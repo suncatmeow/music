@@ -11,7 +11,8 @@
     <meta property="og:title" content="Suncat Studios | Immersive Audio">
     <meta property="og:description" content="The Digital Archive of Suncat. Immersive electronic audio, synthwave, and game tracks.">
     <meta property="og:type" content="music.musician">
-    <meta property="og:url" content="https://your-github-pages-url.com">
+    <meta property="og:url" content="https://suncatmeow.github.io/music/">
+
     <title>Suncat Studios | Immersive Audio</title>
 
     <script type="application/ld+json">
@@ -19,23 +20,23 @@
       "@context": "https://schema.org",
       "@type": "MusicGroup",
       "name": "Suncat",
-      "url": "https://your-github-pages-url.com",
+      "url": "https://suncatmeow.github.io/music/",
       "genre": ["Synthwave", "Electronic", "Chiptune", "Game Audio"],
       "description": "Suncat is an independent electronic music producer and game developer creating immersive, game-inspired audio experiences.",
       "album": {
         "@type": "MusicAlbum",
         "name": "The Digital Archive",
         "track": [
-          { "@type": "MusicRecording", "name": "Baby Boy", "url": "https://your-github-pages-url.com/Baby Boy.mp3", "duration": "PT2M10S" },
-          { "@type": "MusicRecording", "name": "Broken Heart", "url": "https://your-github-pages-url.com/Broken Heart.mp3", "duration": "PT2M11S" },
-          { "@type": "MusicRecording", "name": "Fly High Little Bunny", "url": "https://your-github-pages-url.com/Fly High Little Bunny.mp3", "duration": "PT1M37S" },
-          { "@type": "MusicRecording", "name": "Friends", "url": "https://your-github-pages-url.com/Friends.mp3", "duration": "PT0M58S" },
-          { "@type": "MusicRecording", "name": "I Don't Know Why I'm Here", "url": "https://your-github-pages-url.com/I Don't Know Why I'm Here.mp3", "duration": "PT2M21S" },
-          { "@type": "MusicRecording", "name": "I Love You", "url": "https://your-github-pages-url.com/I Love You.mp3", "duration": "PT2M16S" },
-          { "@type": "MusicRecording", "name": "Moondog", "url": "https://your-github-pages-url.com/Moondog.mp3", "duration": "PT2M39S" },
-          { "@type": "MusicRecording", "name": "She's a Queen", "url": "https://your-github-pages-url.com/She's a Queen.mp3", "duration": "PT1M12S" },
-          { "@type": "MusicRecording", "name": "The Things You Do", "url": "https://your-github-pages-url.com/The Things You Do.mp3", "duration": "PT1M26S" },
-          { "@type": "MusicRecording", "name": "Waiting for the Sun", "url": "https://your-github-pages-url.com/Waiting for the Sun.mp3", "duration": "PT2M22S" }
+          { "@type": "MusicRecording", "name": "Baby Boy", "url": "https://suncatmeow.github.io/music/Baby%20Boy.mp3", "duration": "PT2M10S" },
+          { "@type": "MusicRecording", "name": "Broken Heart", "url": "https://suncatmeow.github.io/music/Broken%20Heart.mp3", "duration": "PT2M11S" },
+          { "@type": "MusicRecording", "name": "Fly High Little Bunny", "url": "https://suncatmeow.github.io/music/Fly%20High%20Little%20Bunny.mp3", "duration": "PT1M37S" },
+          { "@type": "MusicRecording", "name": "Friends", "url": "https://suncatmeow.github.io/music/Friends.mp3", "duration": "PT0M58S" },
+          { "@type": "MusicRecording", "name": "I Don't Know Why I'm Here", "url": "https://suncatmeow.github.io/music/I%20Don't%20Know%20Why%20I'm%20Here.mp3", "duration": "PT2M21S" },
+          { "@type": "MusicRecording", "name": "I Love You", "url": "https://suncatmeow.github.io/music/I%20Love%20You.mp3", "duration": "PT2M16S" },
+          { "@type": "MusicRecording", "name": "Moondog", "url": "https://suncatmeow.github.io/music/Moondog.mp3", "duration": "PT2M39S" },
+          { "@type": "MusicRecording", "name": "She's a Queen", "url": "https://suncatmeow.github.io/music/She's%20a%20Queen.mp3", "duration": "PT1M12S" },
+          { "@type": "MusicRecording", "name": "The Things You Do", "url": "https://suncatmeow.github.io/music/The%20Things%20You%20Do.mp3", "duration": "PT1M26S" },
+          { "@type": "MusicRecording", "name": "Waiting for the Sun", "url": "https://suncatmeow.github.io/music/Waiting%20for%20the%20Sun.mp3", "duration": "PT2M22S" }
         ]
       }
     }
@@ -47,7 +48,7 @@
            ========================================= */
         :root {
             --bg-deep: #020205;
-            --accent-glow: #ffaa00; /* Suncat Gold */
+            --accent-glow: #ffaa00; 
             --glass-bg: rgba(20, 22, 28, 0.4);
             --glass-border: rgba(255, 255, 255, 0.08);
             --text-main: #ffffff;
@@ -87,9 +88,9 @@
         }
 
         .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.3s; }
-        .delay-3 { animation-delay: 0.5s; }
-        .delay-4 { animation-delay: 0.8s; } /* For the Bio Section */
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.6s; } 
 
         /* --- LAYOUT --- */
         .app-container {
@@ -167,6 +168,40 @@
             text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
+        .playback-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .control-btn.active {
+            background: var(--accent-glow);
+            color: #000;
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
+        }
+
         audio {
             width: 100%;
             height: 45px;
@@ -203,18 +238,31 @@
             border-color: rgba(255, 255, 255, 0.1);
         }
 
-        .track-item.active {
+        .track-item.playing {
             background: linear-gradient(90deg, rgba(255, 170, 0, 0.15) 0%, transparent 100%);
             border-left: 4px solid var(--accent-glow);
             border-radius: 8px 16px 16px 8px;
         }
 
-        .track-item.active .track-name {
+        .track-item.playing .track-name {
             color: var(--accent-glow);
             font-weight: 600;
         }
 
+        .track-info-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
         .track-name { font-size: 1.1rem; color: var(--text-main); transition: color 0.3s; }
+        
+        .track-rating {
+            font-size: 0.85rem;
+            color: var(--accent-glow);
+            letter-spacing: 2px;
+        }
+
         .track-duration { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
         
         /* --- AI SEO BIO SECTION --- */
@@ -246,7 +294,14 @@
 
             <div class="controls-wrapper">
                 <div id="track-title" class="animate-entry delay-1">Awaiting Transmission...</div>
-                <audio id="audio-player" class="animate-entry delay-2" controls></audio>
+                
+                <div class="playback-controls animate-entry delay-2">
+                    <button id="btn-prev" class="control-btn" title="Previous Track">⏮</button>
+                    <button id="btn-shuffle" class="control-btn" title="Toggle Shuffle">🔀</button>
+                    <button id="btn-next" class="control-btn" title="Next Track">⏭</button>
+                </div>
+
+                <audio id="audio-player" class="animate-entry delay-3" controls></audio>
             </div>
         </main>
 
@@ -262,18 +317,18 @@
     </div>
 
     <script>
-        // 1. Data Source wired to your exact filenames and extracted durations
-        const playlistData = [
-            { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10" },
-            { title: "Broken Heart", src: "Broken Heart.mp3", duration: "2:11" },
-            { title: "Fly High Little Bunny", src: "Fly High Little Bunny.mp3", duration: "1:37" },
-            { title: "Friends", src: "Friends.mp3", duration: "0:58" },
-            { title: "I Don't Know Why I'm Here", src: "I Don't Know Why I'm Here.mp3", duration: "2:21" },
-            { title: "I Love You", src: "I Love You.mp3", duration: "2:16" },
-            { title: "Moondog", src: "Moondog.mp3", duration: "2:39" },
-            { title: "She's a Queen", src: "She's a Queen.mp3", duration: "1:12" },
-            { title: "The Things You Do", src: "The Things You Do.mp3", duration: "1:26" },
-            { title: "Waiting for the Sun", src: "Waiting for the Sun.mp3", duration: "2:22" }
+        // 1. Data Source
+        let playlistData = [
+            { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Produced in 2024." },
+            { title: "Broken Heart", src: "Broken Heart.mp3", duration: "2:11", rating: 3, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "A song about heartbreak." },
+            { title: "Fly High Little Bunny", src: "Fly High Little Bunny.mp3", duration: "1:37", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "High energy track." },
+            { title: "Friends", src: "Friends.mp3", duration: "0:58", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "A quick interlude." },
+            { title: "I Don't Know Why I'm Here", src: "I Don't Know Why I'm Here.mp3", duration: "2:21", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Existential vibes." },
+            { title: "I Love You", src: "I Love You.mp3", duration: "2:16", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Love song." },
+            { title: "Moondog", src: "Moondog.mp3", duration: "2:39", rating: 3, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Spacey beat." },
+            { title: "She's a Queen", src: "She's a Queen.mp3", duration: "1:12", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Royal vibes." },
+            { title: "The Things You Do", src: "The Things You Do.mp3", duration: "1:26", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Upbeat rhythm." },
+            { title: "Waiting for the Sun", src: "Waiting for the Sun.mp3", duration: "2:22", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Dawn chorus." }
         ];
 
         // 2. DOM Setup
@@ -282,42 +337,132 @@
         const trackTitleDisplay = document.getElementById('track-title');
         const canvas = document.getElementById('visualizer');
         const ctx = canvas.getContext('2d');
+        
+        // Buttons
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnShuffle = document.getElementById('btn-shuffle');
 
         // Web Audio Variables
         let audioCtx, analyser, source, dataArray, bufferLength;
         let isEngineRunning = false;
 
+        // Playback State Variables
+        let playQueue = []; // Holds the indexes of the tracks to play
+        let currentQueuePos = 0; // Where we are in the queue
+        let isShuffle = false;
+
         // 3. Initialize App
         function initApp() {
-            // Build Playlist with staggered fade-in animations
-            playlistData.forEach((track, index) => {
-                const trackEl = document.createElement('div');
-                trackEl.className = `track-item animate-entry`;
-                trackEl.style.animationDelay = `${0.3 + (index * 0.05)}s`; // Stagger effect sped up for 10 tracks
-                
-                trackEl.innerHTML = `
-                    <span class="track-name">${String(index + 1).padStart(2, '0')}. ${track.title}</span>
-                    <span class="track-duration">${track.duration}</span>
-                `;
-                
-                trackEl.addEventListener('click', () => loadAndPlayTrack(index, trackEl));
-                playlistContainer.appendChild(trackEl);
+            // Sort by Rating (High to Low), then alphabetically
+            playlistData.sort((a, b) => {
+                if (b.rating !== a.rating) return b.rating - a.rating;
+                return a.title.localeCompare(b.title);
             });
+
+            // Initialize standard queue (0, 1, 2, 3...)
+            generateQueue();
+
+            // Build Playlist UI
+            renderPlaylist();
+
+            // Event Listeners for Controls
+            btnPrev.addEventListener('click', playPrevTrack);
+            btnNext.addEventListener('click', playNextTrack);
+            btnShuffle.addEventListener('click', toggleShuffle);
+            
+            // Continuous Playback Hook
+            audioPlayer.addEventListener('ended', playNextTrack);
 
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
-            drawIdleState(); // Draw something pretty before music starts
+            drawIdleState(); 
         }
 
-        // 4. Playback Logic
-        function loadAndPlayTrack(index, trackElement) {
+        // --- PLAYBACK ENGINE LOGIC --- //
+
+        function generateQueue() {
+            playQueue = playlistData.map((_, index) => index);
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            btnShuffle.classList.toggle('active', isShuffle);
+
+            if (isShuffle) {
+                // Keep current track at the front, shuffle the rest
+                let currentTrackIndex = playQueue[currentQueuePos];
+                let remainingTracks = playQueue.filter(i => i !== currentTrackIndex);
+                
+                // Fisher-Yates Shuffle
+                for (let i = remainingTracks.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]];
+                }
+                
+                playQueue = [currentTrackIndex, ...remainingTracks];
+                currentQueuePos = 0; // Reset pointer to the start of the new shuffled queue
+            } else {
+                // Restore default order
+                let currentTrackIndex = playQueue[currentQueuePos];
+                generateQueue();
+                currentQueuePos = playQueue.indexOf(currentTrackIndex); // Find where we are in the standard list
+            }
+        }
+
+        function playNextTrack() {
+            currentQueuePos++;
+            if (currentQueuePos >= playQueue.length) currentQueuePos = 0; // Wrap around to start
+            loadAndPlayTrack(playQueue[currentQueuePos]);
+        }
+
+        function playPrevTrack() {
+            currentQueuePos--;
+            if (currentQueuePos < 0) currentQueuePos = playQueue.length - 1; // Wrap around to end
+            loadAndPlayTrack(playQueue[currentQueuePos]);
+        }
+
+        function renderPlaylist() {
+            playlistContainer.innerHTML = ''; 
+            
+            playlistData.forEach((track, index) => {
+                const trackEl = document.createElement('div');
+                trackEl.className = `track-item animate-entry`;
+                trackEl.dataset.index = index; // Store the master index
+                trackEl.style.animationDelay = `${0.1 + (index * 0.05)}s`; 
+                
+                const filledStars = '★'.repeat(track.rating);
+                const emptyStars = '☆'.repeat(5 - track.rating);
+
+                trackEl.innerHTML = `
+                    <div class="track-info-left">
+                        <span class="track-name">${track.title}</span>
+                        <span class="track-rating">${filledStars}${emptyStars}</span>
+                    </div>
+                    <span class="track-duration">${track.duration}</span>
+                `;
+                
+                trackEl.addEventListener('click', () => {
+                    // Update queue position so Next/Prev know where we are
+                    currentQueuePos = playQueue.indexOf(index);
+                    loadAndPlayTrack(index);
+                });
+                playlistContainer.appendChild(trackEl);
+            });
+        }
+
+        function loadAndPlayTrack(index) {
             const track = playlistData[index];
             
             // UI Updates
-            document.querySelectorAll('.track-item').forEach(el => el.classList.remove('active'));
-            trackElement.classList.add('active');
+            document.querySelectorAll('.track-item').forEach(el => {
+                if(parseInt(el.dataset.index) === index) {
+                    el.classList.add('playing');
+                } else {
+                    el.classList.remove('playing');
+                }
+            });
             
-            // Fade out title, change text, fade back in
             trackTitleDisplay.style.opacity = 0;
             setTimeout(() => {
                 trackTitleDisplay.innerText = track.title;
@@ -328,12 +473,24 @@
             audioPlayer.src = track.src;
             audioPlayer.play();
 
+            // Mobile Lock Screen Controls (Media Session API)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: track.title,
+                    artist: 'Suncat',
+                    album: track.album || 'Suncat Studios'
+                });
+                navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
+                navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
+            }
+
             if (!isEngineRunning) {
                 setupAudioEngine();
             }
         }
 
-        // 5. Audio Engine Boot
+        // --- WEB AUDIO API & CANVAS VISUALIZER --- //
+        
         function setupAudioEngine() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
@@ -342,7 +499,7 @@
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
             
-            analyser.fftSize = 256; // Defines how many frequency bands we get
+            analyser.fftSize = 256; 
             bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
             
@@ -352,14 +509,12 @@
 
         function resizeCanvas() {
             const container = document.getElementById('visualizer-container');
-            // Support Retina displays for sharp lines
             const dpr = window.devicePixelRatio || 1;
             canvas.width = container.clientWidth * dpr;
             canvas.height = container.clientHeight * dpr;
             ctx.scale(dpr, dpr);
         }
 
-        // 6. The Idle Canvas State (Before clicking play)
         function drawIdleState() {
             if (isEngineRunning) return;
             requestAnimationFrame(drawIdleState);
@@ -376,7 +531,6 @@
             ctx.stroke();
         }
 
-        // 7. The Active Canvas State (State-of-the-Art Radial Visualizer)
         function renderVisualizer() {
             requestAnimationFrame(renderVisualizer);
             analyser.getByteFrequencyData(dataArray);
@@ -384,18 +538,15 @@
             const cx = canvas.clientWidth / 2;
             const cy = canvas.clientHeight / 2;
 
-            // Clear frame with a slight dark trail
             ctx.fillStyle = 'rgba(2, 2, 5, 0.2)';
             ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-            // Calculate overall bass for the center pulse
             let bassSum = 0;
             for(let i = 0; i < 10; i++) bassSum += dataArray[i];
             const bassAvg = bassSum / 10;
             
-            const baseRadius = 60 + (bassAvg * 0.15); // Center orb beats with bass
+            const baseRadius = 60 + (bassAvg * 0.15);
 
-            // Draw glowing center orb
             const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius);
             gradient.addColorStop(0, 'rgba(255, 170, 0, 0.4)');
             gradient.addColorStop(1, 'rgba(255, 170, 0, 0)');
@@ -404,25 +555,21 @@
             ctx.arc(cx, cy, baseRadius * 2, 0, Math.PI * 2);
             ctx.fill();
 
-            // Draw Radial Bars
-            const bars = bufferLength - 20; // Cut off the high empty frequencies
+            const bars = bufferLength - 20; 
             const angleStep = (Math.PI * 2) / bars;
 
             for (let i = 0; i < bars; i++) {
                 const value = dataArray[i];
-                const barHeight = (value / 255) * 120; // Scale height max
+                const barHeight = (value / 255) * 120;
                 
-                const angle = i * angleStep - (Math.PI / 2); // Start at top
+                const angle = i * angleStep - (Math.PI / 2);
                 
-                // Outer point of the bar
                 const x2 = cx + Math.cos(angle) * (baseRadius + barHeight);
                 const y2 = cy + Math.sin(angle) * (baseRadius + barHeight);
                 
-                // Inner point of the bar
                 const x1 = cx + Math.cos(angle) * baseRadius;
                 const y1 = cy + Math.sin(angle) * baseRadius;
 
-                // Color mapping: bass is orange/gold, treble shifts to white
                 const hue = 35 + (i / bars) * 20; 
                 const lightness = 50 + (value / 255) * 50;
 
@@ -430,7 +577,6 @@
                 ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
                 
-                // Add extreme glow
                 ctx.shadowBlur = 10;
                 ctx.shadowColor = ctx.strokeStyle;
 
@@ -440,11 +586,9 @@
                 ctx.stroke();
             }
             
-            // Reset shadow to prevent lag
             ctx.shadowBlur = 0;
         }
 
-        // Fire it up
         initApp();
     </script>
 </body>
