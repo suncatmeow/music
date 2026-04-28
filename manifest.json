@@ -1,0 +1,21 @@
+{
+  "name": "Suncat Studios",
+  "short_name": "Suncat",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020205",
+  "theme_color": "#ffaa00",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
