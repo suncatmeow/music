@@ -179,7 +179,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 1.5rem;
+            gap: 0.75rem;
         }
 
         .control-btn {
@@ -225,9 +225,49 @@
         .progress-container {
             display: flex;
             align-items: center;
+            justify-content: center; /* This keeps the group centered */
             gap: 1rem;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px; /* Give it enough room to grow */
+            margin: 0 auto;
+        }
+
+        /* 1. The invisible balancer on the left */
+        .spacer {
+            width: 40px; /* Must match the button width below */
+            flex-shrink: 0;
+        }
+
+        /* 2. The Shuffle Button restored to a circle */
+        #btn-shuffle {
+            width: 40px; 
+            height: 40px;
+            border-radius: 50%; /* Makes it a circle */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* Restoring the "Glass" look */
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        /* 3. Hover and Active effects */
+        #btn-shuffle:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+        }
+
+        #btn-shuffle.active {
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
         }
 
         .time-display {
@@ -470,16 +510,20 @@
                 <div class="custom-player animate-entry delay-2">
                     
                     <div class="playback-controls">
-                        <button id="btn-shuffle" class="control-btn" title="Toggle Shuffle">🔀</button>
                         <button id="btn-prev" class="control-btn" title="Previous Track">⏮</button>
                         <button id="btn-main-play" class="control-btn play-btn" title="Play/Pause">▶</button>
                         <button id="btn-next" class="control-btn" title="Next Track">⏭</button>
+
                     </div>
 
                     <div class="progress-container">
+                        <div class="spacer"></div>
+
                         <span id="time-current" class="time-display">0:00</span>
                         <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1">
                         <span id="time-total" class="time-display">0:00</span>
+                        
+                        <button id="btn-shuffle" class="control-btn" title="Toggle Shuffle">🔀</button>
                     </div>
 
                 </div>
@@ -689,8 +733,18 @@
             btnShuffle.classList.toggle('active', isShuffle);
 
             if (isShuffle) {
+                // 1. Generate the random order
                 buildShuffleQueue();
+                
+                // 2. Reset queue position to the start
+                currentQueuePos = 0;
+
+                // 3. Autoplay the first random track in the new queue
+                if (playQueue.length > 0) {
+                    loadAndPlayTrack(playQueue[currentQueuePos]);
+                }
             } else {
+                // If turning shuffle OFF, we just sync back to the normal list
                 playQueue = [...displayOrder];
                 currentQueuePos = playQueue.indexOf(currentTrackIndex); 
                 if(currentQueuePos === -1) currentQueuePos = 0;
@@ -902,6 +956,21 @@
             ctx.stroke();
         }
 
+        // --- UPGRADED PARTICLE SYSTEM ---
+        let particles = [];
+        function createParticles(cx, cy, intensity) {
+            for (let i = 0; i < intensity; i++) {
+                particles.push({
+                    x: cx, y: cy,
+                    xv: (Math.random() - 0.5) * intensity * 0.5,
+                    yv: (Math.random() - 0.5) * intensity * 0.5,
+                    life: 1.0,
+                    size: Math.random() * 3 + 1
+                });
+            }
+        }
+
+        // --- THE NEON RADIAL ENGINE ---
         function renderVisualizer() {
             requestAnimationFrame(renderVisualizer);
             analyser.getByteFrequencyData(dataArray);
@@ -909,58 +978,91 @@
             const cx = canvas.clientWidth / 2;
             const cy = canvas.clientHeight / 2;
 
-            ctx.fillStyle = 'rgba(2, 2, 5, 0.2)';
+            // 1. Sleek Background Clear (gives that faint motion trail)
+            ctx.fillStyle = 'rgba(2, 2, 5, 0.15)';
             ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
+            // 2. Calculate Bass Intensity
             let bassSum = 0;
-            for(let i = 0; i < 10; i++) bassSum += dataArray[i];
-            const bassAvg = bassSum / 10;
+            for(let i = 0; i < 8; i++) bassSum += dataArray[i];
+            const bassAvg = bassSum / 8;
+            const pulse = (bassAvg / 255);
             
-            const baseRadius = 60 + (bassAvg * 0.15);
+            // 3. Spawn Bass Particles
+            if (bassAvg > 180) createParticles(cx, cy, 5); 
 
-            const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseRadius);
-            gradient.addColorStop(0, 'rgba(255, 170, 0, 0.4)');
-            gradient.addColorStop(1, 'rgba(255, 170, 0, 0)');
-            ctx.fillStyle = gradient;
+            // 4. Update & Draw Particles
+            particles.forEach((p, index) => {
+                p.x += p.xv; p.y += p.yv; p.life -= 0.02;
+                if (p.life <= 0) particles.splice(index, 1);
+                ctx.fillStyle = `rgba(255, 170, 0, ${p.life})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            const baseRadius = 70 + (pulse * 20);
+
+            // 5. Draw Symmetrical "Pulse" Glow
+            const glowGrad = ctx.createRadialGradient(cx, cy, baseRadius * 0.8, cx, cy, baseRadius * 1.5);
+            glowGrad.addColorStop(0, `rgba(255, 170, 0, ${0.1 + pulse * 0.3})`);
+            glowGrad.addColorStop(1, 'rgba(255, 170, 0, 0)');
+            ctx.fillStyle = glowGrad;
             ctx.beginPath();
             ctx.arc(cx, cy, baseRadius * 2, 0, Math.PI * 2);
             ctx.fill();
 
-            const bars = bufferLength - 20; 
-            const angleStep = (Math.PI * 2) / bars;
+            // 6. Render Spectrum Bars (Symmetrical)
+            const numBars = 80; 
+            const angleStep = Math.PI / numBars; // Half circle step
 
-            for (let i = 0; i < bars; i++) {
-                const value = dataArray[i];
-                const barHeight = (value / 255) * 120;
-                
-                const angle = i * angleStep - (Math.PI / 2);
-                
-                const x2 = cx + Math.cos(angle) * (baseRadius + barHeight);
-                const y2 = cy + Math.sin(angle) * (baseRadius + barHeight);
-                
-                const x1 = cx + Math.cos(angle) * baseRadius;
-                const y1 = cy + Math.sin(angle) * baseRadius;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
 
-                const hue = 35 + (i / bars) * 20; 
-                const lightness = 50 + (value / 255) * 50;
-
-                ctx.strokeStyle = `hsl(${hue}, 100%, ${lightness}%)`;
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
+            for (let i = 0; i < numBars; i++) {
+                // Use i for one side, reflect for the other
+                const value = dataArray[i % 40]; 
+                const barHeight = Math.pow(value / 255, 2) * 140; // Easing for better "pop"
                 
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = ctx.strokeStyle;
+                // Draw two bars for every data point to create perfect symmetry
+                [1, -1].forEach(side => {
+                    const angle = (i * angleStep * side) - (Math.PI / 2);
+                    
+                    const x1 = cx + Math.cos(angle) * baseRadius;
+                    const y1 = cy + Math.sin(angle) * baseRadius;
+                    const x2 = cx + Math.cos(angle) * (baseRadius + barHeight);
+                    const y2 = cy + Math.sin(angle) * (baseRadius + barHeight);
 
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
+                    const hue = 35 + (i / numBars) * 15;
+                    ctx.strokeStyle = `hsl(${hue}, 100%, ${50 + pulse * 20}%)`;
+                    
+                    ctx.shadowBlur = pulse * 15;
+                    ctx.shadowColor = ctx.strokeStyle;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                });
             }
-            ctx.shadowBlur = 0;
+            ctx.shadowBlur = 0; // Performance reset
+        }
+
+        // Keep this simple so it doesn't clash with the intro animations
+        function drawIdleState() {
+            if (isEngineRunning) return;
+            requestAnimationFrame(drawIdleState);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.clientWidth / 2;
+            const cy = canvas.clientHeight / 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 70, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 170, 0, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
         }
 
         initApp();
-        
     </script>
 </body>
 </html>
