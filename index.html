@@ -571,16 +571,41 @@
     <script>
         // 1. Data Source
         let playlistData = [
-            { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10", rating: 4, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Produced in 2024." },
-            { title: "Broken Heart", src: "Broken Heart.mp3", duration: "2:11", rating: 3, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "A song about heartbreak." },
-            { title: "Fly High Little Bunny", src: "Fly High Little Bunny.mp3", duration: "1:37", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "High energy track." },
-            { title: "Friends", src: "Friends.mp3", duration: "0:58", rating: 4, album: "Acoustic Sessions", lyrics: "Lyrics coming soon...", extraInfo: "A quick interlude." },
-            { title: "I Don't Know Why I'm Here", src: "I Don't Know Why I'm Here.mp3", duration: "2:21", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Existential vibes." },
-            { title: "I Love You", src: "I Love You.mp3", duration: "2:16", rating: 4, album: "Acoustic Sessions", lyrics: "Lyrics coming soon...", extraInfo: "Love song." },
-            { title: "Moondog", src: "Moondog.mp3", duration: "2:39", rating: 3, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Spacey beat." },
-            { title: "She's a Queen", src: "She's a Queen.mp3", duration: "1:12", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Royal vibes." },
-            { title: "The Things You Do", src: "The Things You Do.mp3", duration: "1:26", rating: 4, album: "Acoustic Sessions", lyrics: "Lyrics coming soon...", extraInfo: "Upbeat rhythm." },
-            { title: "Waiting for the Sun", src: "Waiting for the Sun.mp3", duration: "2:22", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Dawn chorus." }
+            { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Produced in 2024." },
+            { title: "Broken Heart", src: "Broken Heart.mp3", duration: "2:11", rating: 3, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "A song about heartbreak." },
+            { title: "Fly High Little Bunny", src: "Fly High Little Bunny.mp3", duration: "1:37", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "High energy track." },
+            { title: "Friends", src: "Friends.mp3", duration: "0:58", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "A quick interlude." },
+            { title: "I Don't Know Why I'm Here", src: "I Don't Know Why I'm Here.mp3", duration: "2:21", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Existential vibes." },
+            { title: "I Love You", src: "I Love You.mp3", duration: "2:16", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Love song." },
+            { title: "Moondog", src: "Moondog.mp3", duration: "2:39", rating: 3, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Spacey beat." },
+            { title: "She's a Queen", src: "She's a Queen.mp3", duration: "1:12", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Royal vibes." },
+            { title: "The Things You Do", src: "The Things You Do.mp3", duration: "1:26", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Upbeat rhythm." },
+            { title: "Waiting for the Sun", src: "Waiting for the Sun.mp3", duration: "2:22", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Dawn chorus." },
+            { title: "Human Zoo", src: "Human Zoo.mp3", duration: "1:42", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Added from the archives." },
+            { title: "It's Not the Same", src: "It's Not the Same.mp3", duration: "2:33", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Added from the archives." },
+            { title: "Odyssey", src: "Odyssey.mp3", duration: "1:22", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Added from the archives." },
+            // --- New Tracks (Suncat II) ---
+            { title: "Andy Bill", src: "Andy Bill.mp3", duration: "2:33", rating: 4, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "Find a Way", src: "Find a Way.mp3", duration: "1:53", rating: 5, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "Got a Bell", src: "Got a Bell.mp3", duration: "1:20", rating: 4, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "I Don't Care", src: "I Don't Care.mp3", duration: "1:42", rating: 3, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "I Never Believed You", src: "I Never Believed You.mp3", duration: "1:24", rating: 4, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "I'm Waiting", src: "I'm Waiting.mp3", duration: "1:41", rating: 5, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "In My Dreams", src: "In My Dreams.mp3", duration: "3:28", rating: 5, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "Please Remember", src: "Please Remember.mp3", duration: "1:39", rating: 4, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "She Is Gone", src: "She Is Gone.mp3", duration: "1:34", rating: 4, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "Thinking of Her", src: "Thinking of Her.mp3", duration: "2:28", rating: 5, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "Time and Time Again", src: "Time and Time Again.mp3", duration: "0:59", rating: 3, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "Wise Child", src: "Wise Child.mp3", duration: "3:05", rating: 5, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            { title: "You Left Me Once Before", src: "You Left Me Once Before.mp3", duration: "1:23", rating: 4, album: "Suncat II", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat II." },
+            // --- New Tracks (Suncat III) ---
+            { title: "Dying Man", src: "Dying Man.mp3", duration: "1:42", rating: 4, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." },
+            { title: "Its Alright", src: "Its Alright.mp3", duration: "1:36", rating: 5, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." },
+            { title: "Shine on Me", src: "Shine on Me.mp3", duration: "1:56", rating: 4, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." },
+            { title: "Take Me Back", src: "Take Me Back.mp3", duration: "2:20", rating: 5, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." },
+            { title: "Two White Toads", src: "Two White Toads.mp3", duration: "3:04", rating: 5, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." },
+            { title: "Wherever You Go", src: "Wherever You Go.mp3", duration: "1:52", rating: 4, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." },
+            { title: "You Don't Mean That Much To Me", src: "You Don't Mean That Much To Me.mp3", duration: "1:14", rating: 3, album: "Suncat III", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat III." }
         ];
 
         // 2. DOM Setup & Global State
