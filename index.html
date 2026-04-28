@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Suncat">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta name="description" content="Listen to original electronic and game-inspired music by Suncat. Stream Baby Boy, Moondog, The Things You Do, and more directly from Suncat Studios.">
     <meta name="keywords" content="Suncat, Suncat Studios, electronic music, indie artist, synthwave, game audio, chiptune">
     <meta name="author" content="Suncat">
-
     <meta property="og:title" content="Suncat Studios | Immersive Audio">
     <meta property="og:description" content="The Digital Archive of Suncat. Immersive electronic audio, synthwave, and game tracks.">
     <meta property="og:type" content="music.musician">
     <meta property="og:url" content="https://suncatmeow.github.io/music/">
 
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Suncat">
     <title>Suncat Studios | Immersive Audio</title>
 
     <script type="application/ld+json">
@@ -75,7 +73,6 @@
             padding: 2rem 0;
         }
 
-        /* --- ANIMATIONS --- */
         @keyframes fadeSlideUp {
             0% { opacity: 0; transform: translateY(30px) scale(0.98); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -97,7 +94,6 @@
         .delay-3 { animation-delay: 0.3s; }
         .delay-4 { animation-delay: 0.6s; } 
 
-        /* --- LAYOUT --- */
         .app-container {
             width: 100%;
             max-width: 900px;
@@ -109,7 +105,6 @@
             z-index: 10;
         }
 
-        /* --- GLASS PANELS --- */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(24px);
@@ -138,7 +133,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* --- CANVAS --- */
         #visualizer-container {
             width: 100%;
             height: 350px;
@@ -157,7 +151,6 @@
             border-radius: 12px;
         }
 
-        /* --- UI CONTROLS --- */
         .controls-wrapper {
             margin-top: 1rem;
             text-align: center;
@@ -173,11 +166,20 @@
             text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
+        /* --- NEW CUSTOM PLAYER CSS --- */
+        .custom-player {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
         .playback-controls {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 1.5rem;
-            margin-bottom: 1rem;
         }
 
         .control-btn {
@@ -195,27 +197,80 @@
             transition: all 0.2s ease;
         }
 
+        .control-btn.play-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            background: var(--accent-glow);
+            color: #000;
+            border: none;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
+        }
+
         .control-btn:hover {
             background: rgba(255, 255, 255, 0.15);
             transform: scale(1.05);
         }
+        
+        .control-btn.play-btn:hover {
+            background: #ffbb33;
+        }
 
         .control-btn.active {
-            background: var(--accent-glow);
-            color: #000;
+            color: var(--accent-glow);
             border-color: var(--accent-glow);
-            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
         }
 
-        audio {
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             width: 100%;
-            height: 45px;
-            border-radius: 50px;
-            outline: none;
-            opacity: 0.8;
-            transition: opacity 0.3s ease;
+            max-width: 500px;
         }
-        audio:hover { opacity: 1; }
+
+        .time-display {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            min-width: 45px;
+        }
+
+        /* Sleek Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            -webkit-appearance: none;
+            margin-top: -5px; /* Center thumb on track */
+            box-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
+            transition: transform 0.1s;
+        }
+        
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+        }
 
         /* --- SORTING CONTROLS --- */
         .sort-controls {
@@ -223,6 +278,7 @@
             justify-content: center;
             gap: 1rem;
             margin-bottom: 1rem;
+            flex-wrap: wrap; /* Helps on small screens */
         }
 
         .sort-btn {
@@ -293,10 +349,18 @@
 
         .track-name { font-size: 1.1rem; color: var(--text-main); transition: color 0.3s; }
         
+        .track-album {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
         .track-rating {
             font-size: 0.85rem;
             color: var(--accent-glow);
             letter-spacing: 2px;
+            margin-top: 2px;
         }
 
         .track-info-right {
@@ -320,7 +384,7 @@
         .heart-btn:hover { color: #ff4757; transform: scale(1.1); }
         
         .heart-btn.saved {
-            color: #ff4757; /* Heart red when saved */
+            color: #ff4757;
         }
 
         /* --- INFO MODAL --- */
@@ -339,10 +403,7 @@
             padding: 1rem;
         }
 
-        .modal-overlay.show {
-            opacity: 1;
-            pointer-events: all;
-        }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
 
         .modal-content {
             width: 100%;
@@ -353,9 +414,7 @@
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .modal-overlay.show .modal-content {
-            transform: translateY(0);
-        }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
 
         .modal-header {
             display: flex;
@@ -366,26 +425,10 @@
             padding-bottom: 1rem;
         }
 
-        .modal-title {
-            font-size: 1.5rem;
-            color: var(--accent-glow);
-        }
+        .modal-title { font-size: 1.5rem; color: var(--accent-glow); }
+        .modal-album-modal { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.25rem; }
 
-        .modal-album {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 0.25rem;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
+        .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
         .close-btn:hover { color: white; }
 
         .modal-section-title {
@@ -401,7 +444,7 @@
             color: var(--text-muted);
             font-size: 0.95rem;
             line-height: 1.6;
-            white-space: pre-wrap; /* Honors line breaks in lyrics */
+            white-space: pre-wrap; 
         }
         
         /* --- AI SEO BIO SECTION --- */
@@ -424,13 +467,24 @@
             <div class="controls-wrapper">
                 <div id="track-title" class="animate-entry delay-1">Awaiting Transmission...</div>
                 
-                <div class="playback-controls animate-entry delay-2">
-                    <button id="btn-prev" class="control-btn" title="Previous Track">⏮</button>
-                    <button id="btn-shuffle" class="control-btn" title="Toggle Shuffle">🔀</button>
-                    <button id="btn-next" class="control-btn" title="Next Track">⏭</button>
+                <div class="custom-player animate-entry delay-2">
+                    
+                    <div class="playback-controls">
+                        <button id="btn-shuffle" class="control-btn" title="Toggle Shuffle">🔀</button>
+                        <button id="btn-prev" class="control-btn" title="Previous Track">⏮</button>
+                        <button id="btn-main-play" class="control-btn play-btn" title="Play/Pause">▶</button>
+                        <button id="btn-next" class="control-btn" title="Next Track">⏭</button>
+                    </div>
+
+                    <div class="progress-container">
+                        <span id="time-current" class="time-display">0:00</span>
+                        <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1">
+                        <span id="time-total" class="time-display">0:00</span>
+                    </div>
+
                 </div>
 
-                <audio id="audio-player" class="animate-entry delay-3" controls></audio>
+                <audio id="audio-player"></audio>
             </div>
         </main>
 
@@ -457,7 +511,7 @@
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title" id="modal-track-title">Track Title</h2>
-                    <p class="modal-album" id="modal-track-album">Album Name</p>
+                    <p class="modal-album-modal" id="modal-track-album">Album Name</p>
                 </div>
                 <button class="close-btn" onclick="closeModal()">×</button>
             </div>
@@ -492,43 +546,107 @@
         const canvas = document.getElementById('visualizer');
         const ctx = canvas.getContext('2d');
         
+        // Custom Player Controls
+        const btnMainPlay = document.getElementById('btn-main-play');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
         const btnShuffle = document.getElementById('btn-shuffle');
+        const progressBar = document.getElementById('progress-bar');
+        const timeCurrent = document.getElementById('time-current');
+        const timeTotal = document.getElementById('time-total');
+        
         const infoModal = document.getElementById('info-modal');
 
         let audioCtx, analyser, source, dataArray, bufferLength;
         let isEngineRunning = false;
+        let isDraggingProgressBar = false;
 
-        let displayOrder = []; // Visual list on screen
-        let playQueue = [];    // Actual playback order
+        let displayOrder = []; 
+        let playQueue = [];    
         let currentQueuePos = 0; 
-        let currentTrackIndex = -1; // Master index of the currently playing track
+        let currentTrackIndex = -1; 
         let isShuffle = false;
         let currentSortMode = 'rating';
 
-        // --- NEW: FETCH SAVED PLAYLIST FROM LOCAL STORAGE ---
         let myPlaylist = JSON.parse(localStorage.getItem('suncat_playlist')) || [];
 
         // 3. Initialize App
         function initApp() {
-            applySort('rating'); // Sets displayOrder, playQueue, and renders UI
+            applySort('rating'); 
 
-            // Event Listeners
+            // Control Event Listeners
+            btnMainPlay.addEventListener('click', handleMainPlayClick);
             btnPrev.addEventListener('click', playPrevTrack);
             btnNext.addEventListener('click', playNextTrack);
             btnShuffle.addEventListener('click', toggleShuffle);
+            
+            // Audio Element Listeners
             audioPlayer.addEventListener('ended', playNextTrack);
+            audioPlayer.addEventListener('play', () => btnMainPlay.innerText = '⏸');
+            audioPlayer.addEventListener('pause', () => btnMainPlay.innerText = '▶');
+            audioPlayer.addEventListener('timeupdate', updateProgressBar);
+            
+            // Progress Bar Listeners
+            progressBar.addEventListener('input', () => { isDraggingProgressBar = true; });
+            progressBar.addEventListener('change', seekAudio);
+
+            // Register PWA Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed: ', err));
+                });
+            }
 
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             drawIdleState(); 
         }
 
+        // --- PROGRESS BAR LOGIC --- //
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function updateProgressBar() {
+            if (!isDraggingProgressBar && audioPlayer.duration) {
+                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.value = percent;
+                timeCurrent.innerText = formatTime(audioPlayer.currentTime);
+                timeTotal.innerText = formatTime(audioPlayer.duration);
+            }
+        }
+
+        function seekAudio() {
+            if (audioPlayer.duration) {
+                audioPlayer.currentTime = (progressBar.value / 100) * audioPlayer.duration;
+            }
+            isDraggingProgressBar = false;
+        }
+
+        function handleMainPlayClick() {
+            // If nothing has been loaded yet, play the first track in the current view
+            if (currentTrackIndex === -1) {
+                if (playQueue.length > 0) {
+                    currentQueuePos = 0;
+                    loadAndPlayTrack(playQueue[0]);
+                }
+            } else {
+                // Otherwise, toggle play/pause
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                } else {
+                    audioPlayer.pause();
+                }
+            }
+        }
+
         // --- VIEW SORTING LOGIC --- //
         function applySort(mode) {
             currentSortMode = mode;
-            displayOrder = playlistData.map((_, i) => i); // Reset to base indexes [0, 1, 2...]
+            displayOrder = playlistData.map((_, i) => i); 
 
             if (mode === 'rating') {
                 displayOrder.sort((a, b) => {
@@ -542,27 +660,26 @@
                     return playlistData[a].title.localeCompare(playlistData[b].title);
                 });
             } else if (mode === 'playlist') {
-                // Filter the display order to ONLY show indexes that are saved in myPlaylist
-                displayOrder = myPlaylist.map(Number); // Ensures they are integers
+                displayOrder = myPlaylist.map(Number); 
             }
 
-            // Update UI Buttons
             document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`sort-${mode}`).classList.add('active');
 
             renderPlaylist();
 
-            // Handle Empty Playlist State
             if (mode === 'playlist' && displayOrder.length === 0) {
                 playlistContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Your playlist is empty. Click the heart icon on any track to add it!</div>';
             }
 
-            // If not shuffling, ensure the playback queue matches the visual order
+            // Sync the queue to the visual order (if not actively shuffling)
             if (!isShuffle) {
                 playQueue = [...displayOrder];
-                // Keep the queue pointer synced to the currently playing song
                 currentQueuePos = playQueue.indexOf(currentTrackIndex);
                 if(currentQueuePos === -1) currentQueuePos = 0;
+            } else {
+                // If we changed tabs while shuffling, reconstruct the shuffle queue from the new view
+                buildShuffleQueue();
             }
         }
 
@@ -572,26 +689,38 @@
             btnShuffle.classList.toggle('active', isShuffle);
 
             if (isShuffle) {
-                // Keep currently playing track at the front of the queue, shuffle the rest
-                let remainingTracks = playQueue.filter(i => i !== currentTrackIndex);
-                
-                // Fisher-Yates Shuffle
-                for (let i = remainingTracks.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]];
-                }
-                
-                playQueue = currentTrackIndex !== -1 ? [currentTrackIndex, ...remainingTracks] : remainingTracks;
-                currentQueuePos = 0; 
+                buildShuffleQueue();
             } else {
-                // Restore queue to match the current visual display order
                 playQueue = [...displayOrder];
                 currentQueuePos = playQueue.indexOf(currentTrackIndex); 
+                if(currentQueuePos === -1) currentQueuePos = 0;
             }
         }
 
+        function buildShuffleQueue() {
+            // Take the currently visible tracks
+            let availableTracks = [...displayOrder];
+            
+            // Remove the currently playing track so we can stick it at the front
+            let remainingTracks = availableTracks.filter(i => i !== currentTrackIndex);
+            
+            // Fisher-Yates Shuffle
+            for (let i = remainingTracks.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]];
+            }
+            
+            // Rebuild queue
+            if (currentTrackIndex !== -1 && availableTracks.includes(currentTrackIndex)) {
+                playQueue = [currentTrackIndex, ...remainingTracks];
+            } else {
+                playQueue = remainingTracks;
+            }
+            currentQueuePos = 0; 
+        }
+
         function playNextTrack() {
-            if (playQueue.length === 0) return; // Failsafe for empty playlist
+            if (playQueue.length === 0) return; 
             currentQueuePos++;
             if (currentQueuePos >= playQueue.length) currentQueuePos = 0; 
             loadAndPlayTrack(playQueue[currentQueuePos]);
@@ -619,14 +748,15 @@
                 const filledStars = '★'.repeat(track.rating);
                 const emptyStars = '☆'.repeat(5 - track.rating);
 
-                // --- NEW: Heart Button State ---
                 const isSaved = myPlaylist.includes(masterIndex);
                 const heartClass = isSaved ? 'saved' : '';
                 const heartIcon = isSaved ? '♥' : '♡';
 
+                // ADDED: Track Album below the Title
                 trackEl.innerHTML = `
                     <div class="track-info-left">
                         <span class="track-name">${track.title}</span>
+                        <span class="track-album">${track.album}</span>
                         <span class="track-rating">${filledStars}${emptyStars}</span>
                     </div>
                     <div class="track-info-right">
@@ -636,20 +766,21 @@
                     </div>
                 `;
                 
-                // Click Track to Play
                 trackEl.addEventListener('click', () => {
-                    currentQueuePos = playQueue.indexOf(masterIndex);
-                    loadAndPlayTrack(masterIndex);
+                    if (currentTrackIndex === masterIndex) {
+                        handleMainPlayClick(); // Toggle pause/play if clicking same track
+                    } else {
+                        currentQueuePos = playQueue.indexOf(masterIndex);
+                        loadAndPlayTrack(masterIndex);
+                    }
                 });
 
-                // Click Info Button (Stop propagation so it doesn't play the track)
                 const infoBtn = trackEl.querySelector('.info-btn');
                 infoBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
                     openModal(masterIndex);
                 });
 
-                // Click Heart Button
                 const heartBtn = trackEl.querySelector('.heart-btn');
                 heartBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -660,31 +791,25 @@
             });
         }
 
-        // --- PLAYLIST SAVING LOGIC --- //
         function togglePlaylist(masterIndex, btn) {
             const arrayPos = myPlaylist.indexOf(masterIndex);
             
             if (arrayPos > -1) {
-                // Remove from playlist
                 myPlaylist.splice(arrayPos, 1);
                 btn.classList.remove('saved');
                 btn.innerText = '♡';
             } else {
-                // Add to playlist
                 myPlaylist.push(masterIndex);
                 btn.classList.add('saved');
                 btn.innerText = '♥';
             }
             
-            // Save to browser memory
             localStorage.setItem('suncat_playlist', JSON.stringify(myPlaylist));
 
-            // If we are currently actively viewing the Custom Playlist, auto-refresh it
             if (currentSortMode === 'playlist') {
                 applySort('playlist');
             }
         }
-
 
         function loadAndPlayTrack(masterIndex) {
             if (masterIndex === undefined || masterIndex === -1) return;
@@ -692,7 +817,6 @@
             currentTrackIndex = masterIndex;
             const track = playlistData[masterIndex];
             
-            // Re-render UI to update the active styling
             renderPlaylist();
             
             trackTitleDisplay.style.opacity = 0;
@@ -702,9 +826,8 @@
             }, 300);
 
             audioPlayer.src = track.src;
-            audioPlayer.play();
+            audioPlayer.play().catch(e => console.log("Waiting for user interaction..."));
 
-            // Mobile Lock Screen Controls (Media Session API)
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: track.title,
@@ -837,18 +960,7 @@
         }
 
         initApp();
-                // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
-        }
+        
     </script>
 </body>
 </html>
