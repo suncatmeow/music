@@ -65,7 +65,7 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             overflow-x: hidden;
             padding: 2rem 0;
         }
@@ -210,8 +210,39 @@
             opacity: 0.8;
             transition: opacity 0.3s ease;
         }
-        
         audio:hover { opacity: 1; }
+
+        /* --- SORTING CONTROLS --- */
+        .sort-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sort-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .sort-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sort-btn.active {
+            background: rgba(255, 170, 0, 0.15);
+            color: var(--accent-glow);
+            border-color: var(--accent-glow);
+        }
 
         /* --- PLAYLIST --- */
         .playlist {
@@ -234,7 +265,7 @@
 
         .track-item:hover {
             background: rgba(255, 255, 255, 0.08);
-            transform: translateX(10px);
+            transform: translateX(5px);
             border-color: rgba(255, 255, 255, 0.1);
         }
 
@@ -263,21 +294,114 @@
             letter-spacing: 2px;
         }
 
-        .track-duration { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
-        
-        /* --- AI SEO BIO SECTION --- */
-        .bio-header {
-            font-size: 1.2rem;
-            color: var(--accent-glow);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        .track-info-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
-        .bio-text {
+
+        .track-duration { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
+
+        .info-btn, .heart-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+            padding: 0.2rem;
+        }
+        .info-btn:hover { color: var(--text-main); }
+        .heart-btn:hover { color: #ff4757; transform: scale(1.1); }
+        
+        .heart-btn.saved {
+            color: #ff4757; /* Heart red when saved */
+        }
+
+        /* --- INFO MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 1rem;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--accent-glow);
+        }
+
+        .modal-album {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.25rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: white; }
+
+        .modal-section-title {
+            font-size: 1rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            border-left: 3px solid var(--accent-glow);
+            padding-left: 0.5rem;
+        }
+
+        .modal-body-text {
             color: var(--text-muted);
             font-size: 0.95rem;
             line-height: 1.6;
+            white-space: pre-wrap; /* Honors line breaks in lyrics */
         }
+        
+        /* --- AI SEO BIO SECTION --- */
+        .bio-header { font-size: 1.2rem; color: var(--accent-glow); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
+        .bio-text { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -305,8 +429,15 @@
             </div>
         </main>
 
-        <section class="playlist" id="playlist">
-            </section>
+        <section>
+            <div class="sort-controls animate-entry delay-3">
+                <button id="sort-rating" class="sort-btn active" onclick="applySort('rating')">Top Rated</button>
+                <button id="sort-album" class="sort-btn" onclick="applySort('album')">By Album</button>
+                <button id="sort-playlist" class="sort-btn" onclick="applySort('playlist')">My Playlist</button>
+            </div>
+            <div class="playlist" id="playlist">
+                </div>
+        </section>
 
         <footer class="glass-panel animate-entry delay-4" id="about">
             <h2 class="bio-header">Who is Suncat?</h2>
@@ -316,62 +447,72 @@
         </footer>
     </div>
 
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="modal-track-title">Track Title</h2>
+                    <p class="modal-album" id="modal-track-album">Album Name</p>
+                </div>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            
+            <h3 class="modal-section-title">Behind the Track</h3>
+            <p class="modal-body-text" id="modal-track-info">Extra info goes here...</p>
+
+            <h3 class="modal-section-title">Lyrics</h3>
+            <p class="modal-body-text" id="modal-track-lyrics">Lyrics go here...</p>
+        </div>
+    </div>
+
     <script>
         // 1. Data Source
         let playlistData = [
-            { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Produced in 2024." },
-            { title: "Broken Heart", src: "Broken Heart.mp3", duration: "2:11", rating: 3, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "A song about heartbreak." },
-            { title: "Fly High Little Bunny", src: "Fly High Little Bunny.mp3", duration: "1:37", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "High energy track." },
-            { title: "Friends", src: "Friends.mp3", duration: "0:58", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "A quick interlude." },
-            { title: "I Don't Know Why I'm Here", src: "I Don't Know Why I'm Here.mp3", duration: "2:21", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Existential vibes." },
-            { title: "I Love You", src: "I Love You.mp3", duration: "2:16", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Love song." },
-            { title: "Moondog", src: "Moondog.mp3", duration: "2:39", rating: 3, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Spacey beat." },
-            { title: "She's a Queen", src: "She's a Queen.mp3", duration: "1:12", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Royal vibes." },
-            { title: "The Things You Do", src: "The Things You Do.mp3", duration: "1:26", rating: 4, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Upbeat rhythm." },
-            { title: "Waiting for the Sun", src: "Waiting for the Sun.mp3", duration: "2:22", rating: 5, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Dawn chorus." }
+            { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10", rating: 4, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Produced in 2024." },
+            { title: "Broken Heart", src: "Broken Heart.mp3", duration: "2:11", rating: 3, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "A song about heartbreak." },
+            { title: "Fly High Little Bunny", src: "Fly High Little Bunny.mp3", duration: "1:37", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "High energy track." },
+            { title: "Friends", src: "Friends.mp3", duration: "0:58", rating: 4, album: "Acoustic Sessions", lyrics: "Lyrics coming soon...", extraInfo: "A quick interlude." },
+            { title: "I Don't Know Why I'm Here", src: "I Don't Know Why I'm Here.mp3", duration: "2:21", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Existential vibes." },
+            { title: "I Love You", src: "I Love You.mp3", duration: "2:16", rating: 4, album: "Acoustic Sessions", lyrics: "Lyrics coming soon...", extraInfo: "Love song." },
+            { title: "Moondog", src: "Moondog.mp3", duration: "2:39", rating: 3, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Spacey beat." },
+            { title: "She's a Queen", src: "She's a Queen.mp3", duration: "1:12", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Royal vibes." },
+            { title: "The Things You Do", src: "The Things You Do.mp3", duration: "1:26", rating: 4, album: "Acoustic Sessions", lyrics: "Lyrics coming soon...", extraInfo: "Upbeat rhythm." },
+            { title: "Waiting for the Sun", src: "Waiting for the Sun.mp3", duration: "2:22", rating: 5, album: "The Digital Archive", lyrics: "Lyrics coming soon...", extraInfo: "Dawn chorus." }
         ];
 
-        // 2. DOM Setup
+        // 2. DOM Setup & Global State
         const playlistContainer = document.getElementById('playlist');
         const audioPlayer = document.getElementById('audio-player');
         const trackTitleDisplay = document.getElementById('track-title');
         const canvas = document.getElementById('visualizer');
         const ctx = canvas.getContext('2d');
         
-        // Buttons
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
         const btnShuffle = document.getElementById('btn-shuffle');
+        const infoModal = document.getElementById('info-modal');
 
-        // Web Audio Variables
         let audioCtx, analyser, source, dataArray, bufferLength;
         let isEngineRunning = false;
 
-        // Playback State Variables
-        let playQueue = []; // Holds the indexes of the tracks to play
-        let currentQueuePos = 0; // Where we are in the queue
+        let displayOrder = []; // Visual list on screen
+        let playQueue = [];    // Actual playback order
+        let currentQueuePos = 0; 
+        let currentTrackIndex = -1; // Master index of the currently playing track
         let isShuffle = false;
+        let currentSortMode = 'rating';
+
+        // --- NEW: FETCH SAVED PLAYLIST FROM LOCAL STORAGE ---
+        let myPlaylist = JSON.parse(localStorage.getItem('suncat_playlist')) || [];
 
         // 3. Initialize App
         function initApp() {
-            // Sort by Rating (High to Low), then alphabetically
-            playlistData.sort((a, b) => {
-                if (b.rating !== a.rating) return b.rating - a.rating;
-                return a.title.localeCompare(b.title);
-            });
+            applySort('rating'); // Sets displayOrder, playQueue, and renders UI
 
-            // Initialize standard queue (0, 1, 2, 3...)
-            generateQueue();
-
-            // Build Playlist UI
-            renderPlaylist();
-
-            // Event Listeners for Controls
+            // Event Listeners
             btnPrev.addEventListener('click', playPrevTrack);
             btnNext.addEventListener('click', playNextTrack);
             btnShuffle.addEventListener('click', toggleShuffle);
-            
-            // Continuous Playback Hook
             audioPlayer.addEventListener('ended', playNextTrack);
 
             resizeCanvas();
@@ -379,19 +520,54 @@
             drawIdleState(); 
         }
 
-        // --- PLAYBACK ENGINE LOGIC --- //
+        // --- VIEW SORTING LOGIC --- //
+        function applySort(mode) {
+            currentSortMode = mode;
+            displayOrder = playlistData.map((_, i) => i); // Reset to base indexes [0, 1, 2...]
 
-        function generateQueue() {
-            playQueue = playlistData.map((_, index) => index);
+            if (mode === 'rating') {
+                displayOrder.sort((a, b) => {
+                    if (playlistData[b].rating !== playlistData[a].rating) return playlistData[b].rating - playlistData[a].rating;
+                    return playlistData[a].title.localeCompare(playlistData[b].title);
+                });
+            } else if (mode === 'album') {
+                displayOrder.sort((a, b) => {
+                    let albumComp = playlistData[a].album.localeCompare(playlistData[b].album);
+                    if (albumComp !== 0) return albumComp;
+                    return playlistData[a].title.localeCompare(playlistData[b].title);
+                });
+            } else if (mode === 'playlist') {
+                // Filter the display order to ONLY show indexes that are saved in myPlaylist
+                displayOrder = myPlaylist.map(Number); // Ensures they are integers
+            }
+
+            // Update UI Buttons
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`sort-${mode}`).classList.add('active');
+
+            renderPlaylist();
+
+            // Handle Empty Playlist State
+            if (mode === 'playlist' && displayOrder.length === 0) {
+                playlistContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Your playlist is empty. Click the heart icon on any track to add it!</div>';
+            }
+
+            // If not shuffling, ensure the playback queue matches the visual order
+            if (!isShuffle) {
+                playQueue = [...displayOrder];
+                // Keep the queue pointer synced to the currently playing song
+                currentQueuePos = playQueue.indexOf(currentTrackIndex);
+                if(currentQueuePos === -1) currentQueuePos = 0;
+            }
         }
 
+        // --- PLAYBACK ENGINE LOGIC --- //
         function toggleShuffle() {
             isShuffle = !isShuffle;
             btnShuffle.classList.toggle('active', isShuffle);
 
             if (isShuffle) {
-                // Keep current track at the front, shuffle the rest
-                let currentTrackIndex = playQueue[currentQueuePos];
+                // Keep currently playing track at the front of the queue, shuffle the rest
                 let remainingTracks = playQueue.filter(i => i !== currentTrackIndex);
                 
                 // Fisher-Yates Shuffle
@@ -400,68 +576,119 @@
                     [remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]];
                 }
                 
-                playQueue = [currentTrackIndex, ...remainingTracks];
-                currentQueuePos = 0; // Reset pointer to the start of the new shuffled queue
+                playQueue = currentTrackIndex !== -1 ? [currentTrackIndex, ...remainingTracks] : remainingTracks;
+                currentQueuePos = 0; 
             } else {
-                // Restore default order
-                let currentTrackIndex = playQueue[currentQueuePos];
-                generateQueue();
-                currentQueuePos = playQueue.indexOf(currentTrackIndex); // Find where we are in the standard list
+                // Restore queue to match the current visual display order
+                playQueue = [...displayOrder];
+                currentQueuePos = playQueue.indexOf(currentTrackIndex); 
             }
         }
 
         function playNextTrack() {
+            if (playQueue.length === 0) return; // Failsafe for empty playlist
             currentQueuePos++;
-            if (currentQueuePos >= playQueue.length) currentQueuePos = 0; // Wrap around to start
+            if (currentQueuePos >= playQueue.length) currentQueuePos = 0; 
             loadAndPlayTrack(playQueue[currentQueuePos]);
         }
 
         function playPrevTrack() {
+            if (playQueue.length === 0) return;
             currentQueuePos--;
-            if (currentQueuePos < 0) currentQueuePos = playQueue.length - 1; // Wrap around to end
+            if (currentQueuePos < 0) currentQueuePos = playQueue.length - 1; 
             loadAndPlayTrack(playQueue[currentQueuePos]);
         }
 
         function renderPlaylist() {
             playlistContainer.innerHTML = ''; 
             
-            playlistData.forEach((track, index) => {
+            displayOrder.forEach((masterIndex, i) => {
+                const track = playlistData[masterIndex];
                 const trackEl = document.createElement('div');
-                trackEl.className = `track-item animate-entry`;
-                trackEl.dataset.index = index; // Store the master index
-                trackEl.style.animationDelay = `${0.1 + (index * 0.05)}s`; 
+                
+                const isPlayingClass = (masterIndex === currentTrackIndex) ? 'playing' : '';
+                trackEl.className = `track-item animate-entry ${isPlayingClass}`;
+                trackEl.dataset.index = masterIndex; 
+                trackEl.style.animationDelay = `${0.05 * i}s`; 
                 
                 const filledStars = '★'.repeat(track.rating);
                 const emptyStars = '☆'.repeat(5 - track.rating);
+
+                // --- NEW: Heart Button State ---
+                const isSaved = myPlaylist.includes(masterIndex);
+                const heartClass = isSaved ? 'saved' : '';
+                const heartIcon = isSaved ? '♥' : '♡';
 
                 trackEl.innerHTML = `
                     <div class="track-info-left">
                         <span class="track-name">${track.title}</span>
                         <span class="track-rating">${filledStars}${emptyStars}</span>
                     </div>
-                    <span class="track-duration">${track.duration}</span>
+                    <div class="track-info-right">
+                        <span class="track-duration">${track.duration}</span>
+                        <button class="heart-btn ${heartClass}" title="Save to Playlist">${heartIcon}</button>
+                        <button class="info-btn" title="Track Info">ℹ️</button>
+                    </div>
                 `;
                 
+                // Click Track to Play
                 trackEl.addEventListener('click', () => {
-                    // Update queue position so Next/Prev know where we are
-                    currentQueuePos = playQueue.indexOf(index);
-                    loadAndPlayTrack(index);
+                    currentQueuePos = playQueue.indexOf(masterIndex);
+                    loadAndPlayTrack(masterIndex);
                 });
+
+                // Click Info Button (Stop propagation so it doesn't play the track)
+                const infoBtn = trackEl.querySelector('.info-btn');
+                infoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    openModal(masterIndex);
+                });
+
+                // Click Heart Button
+                const heartBtn = trackEl.querySelector('.heart-btn');
+                heartBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    togglePlaylist(masterIndex, heartBtn);
+                });
+
                 playlistContainer.appendChild(trackEl);
             });
         }
 
-        function loadAndPlayTrack(index) {
-            const track = playlistData[index];
+        // --- PLAYLIST SAVING LOGIC --- //
+        function togglePlaylist(masterIndex, btn) {
+            const arrayPos = myPlaylist.indexOf(masterIndex);
             
-            // UI Updates
-            document.querySelectorAll('.track-item').forEach(el => {
-                if(parseInt(el.dataset.index) === index) {
-                    el.classList.add('playing');
-                } else {
-                    el.classList.remove('playing');
-                }
-            });
+            if (arrayPos > -1) {
+                // Remove from playlist
+                myPlaylist.splice(arrayPos, 1);
+                btn.classList.remove('saved');
+                btn.innerText = '♡';
+            } else {
+                // Add to playlist
+                myPlaylist.push(masterIndex);
+                btn.classList.add('saved');
+                btn.innerText = '♥';
+            }
+            
+            // Save to browser memory
+            localStorage.setItem('suncat_playlist', JSON.stringify(myPlaylist));
+
+            // If we are currently actively viewing the Custom Playlist, auto-refresh it
+            if (currentSortMode === 'playlist') {
+                applySort('playlist');
+            }
+        }
+
+
+        function loadAndPlayTrack(masterIndex) {
+            if (masterIndex === undefined || masterIndex === -1) return;
+
+            currentTrackIndex = masterIndex;
+            const track = playlistData[masterIndex];
+            
+            // Re-render UI to update the active styling
+            renderPlaylist();
             
             trackTitleDisplay.style.opacity = 0;
             setTimeout(() => {
@@ -469,7 +696,6 @@
                 trackTitleDisplay.style.opacity = 1;
             }, 300);
 
-            // Audio Updates
             audioPlayer.src = track.src;
             audioPlayer.play();
 
@@ -478,19 +704,36 @@
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: track.title,
                     artist: 'Suncat',
-                    album: track.album || 'Suncat Studios'
+                    album: track.album || 'The Digital Archive'
                 });
                 navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
                 navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
             }
 
-            if (!isEngineRunning) {
-                setupAudioEngine();
-            }
+            if (!isEngineRunning) setupAudioEngine();
         }
 
+        // --- MODAL LOGIC --- //
+        function openModal(index) {
+            const track = playlistData[index];
+            document.getElementById('modal-track-title').innerText = track.title;
+            document.getElementById('modal-track-album').innerText = track.album;
+            document.getElementById('modal-track-info').innerText = track.extraInfo;
+            document.getElementById('modal-track-lyrics').innerText = track.lyrics;
+            
+            infoModal.classList.add('show');
+        }
+
+        function closeModal() {
+            infoModal.classList.remove('show');
+        }
+
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) closeModal();
+        });
+
+
         // --- WEB AUDIO API & CANVAS VISUALIZER --- //
-        
         function setupAudioEngine() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
@@ -585,7 +828,6 @@
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
             }
-            
             ctx.shadowBlur = 0;
         }
 
