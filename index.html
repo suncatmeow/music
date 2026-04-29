@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-EEWSYNV43M"></script>
     <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-EEWSYNV43M');
     </script>
     <meta charset="UTF-8">
@@ -46,7 +44,6 @@
       "sameAs": [
         "https://github.com/suncatmeow",
         "https://instagram.com/suncat.meow"
-        
       ],
       "genre": ["Rock", "Pop", "Blues", "Avant Garde"],
       "description": "Suncat is an independent music artist and producer creating original rock, pop, blues, and avant-garde music based in Houston, Texas.",
@@ -112,8 +109,8 @@
 
         .app-container {
             width: 100%;
-            max-width: 750px; /* Slightly tighter for a modern card look */
-            padding: clamp(1rem, 3vw, 2rem); /* Shrinks padding on mobile */
+            max-width: 750px;
+            padding: clamp(1rem, 3vw, 2rem);
             display: grid;
             grid-template-columns: 1fr;
             gap: 2rem;
@@ -127,8 +124,8 @@
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6);
-            padding: clamp(1.5rem, 5vw, 2.5rem); /* Breathes better on small screens */            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            padding: clamp(1.5rem, 5vw, 2.5rem);
             position: relative;
             overflow: hidden;
         }
@@ -156,6 +153,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
         }
 
         #visualizer {
@@ -164,348 +165,88 @@
             position: absolute;
             top: 0;
             left: 0;
-            border-radius: 12px;
-        }
-
-        .controls-wrapper {
-            margin-top: 1rem;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-        }
-
-        #track-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .custom-player {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; /* Nice breathing room between slider and buttons */
-            margin-top: 1.5rem;
-            width: 100%;
-        }
-
-        .playback-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: clamp(0.5rem, 3vw, 1.5rem); /* Buttons get closer on tiny phones */
-            width: 100%;
-        }
-
-        .control-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .control-btn.play-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
-            background: var(--accent-glow);
-            color: #000;
-            border: none;
-            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
-        }
-
-        .control-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(1.05);
-        }
-        
-        .control-btn.play-btn:hover {
-            background: #ffbb33;
-        }
-
-        .control-btn.active {
-            color: var(--accent-glow);
-            border-color: var(--accent-glow);
-            box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
-        }
-
-        .progress-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-        }
-
-        /* 1. The invisible balancer on the left */
-        .spacer {
-            display: none; 
-        }
-
-        /* 2. The Shuffle Button restored to a circle */
-        #btn-shuffle {
-            width: 40px; 
-            height: 40px;
-            border-radius: 50%; /* Makes it a circle */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            /* Restoring the "Glass" look */
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        /* 3. Hover and Active effects */
-        #btn-shuffle:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(1.1);
-        }
-
-        #btn-shuffle.active {
-            color: var(--accent-glow);
-            border-color: var(--accent-glow);
-            box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
-        }
-
-        .time-display {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            min-width: 38px;
-            text-align: center;
-        }
-
-        /* Sleek Range Slider */
-        input[type=range] {
-            -webkit-appearance: none;
-            flex: 1; /* This tells the bar to fill exactly the remaining space */
-            min-width: 0; /* CRITICAL FIX: prevents the slider from breaking mobile layouts */
-            background: transparent;
-            cursor: pointer;
-        }
-
-        input[type=range]:focus {
             outline: none;
         }
 
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            border: 1px solid var(--glass-border);
+        .controls-wrapper { margin-top: 1rem; text-align: center; position: relative; z-index: 2; }
+        #track-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .custom-player { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.5rem; width: 100%; }
+        .playback-controls { display: flex; justify-content: center; align-items: center; gap: clamp(0.5rem, 3vw, 1.5rem); width: 100%; }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-main);
+            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; cursor: pointer; transition: all 0.2s ease;
         }
 
-        input[type=range]::-webkit-slider-thumb {
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            background: var(--accent-glow);
-            -webkit-appearance: none;
-            margin-top: -5px; /* Center thumb on track */
-            box-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
-            transition: transform 0.1s;
-        }
-        
-        input[type=range]::-webkit-slider-thumb:hover {
-            transform: scale(1.3);
+        .control-btn.play-btn {
+            width: 60px; height: 60px; font-size: 1.5rem; background: var(--accent-glow); color: #000; border: none; box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
         }
 
-        /* --- SORTING CONTROLS --- */
-        .sort-controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap; /* Helps on small screens */
-        }
+        .control-btn:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.05); }
+        .control-btn.play-btn:hover { background: #ffbb33; }
+        .control-btn.active { color: var(--accent-glow); border-color: var(--accent-glow); box-shadow: 0 0 10px rgba(255, 170, 0, 0.2); }
 
-        .sort-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-muted);
-            padding: 0.5rem 1.5rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
+        .progress-container { display: flex; align-items: center; gap: 12px; width: 100%; }
+        #btn-shuffle { flex-shrink: 0; }
+        .time-display { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); min-width: 38px; text-align: center; }
 
-        .sort-btn:hover {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.1);
-        }
+        input[type=range] { -webkit-appearance: none; flex: 1; min-width: 0; background: transparent; cursor: pointer; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; border: 1px solid var(--glass-border); }
+        input[type=range]::-webkit-slider-thumb { height: 14px; width: 14px; border-radius: 50%; background: var(--accent-glow); -webkit-appearance: none; margin-top: -5px; box-shadow: 0 0 8px rgba(255, 170, 0, 0.6); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
 
-        .sort-btn.active {
-            background: rgba(255, 170, 0, 0.15);
-            color: var(--accent-glow);
-            border-color: var(--accent-glow);
-        }
+        .sort-controls { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .sort-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 0.5rem 1.5rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s ease; }
+        .sort-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.1); }
+        .sort-btn.active { background: rgba(255, 170, 0, 0.15); color: var(--accent-glow); border-color: var(--accent-glow); }
 
-        /* --- PLAYLIST --- */
-        .playlist {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            transform: translateZ(0);
-        }
+        .playlist { display: flex; flex-direction: column; gap: 0.75rem; transform: translateZ(0); }
+        .track-item { background: rgba(255, 255, 255, 0.03); border: 1px solid transparent; padding: 1.25rem 1.5rem; border-radius: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .track-item:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(5px); border-color: rgba(255, 255, 255, 0.1); }
+        .track-item.playing { background: linear-gradient(90deg, rgba(255, 170, 0, 0.15) 0%, transparent 100%); border-left: 4px solid var(--accent-glow); border-radius: 8px 16px 16px 8px; }
+        .track-item.playing .track-name { color: var(--accent-glow); font-weight: 600; }
 
-        .track-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid transparent;
-            padding: 1.25rem 1.5rem;
-            border-radius: 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .track-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateX(5px);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .track-item.playing {
-            background: linear-gradient(90deg, rgba(255, 170, 0, 0.15) 0%, transparent 100%);
-            border-left: 4px solid var(--accent-glow);
-            border-radius: 8px 16px 16px 8px;
-        }
-
-        .track-item.playing .track-name {
-            color: var(--accent-glow);
-            font-weight: 600;
-        }
-
-        .track-info-left {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
+        .track-info-left { display: flex; flex-direction: column; gap: 0.25rem; }
         .track-name { font-size: 1.1rem; color: var(--text-main); transition: color 0.3s; }
-        
-        .track-album {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .track-rating {
-            font-size: 0.85rem;
-            color: var(--accent-glow);
-            letter-spacing: 2px;
-            margin-top: 2px;
-        }
+        .track-album { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .track-rating { font-size: 0.85rem; color: var(--accent-glow); letter-spacing: 2px; margin-top: 2px; }
 
-        .track-info-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
+        .track-info-right { display: flex; align-items: center; gap: 1rem; }
         .track-duration { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; }
 
-        .info-btn, .heart-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: color 0.2s, transform 0.2s;
-            padding: 0.2rem;
-        }
+        .info-btn, .heart-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; transition: color 0.2s, transform 0.2s; padding: 0.2rem; }
         .info-btn:hover { color: var(--text-main); }
         .heart-btn:hover { color: #ff4757; transform: scale(1.1); }
-        
-        .heart-btn.saved {
-            color: #ff4757;
-        }
+        .heart-btn.saved { color: #ff4757; }
 
         /* --- INFO MODAL --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            padding: 1rem;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 1rem;
         }
-
         .modal-overlay.show { opacity: 1; pointer-events: all; }
-
         .modal-content {
-            width: 100%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            transform: translateY(20px);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
         .modal-overlay.show .modal-content { transform: translateY(0); }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 1rem;
-        }
-
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; }
         .modal-title { font-size: 1.5rem; color: var(--accent-glow); }
         .modal-album-modal { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.25rem; }
-
         .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
         .close-btn:hover { color: white; }
-
-        .modal-section-title {
-            font-size: 1rem;
-            color: var(--text-main);
-            margin-bottom: 0.5rem;
-            margin-top: 1.5rem;
-            border-left: 3px solid var(--accent-glow);
-            padding-left: 0.5rem;
-        }
-
-        .modal-body-text {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            white-space: pre-wrap; 
-        }
+        .modal-section-title { font-size: 1rem; color: var(--text-main); margin-bottom: 0.5rem; margin-top: 1.5rem; border-left: 3px solid var(--accent-glow); padding-left: 0.5rem; }
+        .modal-body-text { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; }
         
-        /* --- AI SEO BIO SECTION --- */
         .bio-header { font-size: 1.2rem; color: var(--accent-glow); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
         .bio-text { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <noscript>
@@ -517,106 +258,13 @@
             
             <h3>Suncat</h3>
             <ul>
-                <li>Baby Boy</li>
-                <li>Broken Heart</li>
-                <li>Fly High Little Bunny</li>
-                <li>Friends</li>
-                <li>I Don't Know Why I'm Here</li>
-                <li>I Love You</li>
-                <li>Moondog</li>
-                <li>She's a Queen</li>
-                <li>The Things You Do</li>
-                <li>Waiting for the Sun</li>
-                <li>Human Zoo</li>
-                <li>It's Not the Same</li>
-                <li>Odyssey</li>
+                <li>Baby Boy</li><li>Broken Heart</li><li>Fly High Little Bunny</li><li>Friends</li>
+                <li>I Don't Know Why I'm Here</li><li>I Love You</li><li>Moondog</li><li>She's a Queen</li>
+                <li>The Things You Do</li><li>Waiting for the Sun</li><li>Human Zoo</li><li>It's Not the Same</li><li>Odyssey</li>
             </ul>
-
-            <h3>Suncat II</h3>
-            <ul>
-                <li>The Old Wild West</li>
-                <li>Find a Way</li>
-                <li>Got a Bell</li>
-                <li>I Don't Care</li>
-                <li>I Never Believed You</li>
-                <li>I'm Waiting</li>
-                <li>In My Dreams</li>
-                <li>Please Remember</li>
-                <li>She Is Gone</li>
-                <li>Thinking of Her</li>
-                <li>Time and Time Again</li>
-                <li>Wise Child</li>
-                <li>You Left Me Once Before</li>
-            </ul>
-
-            <h3>Suncat III</h3>
-            <ul>
-                <li>Good Girl Mary</li>
-                <li>It's a Place I Dare Not Go</li>
-                <li>It's Alright</li>
-                <li>Shine on Me</li>
-                <li>Take Me Back</li>
-                <li>The Man Who's Never Been</li>
-                <li>Wherever You Go</li>
-                <li>Girl</li>
-                <li>Golden Dawn</li>
-                <li>Dying Man</li>
-                <li>Two White Toads</li>
-                <li>You Don't Mean That Much To Me</li>
-                <li>I Won't Be Home For Christmas</li>
-            </ul>
-
-            <h3>Suncat IV</h3>
-            <ul>
-                <li>My Baby Don't Love Me No More</li>
-                <li>Don't Be Late</li>
-                <li>No Sense of Direction</li>
-                <li>Since My Baby Gone</li>
-                <li>That's What I Need</li>
-                <li>Cry (If You Got the Blues)</li>
-                <li>Get Away From Me</li>
-                <li>I Got No Money</li>
-                <li>Bad Luck</li>
-                <li>What Does It Take</li>
-                <li>I'm Down</li>
-                <li>Buntai</li>
-                <li>If You Break My Heart Again</li>
-            </ul>
-
-            <h3>Suncat V</h3>
-            <ul>
-                <li>Pick the Rice Up Off the Floor</li>
-                <li>Carry On</li>
-                <li>The Sun</li>
-                <li>Clouds in the Sky</li>
-                <li>My Baby Give Me Fever</li>
-                <li>Nothing Left to Say</li>
-                <li>My Baby Left Me All Alone (But I Don't Care)</li>
-                <li>Oh Lord (Please Spare Me)</li>
-                <li>Here I Sit</li>
-                <li>Come On Home</li>
-                <li>For Now and Forever</li>
-                <li>Baby, It's Alright</li>
-                <li>Tell Me Again</li>
-            </ul>
-
-            <h3>Suncat VI</h3>
-            <ul>
-                <li>Ah</li>
-                <li>Call Me Mister</li>
-                <li>Christmas</li>
-                <li>Creatures of the Night</li>
-                <li>Left on Read by a Ghost</li>
-                <li>Leftover Lightning</li>
-                <li>Time</li>
-            </ul>
-
-            <h3>Christmas Special</h3>
-            <ul>
-                <li>Christmas (Remix)</li>
-            </ul>
-        </div>
+            </div>
     </noscript>
+
     <div class="app-container">
         <main class="glass-panel player-panel">
             <header>
@@ -629,27 +277,20 @@
 
             <div class="controls-wrapper">
                 <div id="track-title" class="animate-entry delay-1">ฅ^•ﻌ•^ฅ</div>
-                
                 <div class="custom-player animate-entry delay-2">
-    
                     <div class="progress-container">
                         <span id="time-current" class="time-display">0:00</span>
                         <input type="range" id="progress-bar" value="0" min="0" max="100" step="0.1">
                         <span id="time-total" class="time-display">0:00</span>
                     </div>
-
                     <div class="playback-controls">
-                        <button id="btn-shuffle" class="control-btn" aria-label="Toggle Shuffle" title="Toggle Shuffle">🔀</button>
-                        <button id="btn-prev" class="control-btn" aria-label="Previous Track" title="Previous Track">⏮</button>
-                        
-                        <button id="btn-main-play" class="control-btn play-btn" aria-label="Play or Pause current Suncat track" title="Play/Pause">▶</button>
-                        
-                        <button id="btn-next" class="control-btn" aria-label="Next Track" title="Next Track">⏭</button>
+                        <button id="btn-shuffle" class="control-btn" title="Toggle Shuffle">🔀</button>
+                        <button id="btn-prev" class="control-btn" title="Previous Track">⏮</button>
+                        <button id="btn-main-play" class="control-btn play-btn" title="Play/Pause">▶</button>
+                        <button id="btn-next" class="control-btn" title="Next Track">⏭</button>
                         <div style="width: 40px; visibility: hidden;"></div> 
                     </div>
-
                 </div>
-
                 <audio id="audio-player"></audio>
             </div>
         </main>
@@ -660,8 +301,7 @@
                 <button id="sort-album" class="sort-btn" onclick="applySort('album')">By Album</button>
                 <button id="sort-playlist" class="sort-btn" onclick="applySort('playlist')">My Playlist</button>
             </div>
-            <div class="playlist" id="playlist">
-                </div>
+            <div class="playlist" id="playlist"></div>
         </section>
 
         <footer class="glass-panel animate-entry delay-4" id="about">
@@ -691,7 +331,7 @@
     </div>
 
     <script>
-        // 1. Data Source
+        // 1. Data Source (Fully Restored)
         let playlistData = [
             //Suncat
             { title: "Baby Boy", src: "Baby Boy.mp3", duration: "2:10", rating: 2, album: "Suncat", lyrics: "Lyrics coming soon...", extraInfo: "Produced in 2024." },
@@ -772,17 +412,12 @@
             { title: "Left on Read by a Ghost", src: "Left on Read by a Ghost.mp3", duration: "3:17", rating: 4, album: "Suncat VI", lyrics: "Lyrics coming soon...", extraInfo: "A slow-burn story track from Suncat VI." },
             { title: "Leftover Lightning", src: "Leftover Lightning.mp3", duration: "2:52", rating: 3, album: "Suncat VI", lyrics: "Lyrics coming soon...", extraInfo: "High-voltage energy from Suncat VI." },
             { title: "Time", src: "Time.mp3", duration: "1:56", rating: 1, album: "Suncat VI", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat VI." }
-        
         ];
 
         // 2. DOM Setup & Global State
         const playlistContainer = document.getElementById('playlist');
         const audioPlayer = document.getElementById('audio-player');
         const trackTitleDisplay = document.getElementById('track-title');
-        const canvas = document.getElementById('visualizer');
-        const ctx = canvas.getContext('2d');
-        
-        // Custom Player Controls
         const btnMainPlay = document.getElementById('btn-main-play');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
@@ -790,55 +425,36 @@
         const progressBar = document.getElementById('progress-bar');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
-        
         const infoModal = document.getElementById('info-modal');
 
         let audioCtx, analyser, source, dataArray, bufferLength;
-        let isEngineRunning = false;
-        let isDraggingProgressBar = false;
-
-        let displayOrder = []; 
-        let playQueue = [];    
-        let currentQueuePos = 0; 
-        let currentTrackIndex = -1; 
-        let isShuffle = false;
-        let currentSortMode = 'rating';
-        let selectedAlbum = null;
+        let isEngineRunning = false, isDraggingProgressBar = false;
+        let displayOrder = [], playQueue = [], currentQueuePos = 0, currentTrackIndex = -1;
+        let isShuffle = false, currentSortMode = 'rating', selectedAlbum = null;
         let myPlaylist = JSON.parse(localStorage.getItem('suncat_playlist')) || [];
 
-        // 3. Initialize App
+        // 3. WebGL / Three.js Setup Variables
+        let scene, camera, renderer, terrainMesh, dataTexture, shaderUniforms;
+
         function initApp() {
             applySort('rating'); 
-
-            // Control Event Listeners
             btnMainPlay.addEventListener('click', handleMainPlayClick);
             btnPrev.addEventListener('click', playPrevTrack);
             btnNext.addEventListener('click', playNextTrack);
             btnShuffle.addEventListener('click', toggleShuffle);
             
-            // Audio Element Listeners
             audioPlayer.addEventListener('ended', playNextTrack);
             audioPlayer.addEventListener('play', () => btnMainPlay.innerText = '⏸');
             audioPlayer.addEventListener('pause', () => btnMainPlay.innerText = '▶');
             audioPlayer.addEventListener('timeupdate', updateProgressBar);
             
-            // Progress Bar Listeners
             progressBar.addEventListener('input', () => { isDraggingProgressBar = true; });
             progressBar.addEventListener('change', seekAudio);
 
-            // Register PWA Service Worker
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed: ', err));
-                });
-            }
-
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            drawIdleState(); 
+            initWebGL();
         }
 
-        // --- PROGRESS BAR LOGIC --- //
+        // --- PROGRESS BAR LOGIC ---
         function formatTime(seconds) {
             if (isNaN(seconds)) return "0:00";
             const mins = Math.floor(seconds / 60);
@@ -848,8 +464,7 @@
 
         function updateProgressBar() {
             if (!isDraggingProgressBar && audioPlayer.duration) {
-                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-                progressBar.value = percent;
+                progressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
                 timeCurrent.innerText = formatTime(audioPlayer.currentTime);
                 timeTotal.innerText = formatTime(audioPlayer.duration);
             }
@@ -862,85 +477,24 @@
             isDraggingProgressBar = false;
         }
 
+        // --- PLAYBACK ENGINE ---
         function handleMainPlayClick() {
-            // If nothing has been loaded yet, play the first track in the current view
-            if (currentTrackIndex === -1) {
-                if (playQueue.length > 0) {
-                    currentQueuePos = 0;
-                    loadAndPlayTrack(playQueue[0]);
-                }
+            if (currentTrackIndex === -1 && playQueue.length > 0) {
+                currentQueuePos = 0;
+                loadAndPlayTrack(playQueue[0]);
             } else {
-                // Otherwise, toggle play/pause
-                if (audioPlayer.paused) {
-                    audioPlayer.play();
-                } else {
-                    audioPlayer.pause();
-                }
+                audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
             }
         }
 
-        // --- VIEW SORTING LOGIC --- //
-        function applySort(mode, albumName = null) {
-            currentSortMode = mode;
-            selectedAlbum = albumName; // Keep track of which album we are viewing
-            displayOrder = playlistData.map((_, i) => i); 
-
-            if (mode === 'rating') {
-                displayOrder.sort((a, b) => {
-                    if (playlistData[b].rating !== playlistData[a].rating) return playlistData[b].rating - playlistData[a].rating;
-                    return playlistData[a].title.localeCompare(playlistData[b].title);
-                });
-            } else if (mode === 'album') {
-                if (selectedAlbum) {
-                    // If an album is clicked, only show tracks from that album
-                    displayOrder = displayOrder.filter(i => playlistData[i].album === selectedAlbum);
-                }
-                // Sort alphabetically by title
-                displayOrder.sort((a, b) => playlistData[a].title.localeCompare(playlistData[b].title));
-            } else if (mode === 'playlist') {
-                displayOrder = myPlaylist.map(Number); 
-            }
-
-            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
-            
-            // Safely apply active class to the top buttons
-            const activeBtn = document.getElementById(`sort-${mode}`);
-            if(activeBtn) activeBtn.classList.add('active');
-
-            renderPlaylist();
-
-            if (mode === 'playlist' && displayOrder.length === 0) {
-                playlistContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Your playlist is empty. Click the heart icon on any track to add it!</div>';
-            }
-
-            // Sync the queue to the visual order
-            if (!isShuffle) {
-                playQueue = [...displayOrder];
-                currentQueuePos = playQueue.indexOf(currentTrackIndex);
-                if(currentQueuePos === -1) currentQueuePos = 0;
-            } else {
-                buildShuffleQueue();
-            }
-        }
-
-        // --- PLAYBACK ENGINE LOGIC --- //
         function toggleShuffle() {
             isShuffle = !isShuffle;
             btnShuffle.classList.toggle('active', isShuffle);
-
             if (isShuffle) {
-                // 1. Generate the random order
                 buildShuffleQueue();
-                
-                // 2. Reset queue position to the start
                 currentQueuePos = 0;
-
-                // 3. Autoplay the first random track in the new queue
-                if (playQueue.length > 0) {
-                    loadAndPlayTrack(playQueue[currentQueuePos]);
-                }
+                if (playQueue.length > 0) loadAndPlayTrack(playQueue[currentQueuePos]);
             } else {
-                // If turning shuffle OFF, we just sync back to the normal list
                 playQueue = [...displayOrder];
                 currentQueuePos = playQueue.indexOf(currentTrackIndex); 
                 if(currentQueuePos === -1) currentQueuePos = 0;
@@ -948,19 +502,12 @@
         }
 
         function buildShuffleQueue() {
-            // Take the currently visible tracks
             let availableTracks = [...displayOrder];
-            
-            // Remove the currently playing track so we can stick it at the front
             let remainingTracks = availableTracks.filter(i => i !== currentTrackIndex);
-            
-            // Fisher-Yates Shuffle
             for (let i = remainingTracks.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]];
             }
-            
-            // Rebuild queue
             if (currentTrackIndex !== -1 && availableTracks.includes(currentTrackIndex)) {
                 playQueue = [currentTrackIndex, ...remainingTracks];
             } else {
@@ -971,32 +518,63 @@
 
         function playNextTrack() {
             if (playQueue.length === 0) return; 
-            currentQueuePos++;
-            if (currentQueuePos >= playQueue.length) currentQueuePos = 0; 
+            currentQueuePos = (currentQueuePos + 1) % playQueue.length;
             loadAndPlayTrack(playQueue[currentQueuePos]);
         }
 
         function playPrevTrack() {
             if (playQueue.length === 0) return;
-            currentQueuePos--;
-            if (currentQueuePos < 0) currentQueuePos = playQueue.length - 1; 
+            currentQueuePos = (currentQueuePos - 1 + playQueue.length) % playQueue.length;
             loadAndPlayTrack(playQueue[currentQueuePos]);
+        }
+
+        // --- SORTING & UI RENDER ---
+        function applySort(mode, albumName = null) {
+            currentSortMode = mode;
+            selectedAlbum = albumName;
+            displayOrder = playlistData.map((_, i) => i); 
+
+            if (mode === 'rating') {
+                displayOrder.sort((a, b) => {
+                    if (playlistData[b].rating !== playlistData[a].rating) return playlistData[b].rating - playlistData[a].rating;
+                    return playlistData[a].title.localeCompare(playlistData[b].title);
+                });
+            } else if (mode === 'album') {
+                if (selectedAlbum) displayOrder = displayOrder.filter(i => playlistData[i].album === selectedAlbum);
+                displayOrder.sort((a, b) => playlistData[a].title.localeCompare(playlistData[b].title));
+            } else if (mode === 'playlist') {
+                displayOrder = myPlaylist.map(Number); 
+            }
+
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`sort-${mode}`);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            renderPlaylist();
+
+            if (mode === 'playlist' && displayOrder.length === 0) {
+                playlistContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Your playlist is empty. Click the heart icon on any track to add it!</div>';
+            }
+
+            if (!isShuffle) {
+                playQueue = [...displayOrder];
+                currentQueuePos = playQueue.indexOf(currentTrackIndex);
+                if(currentQueuePos === -1) currentQueuePos = 0;
+            } else {
+                buildShuffleQueue();
+            }
         }
 
         function renderPlaylist() {
             playlistContainer.innerHTML = ''; 
+            
             if (currentSortMode === 'album' && !selectedAlbum) {
-                // Get an array of unique album names
                 const albums = [...new Set(playlistData.map(t => t.album))];
-
                 albums.forEach((albumName, i) => {
                     const albumEl = document.createElement('div');
                     albumEl.className = 'track-item animate-entry';
                     albumEl.style.animationDelay = `${0.05 * i}s`;
-                    
-                    // Count how many tracks are in this album
                     const trackCount = playlistData.filter(t => t.album === albumName).length;
-
                     albumEl.innerHTML = `
                         <div class="track-info-left">
                             <span class="track-name">💽 ${albumName}</span>
@@ -1006,41 +584,35 @@
                             <span class="track-duration" style="color: var(--accent-glow);">Explore ➔</span>
                         </div>
                     `;
-
-                    // When clicked, sort again but pass the specific album name
                     albumEl.addEventListener('click', () => applySort('album', albumName));
                     playlistContainer.appendChild(albumEl);
                 });
-                return; // Stop here so it doesn't render individual tracks
+                return;
             }
 
-            // --- NEW: Add a Back Button if viewing a specific album ---
             if (currentSortMode === 'album' && selectedAlbum) {
                 const backBtn = document.createElement('button');
                 backBtn.className = 'sort-btn active';
                 backBtn.style.marginBottom = '1rem';
                 backBtn.style.width = '100%';
                 backBtn.innerText = '← Back to All Albums';
-                backBtn.onclick = () => applySort('album'); // Reset to main album view
+                backBtn.onclick = () => applySort('album');
                 playlistContainer.appendChild(backBtn);
             }
+
             displayOrder.forEach((masterIndex, i) => {
                 const track = playlistData[masterIndex];
                 const trackEl = document.createElement('div');
-                
                 const isPlayingClass = (masterIndex === currentTrackIndex) ? 'playing' : '';
                 trackEl.className = `track-item animate-entry ${isPlayingClass}`;
-                trackEl.dataset.index = masterIndex; 
                 trackEl.style.animationDelay = `${0.05 * i}s`; 
                 
                 const filledStars = '★'.repeat(track.rating);
                 const emptyStars = '☆'.repeat(5 - track.rating);
-
                 const isSaved = myPlaylist.includes(masterIndex);
                 const heartClass = isSaved ? 'saved' : '';
                 const heartIcon = isSaved ? '♥' : '♡';
 
-                // ADDED: Track Album below the Title
                 trackEl.innerHTML = `
                     <div class="track-info-left">
                         <span class="track-name">${track.title}</span>
@@ -1055,24 +627,18 @@
                 `;
                 
                 trackEl.addEventListener('click', () => {
-                    if (currentTrackIndex === masterIndex) {
-                        handleMainPlayClick(); // Toggle pause/play if clicking same track
-                    } else {
+                    if (currentTrackIndex === masterIndex) handleMainPlayClick();
+                    else {
                         currentQueuePos = playQueue.indexOf(masterIndex);
                         loadAndPlayTrack(masterIndex);
                     }
                 });
 
-                const infoBtn = trackEl.querySelector('.info-btn');
-                infoBtn.addEventListener('click', (e) => {
-                    e.stopPropagation(); 
-                    openModal(masterIndex);
+                trackEl.querySelector('.info-btn').addEventListener('click', (e) => {
+                    e.stopPropagation(); openModal(masterIndex);
                 });
-
-                const heartBtn = trackEl.querySelector('.heart-btn');
-                heartBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    togglePlaylist(masterIndex, heartBtn);
+                trackEl.querySelector('.heart-btn').addEventListener('click', (e) => {
+                    e.stopPropagation(); togglePlaylist(masterIndex, e.target);
                 });
 
                 playlistContainer.appendChild(trackEl);
@@ -1081,30 +647,21 @@
 
         function togglePlaylist(masterIndex, btn) {
             const arrayPos = myPlaylist.indexOf(masterIndex);
-            
             if (arrayPos > -1) {
                 myPlaylist.splice(arrayPos, 1);
-                btn.classList.remove('saved');
-                btn.innerText = '♡';
+                btn.classList.remove('saved'); btn.innerText = '♡';
             } else {
                 myPlaylist.push(masterIndex);
-                btn.classList.add('saved');
-                btn.innerText = '♥';
+                btn.classList.add('saved'); btn.innerText = '♥';
             }
-            
             localStorage.setItem('suncat_playlist', JSON.stringify(myPlaylist));
-
-            if (currentSortMode === 'playlist') {
-                applySort('playlist');
-            }
+            if (currentSortMode === 'playlist') applySort('playlist');
         }
 
-        function loadAndPlayTrack(masterIndex) {
-            if (masterIndex === undefined || masterIndex === -1) return;
-
-            currentTrackIndex = masterIndex;
-            const track = playlistData[masterIndex];
-            
+        async function loadAndPlayTrack(index) {
+            if (index === undefined || index === -1) return;
+            currentTrackIndex = index;
+            const track = playlistData[index];
             renderPlaylist();
             
             trackTitleDisplay.style.opacity = 0;
@@ -1118,244 +675,180 @@
 
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: track.title,
-                    artist: 'Suncat',
-                    album: track.album || 'The Digital Archive'
+                    title: track.title, artist: 'Suncat', album: track.album || 'The Digital Archive'
                 });
                 navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
                 navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
             }
 
-            if (!isEngineRunning) setupAudioEngine();
+            if (!isEngineRunning) await setupAudioEngine();
         }
 
-        // --- MODAL LOGIC --- //
+        // --- MODAL LOGIC ---
         function openModal(index) {
             const track = playlistData[index];
             document.getElementById('modal-track-title').innerText = track.title;
             document.getElementById('modal-track-album').innerText = track.album;
             document.getElementById('modal-track-info').innerText = track.extraInfo;
             document.getElementById('modal-track-lyrics').innerText = track.lyrics;
-            
             infoModal.classList.add('show');
         }
-
-        function closeModal() {
-            infoModal.classList.remove('show');
-        }
-
-        infoModal.addEventListener('click', (e) => {
-            if (e.target === infoModal) closeModal();
-        });
+        function closeModal() { infoModal.classList.remove('show'); }
+        infoModal.addEventListener('click', (e) => { if (e.target === infoModal) closeModal(); });
 
 
-        function setupAudioEngine() {
+        // --- COMBINED AUDIO DSP (MASTERING + WORKLET) ---
+        async function setupAudioEngine() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
-            
-            // Create the source from the HTML audio element
-            source = audioCtx.createMediaElementSource(audioPlayer);
-
-            // ----------------------------------------------------
-            // THE "INDUSTRY POLISH" MASTERING CHAIN
-            // ----------------------------------------------------
-
-            // 1. Bass Boost (Warmth & Punch)
-            const bassEQ = audioCtx.createBiquadFilter();
-            bassEQ.type = 'lowshelf';
-            bassEQ.frequency.value = 120; // Target the punchy low-end
-            bassEQ.gain.value = 6;      // +3.5dB boost
-
-            // 2. High-end "Air" (Clarity)
-            const trebleEQ = audioCtx.createBiquadFilter();
-            trebleEQ.type = 'highshelf';
-            trebleEQ.frequency.value = 8000; // Target the crisp highs
-            trebleEQ.gain.value = 2.0;       // +2.0dB boost
-            // 3. Mid-Range Presence (Acoustic Guitar / Vocal Articulation)
-            const midEQ = audioCtx.createBiquadFilter();
-            midEQ.type = 'peaking';
-            midEQ.frequency.value = 1800; // 1.8kHz sits beautifully for acoustic presence
-            midEQ.Q.value = 1.2;          // A slightly wider bell curve for a more musical, natural sound
-            midEQ.gain.value = 2.5;       // A gentle +2.5dB nudge forward
-            // The X-Axis: Stereo Width
-            const panner = audioCtx.createStereoPanner();
-            panner.pan.value = 0; // You can automate this later to sweep left/right!
-
-            // The Z-Axis: Slapback Room Depth (Simulating a wall reflection)
-            const delay = audioCtx.createDelay();
-            delay.delayTime.value = 0.04; // 40 milliseconds feels like a small club room
-            const delayGain = audioCtx.createGain();
-            delayGain.gain.value = 0.15; // Keep it quiet so it doesn't muddy the mix, just adds depth
-            // 3. Overall Volume Boost (Makeup Gain)
-            const makeupGain = audioCtx.createGain();
-            makeupGain.gain.value = 1.6; // Boost overall volume by 60%
-
-            // 4. Dynamics Compressor (The Anti-Popping "Spotify" Glue)
-            const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20; // Start compressing early
-            compressor.knee.value = 20;       // Smooth curve
-            compressor.ratio.value = 4;       // Moderate compression ratio
-            compressor.attack.value = 0.005;  // Very fast attack to catch clipping peaks instantly
-            compressor.release.value = 0.15;  // Fast release to keep the energy pumping
-
-            // ----------------------------------------------------
-            // ROUTING THE AUDIO
-            // ----------------------------------------------------
-            
-            // Connect the dry chain
-                source.connect(bassEQ);
-                bassEQ.connect(midEQ);       
-                midEQ.connect(trebleEQ);     
-                trebleEQ.connect(panner);    
-                panner.connect(makeupGain);
-
-                // Connect the wet (Depth) chain
-                panner.connect(delay);       // Send a copy to the delay
-                delay.connect(delayGain);    // Control the volume of the room echo
-                delayGain.connect(makeupGain); // Mix it back in with the dry signal
-
-                // Final Polish
-                makeupGain.connect(compressor);
-                compressor.connect(analyser); 
-                analyser.connect(audioCtx.destination);
-            
-            // Set up visualizer data
             analyser.fftSize = 256; 
             bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
+            source = audioCtx.createMediaElementSource(audioPlayer);
+
+            // 1. Original Mastering Nodes
+            const bassEQ = audioCtx.createBiquadFilter();
+            bassEQ.type = 'lowshelf'; bassEQ.frequency.value = 120; bassEQ.gain.value = 6;
+
+            const trebleEQ = audioCtx.createBiquadFilter();
+            trebleEQ.type = 'highshelf'; trebleEQ.frequency.value = 8000; trebleEQ.gain.value = 2.0;
+
+            const midEQ = audioCtx.createBiquadFilter();
+            midEQ.type = 'peaking'; midEQ.frequency.value = 1800; midEQ.Q.value = 1.2; midEQ.gain.value = 2.5;
+
+            const panner = audioCtx.createStereoPanner();
+            panner.pan.value = 0;
+
+            const delay = audioCtx.createDelay();
+            delay.delayTime.value = 0.04;
+            const delayGain = audioCtx.createGain();
+            delayGain.gain.value = 0.15;
+
+            const makeupGain = audioCtx.createGain();
+            makeupGain.gain.value = 1.6;
+
+            const compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.value = -20; compressor.knee.value = 20;
+            compressor.ratio.value = 4; compressor.attack.value = 0.005; compressor.release.value = 0.15;
+
+            // 2. New AudioWorklet Node (Standalone Soft-Clipper)
+            const workletCode = `
+                class DynamicSoftClipper extends AudioWorkletProcessor {
+                    process(inputs, outputs) {
+                        const input = inputs[0];
+                        const output = outputs[0];
+                        if (!input || !input.length) return true;
+                        
+                        for (let channel = 0; channel < input.length; ++channel) {
+                            for (let i = 0; i < input[channel].length; ++i) {
+                                let s = input[channel][i];
+                                output[channel][i] = Math.tanh(s * 1.5); 
+                            }
+                        }
+                        return true;
+                    }
+                }
+                registerProcessor('suncat-clipper', DynamicSoftClipper);
+            `;
+            const blob = new Blob([workletCode], { type: 'application/javascript' });
+            const workletUrl = URL.createObjectURL(blob);
+            await audioCtx.audioWorklet.addModule(workletUrl);
+            const clipperNode = new AudioWorkletNode(audioCtx, 'suncat-clipper');
+
+            // 3. Routing Everything
+            source.connect(bassEQ);
+            bassEQ.connect(midEQ);       
+            midEQ.connect(trebleEQ);     
+            trebleEQ.connect(panner);    
+            panner.connect(makeupGain);
+
+            panner.connect(delay);       
+            delay.connect(delayGain);    
+            delayGain.connect(makeupGain); 
+
+            makeupGain.connect(compressor);
+            compressor.connect(clipperNode); // Clipper guards the visualizer and output
+            clipperNode.connect(analyser); 
+            analyser.connect(audioCtx.destination);
             
+            // Sync WebGL
+            dataTexture = new THREE.DataTexture(dataArray, bufferLength, 1, THREE.LuminanceFormat);
+            shaderUniforms.uAudioData.value = dataTexture;
+
             isEngineRunning = true;
-            renderVisualizer();
+            animateWebGL();
         }
 
-        function resizeCanvas() {
+        // --- WEBGL VISUALIZER ---
+        function initWebGL() {
             const container = document.getElementById('visualizer-container');
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = container.clientWidth * dpr;
-            canvas.height = container.clientHeight * dpr;
-            ctx.scale(dpr, dpr);
-        }
+            const canvas = document.getElementById('visualizer');
 
-        function drawIdleState() {
-            if (isEngineRunning) return;
-            requestAnimationFrame(drawIdleState);
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const cx = canvas.clientWidth / 2;
-            const cy = canvas.clientHeight / 2;
-            const time = Date.now() * 0.001;
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(0, 3, 10);
+            camera.lookAt(0, 0, 0);
 
-            ctx.beginPath();
-            ctx.arc(cx, cy, 50 + Math.sin(time) * 5, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255, 170, 0, 0.2)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
 
-        // --- UPGRADED PARTICLE SYSTEM ---
-        let particles = [];
-        function createParticles(cx, cy, intensity) {
-            for (let i = 0; i < intensity; i++) {
-                particles.push({
-                    x: cx, y: cy,
-                    xv: (Math.random() - 0.5) * intensity * 0.5,
-                    yv: (Math.random() - 0.5) * intensity * 0.5,
-                    life: 1.0,
-                    size: Math.random() * 3 + 1
-                });
-            }
-        }
+            const geometry = new THREE.PlaneGeometry(30, 20, 128, 64);
+            geometry.rotateX(-Math.PI / 2); 
 
-        // --- THE NEON RADIAL ENGINE ---
-        function renderVisualizer() {
-            requestAnimationFrame(renderVisualizer);
-            analyser.getByteFrequencyData(dataArray);
+            shaderUniforms = { uTime: { value: 0.0 }, uAudioData: { value: null } };
 
-            const cx = canvas.clientWidth / 2;
-            const cy = canvas.clientHeight / 2;
+            const material = new THREE.ShaderMaterial({
+                uniforms: shaderUniforms,
+                wireframe: true,
+                vertexShader: `
+                    uniform float uTime;
+                    uniform sampler2D uAudioData;
+                    varying float vElevation;
 
-            // 1. Sleek Background Clear (gives that faint motion trail)
-            ctx.fillStyle = 'rgba(2, 2, 5, 0.15)';
-            ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-            // 2. Calculate Bass Intensity
-            let bassSum = 0;
-            for(let i = 0; i < 8; i++) bassSum += dataArray[i];
-            const bassAvg = bassSum / 8;
-            const pulse = (bassAvg / 255);
-            
-            // 3. Spawn Bass Particles
-            if (bassAvg > 180) createParticles(cx, cy, 5); 
-
-            // 4. Update & Draw Particles
-            particles.forEach((p, index) => {
-                p.x += p.xv; p.y += p.yv; p.life -= 0.02;
-                if (p.life <= 0) particles.splice(index, 1);
-                ctx.fillStyle = `rgba(255, 170, 0, ${p.life})`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
+                    void main() {
+                        vec2 uvPos = vec2(uv.x, 0.0);
+                        float audioData = texture2D(uAudioData, uvPos).r;
+                        vec3 pos = position;
+                        
+                        float wave = sin(pos.x * 0.5 + uTime) * 0.5;
+                        float elevation = (audioData * 4.0) + wave;
+                        pos.y += elevation;
+                        
+                        vElevation = elevation;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying float vElevation;
+                    void main() {
+                        vec3 baseColor = vec3(0.0, 0.0, 0.1);
+                        vec3 neonColor = vec3(1.0, 0.66, 0.0); 
+                        vec3 finalColor = mix(baseColor, neonColor, vElevation / 3.0);
+                        gl_FragColor = vec4(finalColor, 1.0);
+                    }
+                `
             });
 
-            const baseRadius = 70 + (pulse * 20);
+            terrainMesh = new THREE.Mesh(geometry, material);
+            scene.add(terrainMesh);
 
-            // 5. Draw Symmetrical "Pulse" Glow
-            const glowGrad = ctx.createRadialGradient(cx, cy, baseRadius * 0.8, cx, cy, baseRadius * 1.5);
-            glowGrad.addColorStop(0, `rgba(255, 170, 0, ${0.1 + pulse * 0.3})`);
-            glowGrad.addColorStop(1, 'rgba(255, 170, 0, 0)');
-            ctx.fillStyle = glowGrad;
-            ctx.beginPath();
-            ctx.arc(cx, cy, baseRadius * 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 6. Render Spectrum Bars (Symmetrical)
-            const numBars = 80; 
-            const angleStep = Math.PI / numBars; // Half circle step
-
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-
-            for (let i = 0; i < numBars; i++) {
-                // Use i for one side, reflect for the other
-                const value = dataArray[i % 40]; 
-                const barHeight = Math.pow(value / 255, 2) * 140; // Easing for better "pop"
-                
-                // Draw two bars for every data point to create perfect symmetry
-                [1, -1].forEach(side => {
-                    const angle = (i * angleStep * side) - (Math.PI / 2);
-                    
-                    const x1 = cx + Math.cos(angle) * baseRadius;
-                    const y1 = cy + Math.sin(angle) * baseRadius;
-                    const x2 = cx + Math.cos(angle) * (baseRadius + barHeight);
-                    const y2 = cy + Math.sin(angle) * (baseRadius + barHeight);
-
-                    const hue = 35 + (i / numBars) * 15;
-                    ctx.strokeStyle = `hsl(${hue}, 100%, ${50 + pulse * 20}%)`;
-                    
-                    //ctx.shadowBlur = pulse * 15;
-                    //ctx.shadowColor = ctx.strokeStyle;
-
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                });
-            }
-            ctx.shadowBlur = 0; // Performance reset
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            renderer.render(scene, camera);
         }
 
-        // Keep this simple so it doesn't clash with the intro animations
-        function drawIdleState() {
-            if (isEngineRunning) return;
-            requestAnimationFrame(drawIdleState);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const cx = canvas.clientWidth / 2;
-            const cy = canvas.clientHeight / 2;
-            ctx.beginPath();
-            ctx.arc(cx, cy, 70, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255, 170, 0, 0.1)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+        function animateWebGL() {
+            requestAnimationFrame(animateWebGL);
+            if (isEngineRunning) {
+                analyser.getByteFrequencyData(dataArray);
+                dataTexture.needsUpdate = true; 
+            }
+            shaderUniforms.uTime.value -= 0.03;
+            renderer.render(scene, camera);
         }
 
         initApp();
