@@ -779,59 +779,118 @@
             animateWebGL();
         }
 
-        // --- WEBGL VISUALIZER ---
+        // --- UPGRADED WEBGL VISUALIZER (ORGANIC PARTICLES) ---
+        let particleSystem;
+
         function initWebGL() {
             const container = document.getElementById('visualizer-container');
             const canvas = document.getElementById('visualizer');
 
             scene = new THREE.Scene();
+            
+            // Adjust camera for a deep, volumetric look
             camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
-            camera.position.set(0, 3, 10);
+            camera.position.set(0, 0, 12);
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
 
-            const geometry = new THREE.PlaneGeometry(30, 20, 128, 64);
-            geometry.rotateX(-Math.PI / 2); 
+            // 1. Generate an Organic Cloud of Particles
+            const particleCount = 1500;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const freqIndices = new Float32Array(particleCount); // Maps each particle to a frequency band
 
-            shaderUniforms = { uTime: { value: 0.0 }, uAudioData: { value: null } };
+            for (let i = 0; i < particleCount; i++) {
+                // Spherical distribution
+                const r = 4 + Math.random() * 4; 
+                const theta = Math.random() * 2 * Math.PI;
+                const phi = Math.acos((Math.random() * 2) - 1);
 
+                positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);     // x
+                positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta); // y
+                positions[i * 3 + 2] = r * Math.cos(phi);                   // z
+
+                // Assign a random frequency index (0.0 to 1.0) to sample from the texture
+                freqIndices[i] = Math.random();
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('aFreq', new THREE.BufferAttribute(freqIndices, 1));
+
+            shaderUniforms = { 
+                uTime: { value: 0.0 }, 
+                uAudioData: { value: null } 
+            };
+
+            // 2. The Custom Particle Shader
             const material = new THREE.ShaderMaterial({
                 uniforms: shaderUniforms,
-                wireframe: true,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending, // This creates the intense, overlapping light effect
                 vertexShader: `
                     uniform float uTime;
                     uniform sampler2D uAudioData;
-                    varying float vElevation;
+                    
+                    attribute float aFreq;
+                    varying float vAudio;
+                    varying float vFreq;
 
                     void main() {
-                        vec2 uvPos = vec2(uv.x, 0.0);
-                        float audioData = texture2D(uAudioData, uvPos).r;
+                        // Sample the specific frequency for this particle
+                        float audioData = texture2D(uAudioData, vec2(aFreq, 0.0)).r;
+                        vAudio = audioData;
+                        vFreq = aFreq;
+                        
                         vec3 pos = position;
                         
-                        float wave = sin(pos.x * 0.5 + uTime) * 0.5;
-                        float elevation = (audioData * 4.0) + wave;
-                        pos.y += elevation;
+                        // Add slow, organic drift based on time and original position
+                        pos.x += sin(uTime * 0.5 + pos.y) * 1.5;
+                        pos.y += cos(uTime * 0.3 + pos.x) * 1.5;
                         
-                        vElevation = elevation;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                        // Push particles outward on bass hits
+                        vec3 direction = normalize(pos);
+                        pos += direction * (audioData * 5.0);
+
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_Position = projectionMatrix * mvPosition;
+                        
+                        // Size reacts to audio and perspective
+                        gl_PointSize = (4.0 + (audioData * 20.0)) * (20.0 / -mvPosition.z);
                     }
                 `,
                 fragmentShader: `
-                    varying float vElevation;
+                    varying float vAudio;
+                    varying float vFreq;
+
                     void main() {
-                        vec3 baseColor = vec3(0.0, 0.0, 0.1);
-                        vec3 neonColor = vec3(1.0, 0.66, 0.0); 
-                        vec3 finalColor = mix(baseColor, neonColor, vElevation / 3.0);
-                        gl_FragColor = vec4(finalColor, 1.0);
+                        // Create a soft, circular glow instead of a hard square pixel
+                        vec2 xy = gl_PointCoord.xy - vec2(0.5);
+                        float distance = length(xy);
+                        if (distance > 0.5) discard;
+                        
+                        // Soft edge fading
+                        float alpha = (0.5 - distance) * 2.0;
+
+                        // Color mapping: Teals and Pinks/Magentas based on frequency band
+                        vec3 colorLow = vec3(0.1, 0.8, 0.9);  // Teal
+                        vec3 colorHigh = vec3(0.9, 0.2, 0.6); // Pink/Magenta
+                        
+                        vec3 finalColor = mix(colorLow, colorHigh, vFreq);
+                        
+                        // Brighten based on audio amplitude
+                        finalColor += vec3(vAudio * 0.5);
+
+                        gl_FragColor = vec4(finalColor, alpha * (0.3 + vAudio));
                     }
                 `
             });
 
-            terrainMesh = new THREE.Mesh(geometry, material);
-            scene.add(terrainMesh);
+            particleSystem = new THREE.Points(geometry, material);
+            scene.add(particleSystem);
 
             window.addEventListener('resize', () => {
                 camera.aspect = container.clientWidth / container.clientHeight;
@@ -843,11 +902,20 @@
 
         function animateWebGL() {
             requestAnimationFrame(animateWebGL);
+            
             if (isEngineRunning) {
                 analyser.getByteFrequencyData(dataArray);
                 dataTexture.needsUpdate = true; 
             }
-            shaderUniforms.uTime.value -= 0.03;
+            
+            shaderUniforms.uTime.value += 0.01;
+            
+            // Slowly rotate the entire cloud for a 3D parallax feel
+            if (particleSystem) {
+                particleSystem.rotation.y -= 0.002;
+                particleSystem.rotation.z -= 0.001;
+            }
+            
             renderer.render(scene, camera);
         }
 
