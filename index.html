@@ -819,16 +819,13 @@
 // WebGL & Physics Globals
 let scene, camera, renderer, world;
 let timeDataArray; 
-let currentVisIndex = 0; // Now 0 through 8
+let currentVisIndex = 0; // 0=Nebula, 1=Core, 2=Vortex, 3=Liquid, 4=Mandala, 5=Pit
 
-// Mesh Trackers
-let nebulaSystem, coreSystem, vortexSystem;
-let tunnelSystem, liquidMesh, mandalaGroup;
-let pitGroup, orbitGroup, fountainGroup; 
+// Mesh Trackers (Exactly 6)
+let nebulaSystem, coreSystem, vortexSystem, liquidMesh, mandalaGroup, pitGroup;
 
-// Physics & Math Trackers
+// Math & Physics Trackers
 let nebulaVelocities = [], coreOriginalPositions = [], vortexAngles = [], liquidBasePos = [], lights = [];
-let tunnelBasePos = []; // NEW: Tracks the perfect tube shape
 let physicsObjects = [];
         // Custom Player Controls
             const btnMainPlay = document.getElementById('btn-main-play');
@@ -1299,7 +1296,6 @@ let physicsObjects = [];
 
 function initWebGL() {
     const container = document.getElementById('visualizer-container');
-    
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.z = 100;
@@ -1308,43 +1304,38 @@ function initWebGL() {
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // Global Materials & Lights
     const commonMat = { size: 1.5, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false };
-    
-    // NEW: Add ambient light so the lava lamp isn't pitch black
-    const ambientLight = new THREE.AmbientLight(0x404040, 2.0); 
-    scene.add(ambientLight);
+    scene.add(new THREE.AmbientLight(0x404040, 2.0)); 
 
-    const light1 = new THREE.PointLight(0xff00aa, 2, 300); light1.position.set(50, 50, 50); scene.add(light1);
-    const light2 = new THREE.PointLight(0x00ffff, 2, 300); light2.position.set(-50, -50, 50); scene.add(light2);
-    lights.push(light1, light2);
+    const l1 = new THREE.PointLight(0xff00aa, 2, 300); l1.position.set(50, 50, 50); scene.add(l1);
+    const l2 = new THREE.PointLight(0x00ffff, 2, 300); l2.position.set(-50, -50, 50); scene.add(l2);
+    lights.push(l1, l2);
 
-    // --- State 0: The Suncat Nebula ---
+    // 0: Suncat Nebula
     const nebGeo = new THREE.BufferGeometry();
     const nebPos = new Float32Array(2000 * 3);
     for(let i=0; i<2000; i++) {
-        nebPos[i*3] = (Math.random() - 0.5) * 150; nebPos[i*3+1] = (Math.random() - 0.5) * 150; nebPos[i*3+2] = (Math.random() - 0.5) * 150;   
-        nebulaVelocities.push(new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4));
+        nebPos[i*3] = (Math.random()-0.5)*150; nebPos[i*3+1] = (Math.random()-0.5)*150; nebPos[i*3+2] = (Math.random()-0.5)*150;   
+        nebulaVelocities.push(new THREE.Vector3((Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4));
     }
     nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos, 3));
     nebulaSystem = new THREE.Points(nebGeo, new THREE.PointsMaterial({ color: 0xff00aa, ...commonMat }));
     scene.add(nebulaSystem);
 
-    // --- State 1: The Runestone Core ---
+    // 1: Runestone Core
     const coreGeo = new THREE.BufferGeometry();
     const corePos = new Float32Array(2048 * 3);
     for(let i=0; i<2048; i++) {
-        const phi = Math.acos(-1 + (2 * i) / 2048);
-        const theta = Math.sqrt(2048 * Math.PI) * phi;
+        const phi = Math.acos(-1 + (2 * i) / 2048); const theta = Math.sqrt(2048 * Math.PI) * phi;
         const x = Math.cos(theta) * Math.sin(phi); const y = Math.sin(theta) * Math.sin(phi); const z = Math.cos(phi);
         coreOriginalPositions.push(new THREE.Vector3(x, y, z));
-        corePos[i*3] = x * 20; corePos[i*3+1] = y * 20; corePos[i*3+2] = z * 20;
+        corePos[i*3] = x*20; corePos[i*3+1] = y*20; corePos[i*3+2] = z*20;
     }
     coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
     coreSystem = new THREE.Points(coreGeo, new THREE.PointsMaterial({ color: 0x00ffff, ...commonMat, size: 2.0 }));
     coreSystem.visible = false; scene.add(coreSystem);
 
-    // --- State 2: The Moondog Vortex ---
+    // 2: Moondog Vortex
     const vortexGeo = new THREE.BufferGeometry();
     const vortexPos = new Float32Array(1500 * 3);
     for(let i=0; i<1500; i++) {
@@ -1356,323 +1347,130 @@ function initWebGL() {
     vortexSystem = new THREE.Points(vortexGeo, new THREE.PointsMaterial({ color: 0xffaa00, ...commonMat }));
     vortexSystem.visible = false; scene.add(vortexSystem);
 
-    // --- State 3: The Winding Wormhole ---
-    const tunnelGeo = new THREE.BufferGeometry();
-    const tPos = new Float32Array(3000 * 3); // More density
-    for(let i=0; i<3000; i++) {
-        const angle = Math.random() * Math.PI * 2; 
-        const radius = 25 + Math.random() * 5; // Tighter tube
-        const bx = Math.cos(angle) * radius; 
-        const by = Math.sin(angle) * radius; 
-        const bz = (Math.random() - 0.5) * 800; // Much deeper
-        tPos[i*3] = bx; tPos[i*3+1] = by; tPos[i*3+2] = bz;
-        tunnelBasePos.push({x: bx, y: by, z: bz}); // Store original circle
-    }
-    tunnelGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
-    // Notice it starts white, we will color it dynamically with the audio
-    tunnelSystem = new THREE.Points(tunnelGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending }));
-    tunnelSystem.visible = false; scene.add(tunnelSystem);
-
-    // --- State 4: The Liquid Metaball (Fixed Materials) ---
+    // 3: Liquid Metamesh
     const liquidGeo = new THREE.IcosahedronGeometry(30, 8); 
     const lPos = liquidGeo.attributes.position.array;
     for(let i=0; i<lPos.length; i+=3) liquidBasePos.push(new THREE.Vector3(lPos[i], lPos[i+1], lPos[i+2]));
-    
-    // Standard Material with emissive glow makes it fully visible in the void
-    const fluidMat = new THREE.MeshStandardMaterial({ 
-        color: 0xff00aa, emissive: 0x220044, roughness: 0.2, metalness: 0.6 
-    });
-    liquidMesh = new THREE.Mesh(liquidGeo, fluidMat);
+    liquidMesh = new THREE.Mesh(liquidGeo, new THREE.MeshStandardMaterial({ color: 0xff00aa, emissive: 0x220044, roughness: 0.2, metalness: 0.6 }));
     liquidMesh.visible = false; scene.add(liquidMesh);
 
-    // --- State 5: The Divination Mandala ---
+    // 4: Divination Mandala
     mandalaGroup = new THREE.Group();
     const mGeo = new THREE.BufferGeometry();
     const mPos = new Float32Array(128 * 3);
-    for(let i=0; i<128; i++) { mPos[i*3] = i * 0.4; mPos[i*3+1] = Math.sin(i * 0.2) * 5; mPos[i*3+2] = 0; }
+    for(let i=0; i<128; i++) { mPos[i*3] = i*0.4; mPos[i*3+1] = Math.sin(i*0.2)*5; mPos[i*3+2] = 0; }
     mGeo.setAttribute('position', new THREE.BufferAttribute(mPos, 3));
     const mMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
     for(let i=0; i<8; i++) {
-        const arm = new THREE.Line(mGeo, mMat); arm.rotation.z = (i / 8) * Math.PI * 2; mandalaGroup.add(arm);
-        const mirrorArm = new THREE.Line(mGeo, mMat); mirrorArm.rotation.z = (i / 8) * Math.PI * 2; mirrorArm.scale.y = -1; mandalaGroup.add(mirrorArm);
+        const arm = new THREE.Line(mGeo, mMat); arm.rotation.z = (i/8)*Math.PI*2; mandalaGroup.add(arm);
+        const mir = new THREE.Line(mGeo, mMat); mir.rotation.z = (i/8)*Math.PI*2; mir.scale.y = -1; mandalaGroup.add(mir);
     }
     mandalaGroup.visible = false; scene.add(mandalaGroup);
 
-// --- INIT PHYSICS WORLD ---
-    world = new CANNON.World();
-    world.gravity.set(0, -60, 0); 
-    world.broadphase = new CANNON.NaiveBroadphase();
-    
-    // NEW: Make things bouncy!
-    const physicsMaterial = new CANNON.Material("standard");
-    const physicsContactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, {
-        friction: 0.1,
-        restitution: 0.8 // 80% Bounce back
-    });
-    world.addContactMaterial(physicsContactMaterial);
-    
-    // Invisible Physics Floor
-    const floorBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane(), material: physicsMaterial });
-    floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-    floorBody.position.y = -20;
-    world.addBody(floorBody);
+    // 5: Box Bounce (Physics Pit)
+    world = new CANNON.World(); world.gravity.set(0, -60, 0);
+    const pMat = new CANNON.Material("standard");
+    world.addContactMaterial(new CANNON.ContactMaterial(pMat, pMat, { friction: 0.1, restitution: 0.8 }));
+    const floor = new CANNON.Body({ mass: 0, shape: new CANNON.Plane(), material: pMat });
+    floor.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); floor.position.y = -20;
+    world.addBody(floor);
 
-    // --- State 6: The Shockwave Pit ---
     pitGroup = new THREE.Group();
     const boxGeo = new THREE.BoxGeometry(2, 2, 2);
     const boxMat = new THREE.MeshPhysicalMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
-    
     for(let i=0; i<150; i++) {
-        const mesh = new THREE.Mesh(boxGeo, boxMat);
-        pitGroup.add(mesh);
-        
-        const body = new CANNON.Body({
-            mass: 1,
-            shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-            position: new CANNON.Vec3((Math.random()-0.5)*40, Math.random()*20, (Math.random()-0.5)*40),
-            material: physicsMaterial
-        });
-        world.addBody(body);
-        physicsObjects.push({ mesh, body, state: 6 });
+        const mesh = new THREE.Mesh(boxGeo, boxMat); pitGroup.add(mesh);
+        const body = new CANNON.Body({ mass: 1, shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)), material: pMat, position: new CANNON.Vec3((Math.random()-0.5)*40, Math.random()*20, (Math.random()-0.5)*40)});
+        world.addBody(body); physicsObjects.push({ mesh, body, state: 5 });
     }
     pitGroup.visible = false; scene.add(pitGroup);
 
-    // --- State 7: The Orbital Attractor ---
-    orbitGroup = new THREE.Group();
-    const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
-    const orbitMat = new THREE.MeshPhysicalMaterial({ color: 0x00ffff, metalness: 0.5, roughness: 0.1 });
-    
-    for(let i=0; i<150; i++) {
-        const mesh = new THREE.Mesh(sphereGeo, orbitMat);
-        orbitGroup.add(mesh);
-        
-        const body = new CANNON.Body({
-            mass: 1,
-            shape: new CANNON.Sphere(1.5),
-            position: new CANNON.Vec3((Math.random()-0.5)*60, (Math.random()-0.5)*60, (Math.random()-0.5)*60)
-            , material: physicsMaterial
-        });
-        world.addBody(body);
-        physicsObjects.push({ mesh, body, state: 7 });
-    }
-    orbitGroup.visible = false; scene.add(orbitGroup);
-
-    // --- State 8: The Frequency Fountains ---
-    fountainGroup = new THREE.Group();
-    const fMat = new THREE.MeshPhysicalMaterial({ color: 0xff00ff, metalness: 0.3, roughness: 0.4 });
-    
-    for(let i=0; i<100; i++) {
-        const mesh = new THREE.Mesh(sphereGeo, fMat);
-        fountainGroup.add(mesh);
-        
-        const body = new CANNON.Body({
-            mass: 2,
-            shape: new CANNON.Sphere(1.5),
-            position: new CANNON.Vec3(0, -30, 0) // Start hidden under floor
-            , material: physicsMaterial
-        });
-        world.addBody(body);
-        physicsObjects.push({ mesh, body, state: 8 });
-    }
-    fountainGroup.visible = false; scene.add(fountainGroup);
-
-    // --- UPDATE SWITCHER LOGIC ---
-    // Update your switcher event listener to cycle 9 states and toggle the new groups
+    // The 6-State Switcher
     btnVisToggle.addEventListener('click', () => {
-        currentVisIndex = (currentVisIndex + 1) % 9; // NOW 9 STATES
-        
-        nebulaSystem.visible = false; coreSystem.visible = false; vortexSystem.visible = false;
-        tunnelSystem.visible = false; liquidMesh.visible = false; mandalaGroup.visible = false;
-        pitGroup.visible = false; orbitGroup.visible = false; fountainGroup.visible = false;
-
-        if (currentVisIndex === 0) nebulaSystem.visible = true;
-        if (currentVisIndex === 1) coreSystem.visible = true;
-        if (currentVisIndex === 2) vortexSystem.visible = true;
-        if (currentVisIndex === 3) tunnelSystem.visible = true;
-        if (currentVisIndex === 4) liquidMesh.visible = true;
-        if (currentVisIndex === 5) mandalaGroup.visible = true;
-        if (currentVisIndex === 6) pitGroup.visible = true;
-        if (currentVisIndex === 7) orbitGroup.visible = true;
-        if (currentVisIndex === 8) fountainGroup.visible = true;
+        currentVisIndex = (currentVisIndex + 1) % 6;
+        nebulaSystem.visible = (currentVisIndex === 0);
+        coreSystem.visible = (currentVisIndex === 1);
+        vortexSystem.visible = (currentVisIndex === 2);
+        liquidMesh.visible = (currentVisIndex === 3);
+        mandalaGroup.visible = (currentVisIndex === 4);
+        pitGroup.visible = (currentVisIndex === 5);
     });
-
     renderVisualizer();
 }
 
 function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
-
     if (isEngineRunning) {
         analyser.getByteFrequencyData(dataArray);
         analyser.getByteTimeDomainData(timeDataArray);
     }
-
-    let bassSum = 0; let midSum = 0;
-    if (isEngineRunning) {
-        for(let i = 0; i < 8; i++) bassSum += dataArray[i];
-        for(let i = 16; i < 32; i++) midSum += dataArray[i];
-    }
-    const bassAvg = bassSum / 8; const midAvg = midSum / 16;
-    const audioEnergy = bassAvg / 255; 
+    let bassSum = 0; if (isEngineRunning) { for(let i = 0; i < 8; i++) bassSum += dataArray[i]; }
+    const audioEnergy = bassSum / 2040; 
     const time = Date.now() * 0.001;
 
-    // --- State 0: Nebula ---
+    // 0: Nebula
     if (currentVisIndex === 0 && isEngineRunning) {
-        const positions = nebulaSystem.geometry.attributes.position.array;
-        const speedBoost = audioEnergy > 0.8 ? 4.0 : 0.5; 
-        for(let i = 0; i < positions.length / 3; i++) {
-            positions[i*3] += nebulaVelocities[i].x * speedBoost;
-            positions[i*3+1] += nebulaVelocities[i].y * speedBoost;
-            positions[i*3+2] += nebulaVelocities[i].z * speedBoost;
-            if (Math.abs(positions[i*3]) > 120 || Math.abs(positions[i*3+1]) > 120 || Math.abs(positions[i*3+2]) > 120) {
-                positions[i*3] = (Math.random() - 0.5) * 20; positions[i*3+1] = (Math.random() - 0.5) * 20; positions[i*3+2] = (Math.random() - 0.5) * 20;
-            }
+        const pos = nebulaSystem.geometry.attributes.position.array;
+        const speed = audioEnergy > 0.8 ? 4.0 : 0.5;
+        for(let i=0; i<pos.length/3; i++){
+            pos[i*3]+=nebulaVelocities[i].x*speed; pos[i*3+1]+=nebulaVelocities[i].y*speed; pos[i*3+2]+=nebulaVelocities[i].z*speed;
+            if(Math.abs(pos[i*3])>120) pos[i*3]=(Math.random()-0.5)*20;
         }
         nebulaSystem.geometry.attributes.position.needsUpdate = true;
-        const sysScale = 1 + (audioEnergy * 0.3); nebulaSystem.scale.set(sysScale, sysScale, sysScale);
-        nebulaSystem.rotation.y += 0.002; nebulaSystem.rotation.z += 0.001;
+        nebulaSystem.rotation.y += 0.002;
     }
-
-    // --- State 1: Core ---
+    // 1: Core
     else if (currentVisIndex === 1 && isEngineRunning) {
-        const positions = coreSystem.geometry.attributes.position.array;
-        for(let i = 0; i < coreOriginalPositions.length; i++) {
-            const freqVal = dataArray[i % (bufferLength / 2)] / 255;
-            const dynamicRadius = 20 + Math.pow(freqVal, 2) * 40; 
-            const originalVec = coreOriginalPositions[i];
-            positions[i*3] = originalVec.x * dynamicRadius; positions[i*3+1] = originalVec.y * dynamicRadius; positions[i*3+2] = originalVec.z * dynamicRadius;
+        const pos = coreSystem.geometry.attributes.position.array;
+        for(let i=0; i<coreOriginalPositions.length; i++){
+            const f = dataArray[i % 128]/255; const rad = 20 + Math.pow(f, 2)*40;
+            const v = coreOriginalPositions[i]; pos[i*3]=v.x*rad; pos[i*3+1]=v.y*rad; pos[i*3+2]=v.z*rad;
         }
         coreSystem.geometry.attributes.position.needsUpdate = true;
-        coreSystem.material.color.setHSL(0.5 - (audioEnergy * 0.2), 1, 0.6);
-        coreSystem.rotation.y += 0.005; coreSystem.rotation.x += 0.003;
+        coreSystem.rotation.y += 0.005;
     }
-
-    // --- State 2: Vortex ---
+    // 2: Vortex
     else if (currentVisIndex === 2 && isEngineRunning) {
-        const positions = vortexSystem.geometry.attributes.position.array;
+        const pos = vortexSystem.geometry.attributes.position.array;
         for(let i = 0; i < vortexAngles.length; i++) {
-            const freqVal = dataArray[Math.floor((i / vortexAngles.length) * bufferLength)] / 255;
-            const dynamicRadius = 20 + Math.sin(i * 0.05) * 10 + (freqVal * 25);
+            const freqVal = dataArray[Math.floor((i / vortexAngles.length) * 128)] / 255;
+            const dynamicRadius = 25 + (freqVal * 30);
             vortexAngles[i] += 0.02 + (audioEnergy * 0.05); 
             const angle = vortexAngles[i]; const arm = i % 2 === 0 ? 1 : -1;
-            positions[i*3] = Math.cos(angle) * dynamicRadius * arm; positions[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
+            pos[i*3] = Math.cos(angle) * dynamicRadius * arm; pos[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
         }
         vortexSystem.geometry.attributes.position.needsUpdate = true;
         vortexSystem.rotation.x = 0.2;
     }
-
-    // --- State 3: Winding Wormhole ---
+    // 3: Metamesh (Liquid)
     else if (currentVisIndex === 3) {
-        const positions = tunnelSystem.geometry.attributes.position.array;
-        const speed = 2.0 + (audioEnergy * 8); 
-        
-        for(let i = 0; i < positions.length / 3; i++) {
-            tunnelBasePos[i].z += speed; 
-            if (tunnelBasePos[i].z > 200) tunnelBasePos[i].z = -600; // Loop seamlessly
-            
-            const z = tunnelBasePos[i].z;
-            
-            // The Winding Math: Offsets X and Y based on Z depth to create curves
-            const windX = Math.sin(z * 0.005 + time) * 30;
-            const windY = Math.cos(z * 0.004 + time * 0.8) * 30;
-            
-            positions[i*3] = tunnelBasePos[i].x + windX;
-            positions[i*3+1] = tunnelBasePos[i].y + windY;
-            positions[i*3+2] = z;
-        }
-        tunnelSystem.geometry.attributes.position.needsUpdate = true;
-        
-        // Dynamically color the tube walls based on audio energy
-        tunnelSystem.material.color.setHSL((time * 0.1) % 1, 1, 0.4 + (audioEnergy * 0.6));
-    }
-
-    // --- State 4: Liquid Metaball ---
-    else if (currentVisIndex === 4) {
-        const positions = liquidMesh.geometry.attributes.position.array;
-        for(let i = 0; i < liquidBasePos.length; i++) {
-            const base = liquidBasePos[i];
-            const wave1 = Math.sin(base.x * 0.1 + time * 2); const wave2 = Math.cos(base.y * 0.1 + time * 2); const wave3 = Math.sin(base.z * 0.1 + time * 2);
-            const freqVal = (dataArray[i % bufferLength] || 0) / 255;
-            const displacement = 1 + (wave1 * wave2 * wave3 * 0.15) + (freqVal * audioEnergy * 0.4);
-            positions[i*3] = base.x * displacement; positions[i*3+1] = base.y * displacement; positions[i*3+2] = base.z * displacement;
+        const pos = liquidMesh.geometry.attributes.position.array;
+        for(let i=0; i<liquidBasePos.length; i++){
+            const b = liquidBasePos[i];
+            const wave = Math.sin(b.x*0.1+time*2)*Math.cos(b.y*0.1+time*2);
+            const disp = 1 + (wave*0.15) + (dataArray[i%128]/255 * audioEnergy * 0.4);
+            pos[i*3]=b.x*disp; pos[i*3+1]=b.y*disp; pos[i*3+2]=b.z*disp;
         }
         liquidMesh.geometry.attributes.position.needsUpdate = true;
-        liquidMesh.geometry.computeVertexNormals(); 
-        liquidMesh.rotation.y += 0.005; liquidMesh.rotation.x += 0.002;
-        lights[0].intensity = 1 + audioEnergy * 6; lights[1].intensity = 1 + audioEnergy * 6;
+        liquidMesh.geometry.computeVertexNormals();
+        lights[0].intensity = 1 + audioEnergy*6;
     }
-
-    // --- State 5: Mandala ---
-    else if (currentVisIndex === 5) {
-        mandalaGroup.rotation.z -= 0.002 + (audioEnergy * 0.02);
-        const scale = 1 + (audioEnergy * 0.4); mandalaGroup.scale.set(scale, scale, 1);
-        mandalaGroup.children.forEach((arm) => {
-            const positions = arm.geometry.attributes.position.array;
-            for(let i=0; i < positions.length / 3; i++) {
-                const waveform = (timeDataArray[i] / 128.0) - 1.0; 
-                positions[i*3+1] = Math.sin(i * 0.2 + time * 5) * 5 + (waveform * 12);
-            }
+    // 4: Mandala
+    else if (currentVisIndex === 4) {
+        const s = 1 + (audioEnergy*0.4); mandalaGroup.scale.set(s,s,1);
+        mandalaGroup.children.forEach(arm => {
+            const pos = arm.geometry.attributes.position.array;
+            for(let i=0; i<pos.length/3; i++){ pos[i*3+1] = Math.sin(i*0.2+time*5)*5 + (((timeDataArray[i]/128)-1)*12); }
             arm.geometry.attributes.position.needsUpdate = true;
         });
     }
-// --- PHYSICS ENGINE SYNC & LOGIC ---
-    if (currentVisIndex >= 6) {
-        world.step(1 / 60); // Advance the physics simulation
-        
+    // 5: Box Bounce (Physics)
+    if (currentVisIndex === 5) {
+        world.step(1/60);
         physicsObjects.forEach(obj => {
-            // Only update meshes for the active state to save performance
-            if (obj.state === currentVisIndex) {
-                obj.mesh.position.copy(obj.body.position);
-                obj.mesh.quaternion.copy(obj.body.quaternion);
-
-                // --- State 6: Shockwave Pit Physics ---
-                if (currentVisIndex === 6 && isEngineRunning && audioEnergy > 0.85) {
-                    // If bass hits hard, blast cubes resting near the floor upwards
-                    if (obj.body.position.y < -15) {
-                        obj.body.velocity.set((Math.random()-0.5)*40, audioEnergy * 80, (Math.random()-0.5)*40);
-                        obj.body.angularVelocity.set(Math.random()*10, Math.random()*10, Math.random()*10);
-                    }
-                }
-
-                // --- State 7: Orbital Attractor Physics ---
-                if (currentVisIndex === 7 && isEngineRunning) {
-                    const center = new CANNON.Vec3(0, 0, 0);
-                    const direction = center.vsub(obj.body.position);
-                    const distance = direction.length();
-                    direction.normalize();
-                    
-                    // Give them a tangential push so they orbit in a circle instead of falling straight in
-                    const tangent = new CANNON.Vec3(-direction.z, 0, direction.x);
-                    obj.body.applyForce(tangent.mult(40), obj.body.position);
-                    
-                    if (distance > 8) {
-                        // Pull them in if they are far away
-                        const gravityStrength = 30 + (audioEnergy * 300);
-                        obj.body.applyForce(direction.mult(gravityStrength), obj.body.position);
-                    } else {
-                        // Violently repel them if they clump too close to the center
-                        obj.body.applyForce(direction.mult(-300), obj.body.position);
-                    }
-                    
-                    obj.body.velocity.mult(0.96, obj.body.velocity); // Drag
-                }
-
-                // --- State 8: Frequency Fountains Physics ---
-                if (currentVisIndex === 8 && isEngineRunning) {
-                    // Shoot resting bodies upwards based on audio energy
-                    if (obj.body.position.y <= -18 && Math.random() < audioEnergy * 0.3) {
-                        // Reset to center floor
-                        obj.body.position.set((Math.random()-0.5)*15, -15, (Math.random()-0.5)*15);
-                        // Blast upwards
-                        obj.body.velocity.set((Math.random()-0.5)*10, 60 + (audioEnergy * 100), (Math.random()-0.5)*10);
-                    }
-                    
-                    // Catch bodies that fly off the edges and recycle them immediately
-                    if (obj.body.position.y < -30 || Math.abs(obj.body.position.x) > 50) {
-                        obj.body.position.set(0, -19, 0);
-                        obj.body.velocity.set(0,0,0);
-                    }
-                }
+            obj.mesh.position.copy(obj.body.position); obj.mesh.quaternion.copy(obj.body.quaternion);
+            if(isEngineRunning && audioEnergy > 0.85 && obj.body.position.y < -15) {
+                obj.body.velocity.set((Math.random()-0.5)*40, audioEnergy*80, (Math.random()-0.5)*40);
             }
         });
     }
