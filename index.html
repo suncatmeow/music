@@ -328,7 +328,30 @@
         input[type=range]::-webkit-slider-thumb:hover {
             transform: scale(1.3);
         }
+        /* --- SEARCH BAR --- */
+.search-bar {
+    width: 100%;
+    padding: 0.8rem 1.2rem;
+    margin-top: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    color: var(--text-main);
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
 
+.search-bar::placeholder {
+    color: var(--text-muted);
+}
+
+.search-bar:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-glow);
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);
+}
         /* --- SORTING CONTROLS --- */
         .sort-controls {
             display: flex;
@@ -510,6 +533,7 @@
         .bio-text { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
     <noscript>
@@ -624,8 +648,9 @@
     <div class="app-container">
         <main class="glass-panel player-panel">
             <header>
-                <h1>Suncat Studios</h1>
-            </header>
+        <h1>Suncat Studios</h1>
+        <input type="text" id="search-bar" class="search-bar animate-entry delay-1" placeholder="Search for a track or album..." autocomplete="off">
+    </header>
             
             <div id="visualizer-container" style="position: relative;">
                 <canvas id="visualizer"></canvas>
@@ -743,7 +768,7 @@
             //Suncat IV
             { title: "My Baby Don't Love Me No More", src: "My Baby Don't Love Me No More.mp3", duration: "1:56", rating: 4, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
             { title: "Don't Be Late", src: "Don't Be Late.mp3", duration: "1:50", rating: 2, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
-            { title: "No Sense of Direction", src: "No Sense of Direction.mp3", duration: "1:28", rating: 3, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
+            { title: "No Sense of Direction", src: "No Sense of Direction.mp3", duration: "1:28", rating: 2, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
             { title: "Since My Baby Gone", src: "Since My Baby Gone.mp3", duration: "2:07", rating: 4, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
             { title: "That's What I Need", src: "That's What I Need.mp3", duration: "2:05", rating: 5, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
             { title: "Cry (If You Got the Blues)", src: "Cry (If You Got the Blues).mp3", duration: "1:48", rating: 2, album: "Suncat IV", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat IV." },
@@ -786,17 +811,21 @@
             const trackTitleDisplay = document.getElementById('track-title');
             const canvas = document.getElementById('visualizer');
             const btnVisToggle = document.getElementById('btn-vis-toggle');
-
-            // WebGL Globals
-let scene, camera, renderer;
+            let currentSearchQuery = '';
+            const searchInput = document.getElementById('search-bar');
+// WebGL & Physics Globals
+let scene, camera, renderer, world;
 let timeDataArray; 
-let currentVisIndex = 0; // 0=Nebula, 1=Core, 2=Vortex
-let nebulaSystem, coreSystem, vortexSystem;
+let currentVisIndex = 0; // Now 0 through 8
 
-// Math trackers for the particles
-let nebulaVelocities = [];
-let coreOriginalPositions = []; // Tracks the base sphere for the exploding core
-let vortexAngles = []; // Tracks the spiral math
+// Mesh Trackers
+let nebulaSystem, coreSystem, vortexSystem;
+let tunnelSystem, liquidMesh, mandalaGroup;
+let pitGroup, orbitGroup, fountainGroup; 
+
+// Physics & Math Trackers
+let nebulaVelocities = [], coreOriginalPositions = [], vortexAngles = [], liquidBasePos = [], lights = [];
+let physicsObjects = []; // Syncs Three.js meshes with Cannon.js bodies
         // Custom Player Controls
             const btnMainPlay = document.getElementById('btn-main-play');
             const btnPrev = document.getElementById('btn-prev');
@@ -847,7 +876,11 @@ let vortexAngles = []; // Tracks the spiral math
                     navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed: ', err));
                 });
             }
-
+            // Search Bar Listener (Real-time filtering)
+            searchInput.addEventListener('input', (e) => {
+                currentSearchQuery = e.target.value.toLowerCase().trim();
+                applySort(currentSortMode, selectedAlbum);
+            });
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
         }
@@ -914,7 +947,15 @@ let vortexAngles = []; // Tracks the spiral math
             } else if (mode === 'playlist') {
                 displayOrder = myPlaylist.map(Number); 
             }
-
+            // Apply Search Filter
+            if (currentSearchQuery !== '') {
+                displayOrder = displayOrder.filter(masterIndex => {
+                    const track = playlistData[masterIndex];
+                    // Search both track titles and album names
+                    return track.title.toLowerCase().includes(currentSearchQuery) || 
+                        track.album.toLowerCase().includes(currentSearchQuery);
+                });
+            }
             document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
             
             // Safely apply active class to the top buttons
@@ -999,7 +1040,7 @@ let vortexAngles = []; // Tracks the spiral math
 
         function renderPlaylist() {
             playlistContainer.innerHTML = ''; 
-            if (currentSortMode === 'album' && !selectedAlbum) {
+            if (currentSortMode === 'album' && !selectedAlbum && currentSearchQuery === '') {
                 // Get an array of unique album names
                 const albums = [...new Set(playlistData.map(t => t.album))];
 
@@ -1252,111 +1293,183 @@ let vortexAngles = []; // Tracks the spiral math
                 }
             }
 
-   function initWebGL() {
+function initWebGL() {
     const container = document.getElementById('visualizer-container');
     
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 100; // Pulled back for massive particle systems
+    camera.position.z = 100;
 
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('visualizer'), alpha: true, antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    const commonMat = {
-        size: 1.5,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-    };
+    // Global Materials & Lights
+    const commonMat = { size: 1.5, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false };
+    
+    const light1 = new THREE.PointLight(0xff00aa, 2, 300); light1.position.set(50, 50, 50); scene.add(light1);
+    const light2 = new THREE.PointLight(0x00ffff, 2, 300); light2.position.set(-50, -50, 50); scene.add(light2);
+    lights.push(light1, light2);
 
     // --- State 0: The Suncat Nebula ---
     const nebGeo = new THREE.BufferGeometry();
-    const nebCount = 2000; 
-    const nebPos = new Float32Array(nebCount * 3);
-    for(let i = 0; i < nebCount; i++) {
-        nebPos[i*3] = (Math.random() - 0.5) * 150;     
-        nebPos[i*3+1] = (Math.random() - 0.5) * 150;   
-        nebPos[i*3+2] = (Math.random() - 0.5) * 150;   
-        
-        nebulaVelocities.push(new THREE.Vector3(
-            (Math.random() - 0.5) * 0.4,
-            (Math.random() - 0.5) * 0.4,
-            (Math.random() - 0.5) * 0.4
-        ));
+    const nebPos = new Float32Array(2000 * 3);
+    for(let i=0; i<2000; i++) {
+        nebPos[i*3] = (Math.random() - 0.5) * 150; nebPos[i*3+1] = (Math.random() - 0.5) * 150; nebPos[i*3+2] = (Math.random() - 0.5) * 150;   
+        nebulaVelocities.push(new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4));
     }
     nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos, 3));
-    const nebMat = new THREE.PointsMaterial({ color: 0xff00aa, ...commonMat });
-    nebulaSystem = new THREE.Points(nebGeo, nebMat);
+    nebulaSystem = new THREE.Points(nebGeo, new THREE.PointsMaterial({ color: 0xff00aa, ...commonMat }));
     scene.add(nebulaSystem);
 
-    // --- State 1: The Runestone Core (Exploding Sphere) ---
+    // --- State 1: The Runestone Core ---
     const coreGeo = new THREE.BufferGeometry();
-    const coreCount = 2048; // Dense sphere
-    const corePos = new Float32Array(coreCount * 3);
-    for(let i = 0; i < coreCount; i++) {
-        // Math to distribute points evenly on a sphere
-        const phi = Math.acos(-1 + (2 * i) / coreCount);
-        const theta = Math.sqrt(coreCount * Math.PI) * phi;
-        
-        const x = Math.cos(theta) * Math.sin(phi);
-        const y = Math.sin(theta) * Math.sin(phi);
-        const z = Math.cos(phi);
-
-        // Store original normalized vectors for pushing outward
+    const corePos = new Float32Array(2048 * 3);
+    for(let i=0; i<2048; i++) {
+        const phi = Math.acos(-1 + (2 * i) / 2048);
+        const theta = Math.sqrt(2048 * Math.PI) * phi;
+        const x = Math.cos(theta) * Math.sin(phi); const y = Math.sin(theta) * Math.sin(phi); const z = Math.cos(phi);
         coreOriginalPositions.push(new THREE.Vector3(x, y, z));
-        
-        corePos[i*3] = x * 20;
-        corePos[i*3+1] = y * 20;
-        corePos[i*3+2] = z * 20;
+        corePos[i*3] = x * 20; corePos[i*3+1] = y * 20; corePos[i*3+2] = z * 20;
     }
     coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
-    const coreMat = new THREE.PointsMaterial({ color: 0x00ffff, ...commonMat, size: 2.0 });
-    coreSystem = new THREE.Points(coreGeo, coreMat);
-    coreSystem.visible = false;
-    scene.add(coreSystem);
+    coreSystem = new THREE.Points(coreGeo, new THREE.PointsMaterial({ color: 0x00ffff, ...commonMat, size: 2.0 }));
+    coreSystem.visible = false; scene.add(coreSystem);
 
-    // --- State 2: The Moondog Vortex (Double Helix) ---
+    // --- State 2: The Moondog Vortex ---
     const vortexGeo = new THREE.BufferGeometry();
-    const vortexCount = 1500;
-    const vortexPos = new Float32Array(vortexCount * 3);
-    for(let i = 0; i < vortexCount; i++) {
-        const y = (i / vortexCount) * 200 - 100; // Spreads from -100 to 100 on Y axis
-        const angle = i * 0.1;
-        vortexAngles.push(angle);
-
-        // Two intersecting spirals
-        const radius = 25 + Math.sin(i * 0.05) * 10;
+    const vortexPos = new Float32Array(1500 * 3);
+    for(let i=0; i<1500; i++) {
+        const angle = i * 0.1; vortexAngles.push(angle);
         const arm = i % 2 === 0 ? 1 : -1; 
-        
-        vortexPos[i*3] = Math.cos(angle) * radius * arm;
-        vortexPos[i*3+1] = y;
-        vortexPos[i*3+2] = Math.sin(angle) * radius * arm;
+        vortexPos[i*3] = Math.cos(angle) * 25 * arm; vortexPos[i*3+1] = (i / 1500) * 200 - 100; vortexPos[i*3+2] = Math.sin(angle) * 25 * arm;
     }
     vortexGeo.setAttribute('position', new THREE.BufferAttribute(vortexPos, 3));
-    const vortexMat = new THREE.PointsMaterial({ color: 0xffaa00, ...commonMat });
-    vortexSystem = new THREE.Points(vortexGeo, vortexMat);
-    vortexSystem.visible = false;
-    scene.add(vortexSystem);
+    vortexSystem = new THREE.Points(vortexGeo, new THREE.PointsMaterial({ color: 0xffaa00, ...commonMat }));
+    vortexSystem.visible = false; scene.add(vortexSystem);
 
-    // Switcher Logic
-    btnVisToggle.addEventListener('click', () => {
-        currentVisIndex = (currentVisIndex + 1) % 3; 
+    // --- State 3: The Infinite Wormhole ---
+    const tunnelGeo = new THREE.BufferGeometry();
+    const tPos = new Float32Array(2000 * 3);
+    for(let i=0; i<2000; i++) {
+        const angle = Math.random() * Math.PI * 2; const radius = 25 + Math.random() * 20;
+        tPos[i*3] = Math.cos(angle) * radius; tPos[i*3+1] = Math.sin(angle) * radius; tPos[i*3+2] = (Math.random() - 0.5) * 500;
+    }
+    tunnelGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3));
+    tunnelSystem = new THREE.Points(tunnelGeo, new THREE.PointsMaterial({ color: 0xffaa00, ...commonMat }));
+    tunnelSystem.visible = false; scene.add(tunnelSystem);
+
+    // --- State 4: The Liquid Metaball ---
+    const liquidGeo = new THREE.IcosahedronGeometry(30, 8); 
+    const lPos = liquidGeo.attributes.position.array;
+    for(let i=0; i<lPos.length; i+=3) liquidBasePos.push(new THREE.Vector3(lPos[i], lPos[i+1], lPos[i+2]));
+    liquidMesh = new THREE.Mesh(liquidGeo, new THREE.MeshPhysicalMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1, clearcoat: 1.0 }));
+    liquidMesh.visible = false; scene.add(liquidMesh);
+
+    // --- State 5: The Divination Mandala ---
+    mandalaGroup = new THREE.Group();
+    const mGeo = new THREE.BufferGeometry();
+    const mPos = new Float32Array(128 * 3);
+    for(let i=0; i<128; i++) { mPos[i*3] = i * 0.4; mPos[i*3+1] = Math.sin(i * 0.2) * 5; mPos[i*3+2] = 0; }
+    mGeo.setAttribute('position', new THREE.BufferAttribute(mPos, 3));
+    const mMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
+    for(let i=0; i<8; i++) {
+        const arm = new THREE.Line(mGeo, mMat); arm.rotation.z = (i / 8) * Math.PI * 2; mandalaGroup.add(arm);
+        const mirrorArm = new THREE.Line(mGeo, mMat); mirrorArm.rotation.z = (i / 8) * Math.PI * 2; mirrorArm.scale.y = -1; mandalaGroup.add(mirrorArm);
+    }
+    mandalaGroup.visible = false; scene.add(mandalaGroup);
+
+// --- INIT PHYSICS WORLD ---
+    world = new CANNON.World();
+    world.gravity.set(0, -60, 0); // Heavy gravity
+    world.broadphase = new CANNON.NaiveBroadphase();
+    
+    // Invisible Physics Floor
+    const floorBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
+    floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    floorBody.position.y = -20;
+    world.addBody(floorBody);
+
+    // --- State 6: The Shockwave Pit ---
+    pitGroup = new THREE.Group();
+    const boxGeo = new THREE.BoxGeometry(2, 2, 2);
+    const boxMat = new THREE.MeshPhysicalMaterial({ color: 0xffaa00, metalness: 0.8, roughness: 0.2 });
+    
+    for(let i=0; i<150; i++) {
+        const mesh = new THREE.Mesh(boxGeo, boxMat);
+        pitGroup.add(mesh);
         
-        nebulaSystem.visible = false;
-        coreSystem.visible = false;
-        vortexSystem.visible = false;
+        const body = new CANNON.Body({
+            mass: 1,
+            shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+            position: new CANNON.Vec3((Math.random()-0.5)*40, Math.random()*20, (Math.random()-0.5)*40)
+        });
+        world.addBody(body);
+        physicsObjects.push({ mesh, body, state: 6 });
+    }
+    pitGroup.visible = false; scene.add(pitGroup);
+
+    // --- State 7: The Orbital Attractor ---
+    orbitGroup = new THREE.Group();
+    const sphereGeo = new THREE.SphereGeometry(1.5, 16, 16);
+    const orbitMat = new THREE.MeshPhysicalMaterial({ color: 0x00ffff, metalness: 0.5, roughness: 0.1 });
+    
+    for(let i=0; i<150; i++) {
+        const mesh = new THREE.Mesh(sphereGeo, orbitMat);
+        orbitGroup.add(mesh);
+        
+        const body = new CANNON.Body({
+            mass: 1,
+            shape: new CANNON.Sphere(1.5),
+            position: new CANNON.Vec3((Math.random()-0.5)*60, (Math.random()-0.5)*60, (Math.random()-0.5)*60)
+        });
+        world.addBody(body);
+        physicsObjects.push({ mesh, body, state: 7 });
+    }
+    orbitGroup.visible = false; scene.add(orbitGroup);
+
+    // --- State 8: The Frequency Fountains ---
+    fountainGroup = new THREE.Group();
+    const fMat = new THREE.MeshPhysicalMaterial({ color: 0xff00ff, metalness: 0.3, roughness: 0.4 });
+    
+    for(let i=0; i<100; i++) {
+        const mesh = new THREE.Mesh(sphereGeo, fMat);
+        fountainGroup.add(mesh);
+        
+        const body = new CANNON.Body({
+            mass: 2,
+            shape: new CANNON.Sphere(1.5),
+            position: new CANNON.Vec3(0, -30, 0) // Start hidden under floor
+        });
+        world.addBody(body);
+        physicsObjects.push({ mesh, body, state: 8 });
+    }
+    fountainGroup.visible = false; scene.add(fountainGroup);
+
+    // --- UPDATE SWITCHER LOGIC ---
+    // Update your switcher event listener to cycle 9 states and toggle the new groups
+    btnVisToggle.addEventListener('click', () => {
+        currentVisIndex = (currentVisIndex + 1) % 9; // NOW 9 STATES
+        
+        nebulaSystem.visible = false; coreSystem.visible = false; vortexSystem.visible = false;
+        tunnelSystem.visible = false; liquidMesh.visible = false; mandalaGroup.visible = false;
+        pitGroup.visible = false; orbitGroup.visible = false; fountainGroup.visible = false;
 
         if (currentVisIndex === 0) nebulaSystem.visible = true;
         if (currentVisIndex === 1) coreSystem.visible = true;
         if (currentVisIndex === 2) vortexSystem.visible = true;
+        if (currentVisIndex === 3) tunnelSystem.visible = true;
+        if (currentVisIndex === 4) liquidMesh.visible = true;
+        if (currentVisIndex === 5) mandalaGroup.visible = true;
+        if (currentVisIndex === 6) pitGroup.visible = true;
+        if (currentVisIndex === 7) orbitGroup.visible = true;
+        if (currentVisIndex === 8) fountainGroup.visible = true;
     });
 
     renderVisualizer();
 }
 
- function renderVisualizer() {
+function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
 
     if (isEngineRunning) {
@@ -1364,90 +1477,154 @@ let vortexAngles = []; // Tracks the spiral math
         analyser.getByteTimeDomainData(timeDataArray);
     }
 
-    let bassSum = 0;
+    let bassSum = 0; let midSum = 0;
     if (isEngineRunning) {
         for(let i = 0; i < 8; i++) bassSum += dataArray[i];
+        for(let i = 16; i < 32; i++) midSum += dataArray[i];
     }
-    const bassAvg = bassSum / 8;
-    const audioEnergy = bassAvg / 255; // Normalized 0.0 to 1.0
+    const bassAvg = bassSum / 8; const midAvg = midSum / 16;
+    const audioEnergy = bassAvg / 255; 
+    const time = Date.now() * 0.001;
 
-    // --- State 0: The Suncat Nebula ---
+    // --- State 0: Nebula ---
     if (currentVisIndex === 0 && isEngineRunning) {
         const positions = nebulaSystem.geometry.attributes.position.array;
-        const speedBoost = audioEnergy > 0.8 ? 4.0 : 0.5; // Explosive burst on heavy bass
-
+        const speedBoost = audioEnergy > 0.8 ? 4.0 : 0.5; 
         for(let i = 0; i < positions.length / 3; i++) {
             positions[i*3] += nebulaVelocities[i].x * speedBoost;
             positions[i*3+1] += nebulaVelocities[i].y * speedBoost;
             positions[i*3+2] += nebulaVelocities[i].z * speedBoost;
-
-            // Constrain to a massive sphere
             if (Math.abs(positions[i*3]) > 120 || Math.abs(positions[i*3+1]) > 120 || Math.abs(positions[i*3+2]) > 120) {
-                positions[i*3] = (Math.random() - 0.5) * 20;
-                positions[i*3+1] = (Math.random() - 0.5) * 20;
-                positions[i*3+2] = (Math.random() - 0.5) * 20;
+                positions[i*3] = (Math.random() - 0.5) * 20; positions[i*3+1] = (Math.random() - 0.5) * 20; positions[i*3+2] = (Math.random() - 0.5) * 20;
             }
         }
         nebulaSystem.geometry.attributes.position.needsUpdate = true;
-        
-        // Gentle rotation + pulse
-        const sysScale = 1 + (audioEnergy * 0.3);
-        nebulaSystem.scale.set(sysScale, sysScale, sysScale);
-        nebulaSystem.rotation.y += 0.002;
-        nebulaSystem.rotation.z += 0.001;
+        const sysScale = 1 + (audioEnergy * 0.3); nebulaSystem.scale.set(sysScale, sysScale, sysScale);
+        nebulaSystem.rotation.y += 0.002; nebulaSystem.rotation.z += 0.001;
     }
 
-    // --- State 1: The Runestone Core ---
+    // --- State 1: Core ---
     else if (currentVisIndex === 1 && isEngineRunning) {
         const positions = coreSystem.geometry.attributes.position.array;
-        
         for(let i = 0; i < coreOriginalPositions.length; i++) {
-            // Map the 2048 points to the 128 audio bins
-            const audioBin = i % (bufferLength / 2); 
-            const freqVal = dataArray[audioBin] / 255;
-            
-            // Base radius is 20, expands up to 60 based on frequency
+            const freqVal = dataArray[i % (bufferLength / 2)] / 255;
             const dynamicRadius = 20 + Math.pow(freqVal, 2) * 40; 
-
             const originalVec = coreOriginalPositions[i];
-            positions[i*3] = originalVec.x * dynamicRadius;
-            positions[i*3+1] = originalVec.y * dynamicRadius;
-            positions[i*3+2] = originalVec.z * dynamicRadius;
+            positions[i*3] = originalVec.x * dynamicRadius; positions[i*3+1] = originalVec.y * dynamicRadius; positions[i*3+2] = originalVec.z * dynamicRadius;
         }
         coreSystem.geometry.attributes.position.needsUpdate = true;
-        
-        // Shift color from Cyan to Purple based on bass
         coreSystem.material.color.setHSL(0.5 - (audioEnergy * 0.2), 1, 0.6);
-        coreSystem.rotation.y += 0.005;
-        coreSystem.rotation.x += 0.003;
+        coreSystem.rotation.y += 0.005; coreSystem.rotation.x += 0.003;
     }
 
-    // --- State 2: The Moondog Vortex ---
+    // --- State 2: Vortex ---
     else if (currentVisIndex === 2 && isEngineRunning) {
         const positions = vortexSystem.geometry.attributes.position.array;
-        
         for(let i = 0; i < vortexAngles.length; i++) {
-            // Audio expands the radius of the tornado
-            const audioBin = Math.floor((i / vortexAngles.length) * bufferLength);
-            const freqVal = dataArray[audioBin] / 255;
-            
-            const baseRadius = 20 + Math.sin(i * 0.05) * 10;
-            const dynamicRadius = baseRadius + (freqVal * 25);
-            
-            vortexAngles[i] += 0.02 + (audioEnergy * 0.05); // Spins faster with bass
-            const angle = vortexAngles[i];
-            const arm = i % 2 === 0 ? 1 : -1;
-            
-            positions[i*3] = Math.cos(angle) * dynamicRadius * arm;
-            // Y stays the same
-            positions[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
+            const freqVal = dataArray[Math.floor((i / vortexAngles.length) * bufferLength)] / 255;
+            const dynamicRadius = 20 + Math.sin(i * 0.05) * 10 + (freqVal * 25);
+            vortexAngles[i] += 0.02 + (audioEnergy * 0.05); 
+            const angle = vortexAngles[i]; const arm = i % 2 === 0 ? 1 : -1;
+            positions[i*3] = Math.cos(angle) * dynamicRadius * arm; positions[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
         }
         vortexSystem.geometry.attributes.position.needsUpdate = true;
-        
-        // Tilt the tornado slightly towards the camera
         vortexSystem.rotation.x = 0.2;
     }
 
+    // --- State 3: Wormhole ---
+    else if (currentVisIndex === 3) {
+        const positions = tunnelSystem.geometry.attributes.position.array;
+        const speed = 1.5 + (audioEnergy * 15); 
+        for(let i = 0; i < positions.length / 3; i++) {
+            positions[i*3+2] += speed; 
+            if (positions[i*3+2] > 100) positions[i*3+2] = -400;
+        }
+        tunnelSystem.geometry.attributes.position.needsUpdate = true;
+        tunnelSystem.rotation.z += 0.002 + (midAvg / 255) * 0.05;
+    }
+
+    // --- State 4: Liquid Metaball ---
+    else if (currentVisIndex === 4) {
+        const positions = liquidMesh.geometry.attributes.position.array;
+        for(let i = 0; i < liquidBasePos.length; i++) {
+            const base = liquidBasePos[i];
+            const wave1 = Math.sin(base.x * 0.1 + time * 2); const wave2 = Math.cos(base.y * 0.1 + time * 2); const wave3 = Math.sin(base.z * 0.1 + time * 2);
+            const freqVal = (dataArray[i % bufferLength] || 0) / 255;
+            const displacement = 1 + (wave1 * wave2 * wave3 * 0.15) + (freqVal * audioEnergy * 0.4);
+            positions[i*3] = base.x * displacement; positions[i*3+1] = base.y * displacement; positions[i*3+2] = base.z * displacement;
+        }
+        liquidMesh.geometry.attributes.position.needsUpdate = true;
+        liquidMesh.geometry.computeVertexNormals(); 
+        liquidMesh.rotation.y += 0.005; liquidMesh.rotation.x += 0.002;
+        lights[0].intensity = 1 + audioEnergy * 6; lights[1].intensity = 1 + audioEnergy * 6;
+    }
+
+    // --- State 5: Mandala ---
+    else if (currentVisIndex === 5) {
+        mandalaGroup.rotation.z -= 0.002 + (audioEnergy * 0.02);
+        const scale = 1 + (audioEnergy * 0.4); mandalaGroup.scale.set(scale, scale, 1);
+        mandalaGroup.children.forEach((arm) => {
+            const positions = arm.geometry.attributes.position.array;
+            for(let i=0; i < positions.length / 3; i++) {
+                const waveform = (timeDataArray[i] / 128.0) - 1.0; 
+                positions[i*3+1] = Math.sin(i * 0.2 + time * 5) * 5 + (waveform * 12);
+            }
+            arm.geometry.attributes.position.needsUpdate = true;
+        });
+    }
+// --- PHYSICS ENGINE SYNC & LOGIC ---
+    if (currentVisIndex >= 6) {
+        world.step(1 / 60); // Advance the physics simulation
+        
+        physicsObjects.forEach(obj => {
+            // Only update meshes for the active state to save performance
+            if (obj.state === currentVisIndex) {
+                obj.mesh.position.copy(obj.body.position);
+                obj.mesh.quaternion.copy(obj.body.quaternion);
+
+                // --- State 6: Shockwave Pit Physics ---
+                if (currentVisIndex === 6 && isEngineRunning && audioEnergy > 0.85) {
+                    // If bass hits hard, blast cubes resting near the floor upwards
+                    if (obj.body.position.y < -15) {
+                        obj.body.velocity.set((Math.random()-0.5)*40, audioEnergy * 80, (Math.random()-0.5)*40);
+                        obj.body.angularVelocity.set(Math.random()*10, Math.random()*10, Math.random()*10);
+                    }
+                }
+
+                // --- State 7: Orbital Attractor Physics ---
+                if (currentVisIndex === 7 && isEngineRunning) {
+                    // Calculate vector towards the center (0,0,0)
+                    const center = new CANNON.Vec3(0, 0, 0);
+                    const direction = center.vsub(obj.body.position);
+                    direction.normalize();
+                    
+                    // The louder the audio, the stronger the gravitational pull
+                    const gravityStrength = 20 + (audioEnergy * 200);
+                    obj.body.applyForce(direction.mult(gravityStrength), obj.body.position);
+                    
+                    // Add slight drag so they don't accelerate infinitely
+                    obj.body.velocity.mult(0.98, obj.body.velocity);
+                }
+
+                // --- State 8: Frequency Fountains Physics ---
+                if (currentVisIndex === 8 && isEngineRunning) {
+                    // Randomly shoot resting bodies upwards based on general audio energy
+                    if (obj.body.position.y <= -19 && Math.random() < audioEnergy * 0.2) {
+                        // Reset to center floor
+                        obj.body.position.set((Math.random()-0.5)*10, -18, (Math.random()-0.5)*10);
+                        // Blast upwards
+                        obj.body.velocity.set((Math.random()-0.5)*20, 40 + (audioEnergy * 60), (Math.random()-0.5)*20);
+                    }
+                    
+                    // Catch bodies that fly off the edges and recycle them
+                    if (obj.body.position.y < -30) {
+                        obj.body.position.set(0, -19, 0);
+                        obj.body.velocity.set(0,0,0);
+                    }
+                }
+            }
+        });
+    }
     renderer.render(scene, camera);
 }
 
