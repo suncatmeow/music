@@ -619,7 +619,7 @@
             animateWebGL();
         }
 
-       // --- UPGRADED WEBGL VISUALIZER (EMERGENT 3D CYMATICS) ---
+       // --- UPGRADED WEBGL VISUALIZER (TRUE EMERGENT CYMATICS) ---
         let controls;
 
         function initWebGL() {
@@ -635,7 +635,6 @@
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
 
-            // Add OrbitControls for full XYZ rotation and zooming
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
@@ -643,9 +642,8 @@
             controls.minDistance = 5;
             controls.maxDistance = 40;
 
-            // 1. Generate a high-resolution continuous mesh
-            // Detail level 30 creates thousands of vertices for the sound to manipulate
-            const geometry = new THREE.IcosahedronGeometry(3, 30);
+            // 1. High-Resolution Sphere for Complex Folding
+            const geometry = new THREE.SphereGeometry(3, 128, 128);
 
             shaderUniforms = { 
                 uTime: { value: 0.0 }, 
@@ -654,42 +652,59 @@
 
             const material = new THREE.ShaderMaterial({
                 uniforms: shaderUniforms,
-                wireframe: true, // Wireframe reveals the complex topological folding
+                wireframe: true, 
                 transparent: true,
                 vertexShader: `
                     uniform float uTime;
                     uniform sampler2D uAudioData;
                     
-                    varying float vAudio;
-                    varying vec2 vUv;
+                    varying float vDeformation;
                     varying vec3 vNormal;
 
                     void main() {
-                        vUv = uv;
                         vNormal = normal;
 
-                        // Map the Y-axis of the sphere to the frequency bins (0.0 to 1.0)
-                        // This means low frequencies shape the bottom/equator, highs shape the poles
-                        float freqIndex = abs(normal.y); 
+                        // Calculate spherical coordinates (phi and theta)
+                        // This allows us to map patterns across the entire surface
+                        vec3 p = normalize(position);
+                        float phi = acos(p.y);
+                        float theta = atan(p.z, p.x);
                         
-                        // Sample the audio texture
-                        float audioData = texture2D(uAudioData, vec2(freqIndex, 0.0)).r;
-                        vAudio = audioData;
+                        // Sample different frequency bands
+                        // Bass (Low frequencies) shapes the macro structure
+                        float bass = texture2D(uAudioData, vec2(0.1, 0.0)).r;
+                        // Mids shape the secondary features
+                        float mid = texture2D(uAudioData, vec2(0.5, 0.0)).r;
+                        // Highs add surface texture
+                        float high = texture2D(uAudioData, vec2(0.9, 0.0)).r;
                         
                         vec3 pos = position;
                         
-                        // Emergent Deformation: 
-                        // Push the vertex outward along its normal based on the frequency amplitude.
-                        // We add a slight twist using the vertex's X/Z coordinates and time to make it organic.
-                        float twist = sin(pos.x * 2.0 + uTime) * cos(pos.z * 2.0 + uTime) * 0.5;
-                        pos += normal * (audioData * 6.0 + twist);
+                        // 1. Base Resonance (Macro Shape)
+                        // Driven by bass. Modifies the overall topology.
+                        float lobes = 3.0 + (bass * 5.0); // The number of "arms" or "lobes"
+                        float resonance = sin(lobes * phi) * cos(lobes * theta);
+                        
+                        // 2. Harmonic Interference (Detail)
+                        // Driven by mids. Creates intricate folds within the lobes.
+                        float interference = sin(10.0 * phi + uTime) * sin(10.0 * theta + uTime) * mid;
+                        
+                        // 3. Surface Tension (Micro Detail)
+                        // Driven by highs. Creates sharp spikes or ripples.
+                        float tension = sin(20.0 * p.x) * cos(20.0 * p.y) * high;
+                        
+                        // Combine the forces to calculate total deformation
+                        float deformation = (resonance * 1.5) + (interference * 0.8) + (tension * 0.3);
+                        vDeformation = deformation;
+
+                        // Apply the deformation along the vertex normal
+                        pos += normal * deformation;
 
                         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                     }
                 `,
                 fragmentShader: `
-                    varying float vAudio;
-                    varying vec2 vUv;
+                    varying float vDeformation;
                     varying vec3 vNormal;
 
                     vec3 hsv2rgb(vec3 c) {
@@ -699,14 +714,18 @@
                     }
 
                     void main() {
-                        // Color mapping based on the structural deformation and original normal
-                        float hue = abs(vNormal.y) * 0.8; 
-                        vec3 baseColor = hsv2rgb(vec3(hue, 0.8, 1.0));
+                        // Color mapping based on how far the mesh is stretched (vDeformation)
+                        // Normalize deformation to a 0.0 - 1.0 range for coloring
+                        float normalizedDef = clamp((vDeformation + 2.0) / 4.0, 0.0, 1.0);
                         
-                        // The wireframe glows intensely where the deformation is highest
-                        vec3 finalColor = baseColor * (0.5 + vAudio * 2.0);
+                        // Hue shifts from cool blue (valleys) to hot red/yellow (peaks)
+                        float hue = 0.6 - (normalizedDef * 0.6); 
+                        vec3 baseColor = hsv2rgb(vec3(hue, 0.9, 1.0));
+                        
+                        // Intensity increases at the peaks
+                        vec3 finalColor = baseColor * (0.4 + normalizedDef * 1.5);
 
-                        gl_FragColor = vec4(finalColor, 0.3 + vAudio);
+                        gl_FragColor = vec4(finalColor, 0.4 + normalizedDef);
                     }
                 `
             });
