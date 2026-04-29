@@ -1164,14 +1164,28 @@
             const bassEQ = audioCtx.createBiquadFilter();
             bassEQ.type = 'lowshelf';
             bassEQ.frequency.value = 120; // Target the punchy low-end
-            bassEQ.gain.value = 3.5;      // +3.5dB boost
+            bassEQ.gain.value = 6;      // +3.5dB boost
 
             // 2. High-end "Air" (Clarity)
             const trebleEQ = audioCtx.createBiquadFilter();
             trebleEQ.type = 'highshelf';
             trebleEQ.frequency.value = 8000; // Target the crisp highs
             trebleEQ.gain.value = 2.0;       // +2.0dB boost
+            // 3. Mid-Range Presence (Acoustic Guitar / Vocal Articulation)
+            const midEQ = audioCtx.createBiquadFilter();
+            midEQ.type = 'peaking';
+            midEQ.frequency.value = 1800; // 1.8kHz sits beautifully for acoustic presence
+            midEQ.Q.value = 1.2;          // A slightly wider bell curve for a more musical, natural sound
+            midEQ.gain.value = 2.5;       // A gentle +2.5dB nudge forward
+            // The X-Axis: Stereo Width
+            const panner = audioCtx.createStereoPanner();
+            panner.pan.value = 0; // You can automate this later to sweep left/right!
 
+            // The Z-Axis: Slapback Room Depth (Simulating a wall reflection)
+            const delay = audioCtx.createDelay();
+            delay.delayTime.value = 0.04; // 40 milliseconds feels like a small club room
+            const delayGain = audioCtx.createGain();
+            delayGain.gain.value = 0.15; // Keep it quiet so it doesn't muddy the mix, just adds depth
             // 3. Overall Volume Boost (Makeup Gain)
             const makeupGain = audioCtx.createGain();
             makeupGain.gain.value = 1.6; // Boost overall volume by 60%
@@ -1188,15 +1202,22 @@
             // ROUTING THE AUDIO
             // ----------------------------------------------------
             
-            // Connect the chain: Source -> EQ -> Gain -> Compressor -> Analyser -> Output
-            source.connect(bassEQ);
-            bassEQ.connect(trebleEQ);
-            trebleEQ.connect(makeupGain);
-            makeupGain.connect(compressor);
-            
-            // The analyser sits at the end so the visualizer reacts to the HUGE mastered sound
-            compressor.connect(analyser); 
-            analyser.connect(audioCtx.destination);
+            // Connect the dry chain
+                source.connect(bassEQ);
+                bassEQ.connect(midEQ);       
+                midEQ.connect(trebleEQ);     
+                trebleEQ.connect(panner);    
+                panner.connect(makeupGain);
+
+                // Connect the wet (Depth) chain
+                panner.connect(delay);       // Send a copy to the delay
+                delay.connect(delayGain);    // Control the volume of the room echo
+                delayGain.connect(makeupGain); // Mix it back in with the dry signal
+
+                // Final Polish
+                makeupGain.connect(compressor);
+                compressor.connect(analyser); 
+                analyser.connect(audioCtx.destination);
             
             // Set up visualizer data
             analyser.fftSize = 256; 
