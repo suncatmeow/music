@@ -1323,17 +1323,18 @@ function initWebGL() {
     scene.add(nebulaSystem);
 
     // 1: Runestone Core
-    const coreGeo = new THREE.BufferGeometry();
+      const coreGeo = new THREE.BufferGeometry();
     const corePos = new Float32Array(2048 * 3);
     for(let i=0; i<2048; i++) {
-        const phi = Math.acos(-1 + (2 * i) / 2048); const theta = Math.sqrt(2048 * Math.PI) * phi;
+        const phi = Math.acos(-1 + (2 * i) / 2048);
+        const theta = Math.sqrt(2048 * Math.PI) * phi;
         const x = Math.cos(theta) * Math.sin(phi); const y = Math.sin(theta) * Math.sin(phi); const z = Math.cos(phi);
         coreOriginalPositions.push(new THREE.Vector3(x, y, z));
-        corePos[i*3] = x*20; corePos[i*3+1] = y*20; corePos[i*3+2] = z*20;
+        corePos[i*3] = x * 20; corePos[i*3+1] = y * 20; corePos[i*3+2] = z * 20;
     }
     coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
     coreSystem = new THREE.Points(coreGeo, new THREE.PointsMaterial({ color: 0x00ffff, ...commonMat, size: 2.0 }));
-    coreSystem.visible = false; scene.add(coreSystem);
+    coreSystem.visible = false; scene.add(coreSystem);  
 
      // --- State 2: The Moondog Vortex ---
     const vortexGeo = new THREE.BufferGeometry();
@@ -1424,15 +1425,18 @@ function renderVisualizer() {
         const sysScale = 1 + (audioEnergy * 0.3); nebulaSystem.scale.set(sysScale, sysScale, sysScale);
         nebulaSystem.rotation.y += 0.002; nebulaSystem.rotation.z += 0.001;
     }
-    // 1: Core
+    // --- State 1: Core ---
     else if (currentVisIndex === 1 && isEngineRunning) {
-        const pos = coreSystem.geometry.attributes.position.array;
-        for(let i=0; i<coreOriginalPositions.length; i++){
-            const f = dataArray[i % 128]/255; const rad = 20 + Math.pow(f, 2)*40;
-            const v = coreOriginalPositions[i]; pos[i*3]=v.x*rad; pos[i*3+1]=v.y*rad; pos[i*3+2]=v.z*rad;
+        const positions = coreSystem.geometry.attributes.position.array;
+        for(let i = 0; i < coreOriginalPositions.length; i++) {
+            const freqVal = dataArray[i % (bufferLength / 2)] / 255;
+            const dynamicRadius = 20 + Math.pow(freqVal, 2) * 40; 
+            const originalVec = coreOriginalPositions[i];
+            positions[i*3] = originalVec.x * dynamicRadius; positions[i*3+1] = originalVec.y * dynamicRadius; positions[i*3+2] = originalVec.z * dynamicRadius;
         }
         coreSystem.geometry.attributes.position.needsUpdate = true;
-        coreSystem.rotation.y += 0.005;
+        coreSystem.material.color.setHSL(0.5 - (audioEnergy * 0.2), 1, 0.6);
+        coreSystem.rotation.y += 0.005; coreSystem.rotation.x += 0.003;
     }
     // --- State 2: Vortex ---
     else if (currentVisIndex === 2 && isEngineRunning) {
