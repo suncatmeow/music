@@ -788,13 +788,15 @@
             const btnVisToggle = document.getElementById('btn-vis-toggle');
 
             // WebGL Globals
-                let scene, camera, renderer;
-                let timeDataArray; 
-                let currentVisIndex = 0; // 0=Alchemy Starfield, 1=Cultivation Grid, 2=Runestone Knot, 3=Suncat Pulsar
-                let particleSystem, terrainMesh, knotMesh, pulsarSystem;
-                let particleVelocities = [];
-                let pulsarBaseAngles = []; // Stores the math for the radial burst
-            
+let scene, camera, renderer;
+let timeDataArray; 
+let currentVisIndex = 0; // 0=Nebula, 1=Core, 2=Vortex
+let nebulaSystem, coreSystem, vortexSystem;
+
+// Math trackers for the particles
+let nebulaVelocities = [];
+let coreOriginalPositions = []; // Tracks the base sphere for the exploding core
+let vortexAngles = []; // Tracks the spiral math
         // Custom Player Controls
             const btnMainPlay = document.getElementById('btn-main-play');
             const btnPrev = document.getElementById('btn-prev');
@@ -1250,90 +1252,111 @@
                 }
             }
 
-            function initWebGL() {
+   function initWebGL() {
     const container = document.getElementById('visualizer-container');
     
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 85;
+    camera.position.z = 100; // Pulled back for massive particle systems
 
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('visualizer'), alpha: true, antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // --- State 0: Alchemy Starfield ---
-    const pGeo = new THREE.BufferGeometry();
-    const pCount = 800; 
-    const pPos = new Float32Array(pCount * 3);
-    for(let i = 0; i < pCount; i++) {
-        pPos[i*3] = (Math.random() - 0.5) * 100;     
-        pPos[i*3+1] = (Math.random() - 0.5) * 100;   
-        pPos[i*3+2] = (Math.random() - 0.5) * 100;   
+    const commonMat = {
+        size: 1.5,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    };
+
+    // --- State 0: The Suncat Nebula ---
+    const nebGeo = new THREE.BufferGeometry();
+    const nebCount = 2000; 
+    const nebPos = new Float32Array(nebCount * 3);
+    for(let i = 0; i < nebCount; i++) {
+        nebPos[i*3] = (Math.random() - 0.5) * 150;     
+        nebPos[i*3+1] = (Math.random() - 0.5) * 150;   
+        nebPos[i*3+2] = (Math.random() - 0.5) * 150;   
         
-        particleVelocities.push(new THREE.Vector3(
-            (Math.random() - 0.5) * 0.8,
-            (Math.random() - 0.5) * 0.8,
-            (Math.random() - 0.5) * 0.8
+        nebulaVelocities.push(new THREE.Vector3(
+            (Math.random() - 0.5) * 0.4,
+            (Math.random() - 0.5) * 0.4,
+            (Math.random() - 0.5) * 0.4
         ));
     }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-    const pMat = new THREE.PointsMaterial({ color: 0xff00aa, size: 1.2, transparent: true, opacity: 0.8 });
-    particleSystem = new THREE.Points(pGeo, pMat);
-    scene.add(particleSystem);
+    nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos, 3));
+    const nebMat = new THREE.PointsMaterial({ color: 0xff00aa, ...commonMat });
+    nebulaSystem = new THREE.Points(nebGeo, nebMat);
+    scene.add(nebulaSystem);
 
-    // --- State 1: The Cultivation Grid (Audio Terrain) ---
-    const terrainGeo = new THREE.PlaneGeometry(200, 150, 32, 32); // Huge flat plane divided into a grid
-    const terrainMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.5 });
-    terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
-    terrainMesh.rotation.x = -Math.PI / 3; // Tilt it back so it looks like a landscape
-    terrainMesh.position.y = -20;
-    terrainMesh.visible = false;
-    scene.add(terrainMesh);
+    // --- State 1: The Runestone Core (Exploding Sphere) ---
+    const coreGeo = new THREE.BufferGeometry();
+    const coreCount = 2048; // Dense sphere
+    const corePos = new Float32Array(coreCount * 3);
+    for(let i = 0; i < coreCount; i++) {
+        // Math to distribute points evenly on a sphere
+        const phi = Math.acos(-1 + (2 * i) / coreCount);
+        const theta = Math.sqrt(coreCount * Math.PI) * phi;
+        
+        const x = Math.cos(theta) * Math.sin(phi);
+        const y = Math.sin(theta) * Math.sin(phi);
+        const z = Math.cos(phi);
 
-    // --- State 2: The Runestone Knot ---
-    const knotGeo = new THREE.TorusKnotGeometry(25, 4, 150, 20);
-    const knotMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true, transparent: true, opacity: 0.7 });
-    knotMesh = new THREE.Mesh(knotGeo, knotMat);
-    knotMesh.visible = false;
-    scene.add(knotMesh);
-
-    // --- State 3: The Suncat Pulsar ---
-    const pulsarGeo = new THREE.BufferGeometry();
-    const pulsarCount = 128; // Matches audio bins
-    const pulsarPos = new Float32Array(pulsarCount * 3);
-    for(let i = 0; i < pulsarCount; i++) {
-        const angle = (i / pulsarCount) * Math.PI * 2;
-        pulsarBaseAngles.push(angle);
-        // Start them in a ring
-        pulsarPos[i*3] = Math.cos(angle) * 30;
-        pulsarPos[i*3+1] = Math.sin(angle) * 30;
-        pulsarPos[i*3+2] = 0;
+        // Store original normalized vectors for pushing outward
+        coreOriginalPositions.push(new THREE.Vector3(x, y, z));
+        
+        corePos[i*3] = x * 20;
+        corePos[i*3+1] = y * 20;
+        corePos[i*3+2] = z * 20;
     }
-    pulsarGeo.setAttribute('position', new THREE.BufferAttribute(pulsarPos, 3));
-    const pulsarMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.5 });
-    pulsarSystem = new THREE.Points(pulsarGeo, pulsarMat);
-    pulsarSystem.visible = false;
-    scene.add(pulsarSystem);
+    coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
+    const coreMat = new THREE.PointsMaterial({ color: 0x00ffff, ...commonMat, size: 2.0 });
+    coreSystem = new THREE.Points(coreGeo, coreMat);
+    coreSystem.visible = false;
+    scene.add(coreSystem);
+
+    // --- State 2: The Moondog Vortex (Double Helix) ---
+    const vortexGeo = new THREE.BufferGeometry();
+    const vortexCount = 1500;
+    const vortexPos = new Float32Array(vortexCount * 3);
+    for(let i = 0; i < vortexCount; i++) {
+        const y = (i / vortexCount) * 200 - 100; // Spreads from -100 to 100 on Y axis
+        const angle = i * 0.1;
+        vortexAngles.push(angle);
+
+        // Two intersecting spirals
+        const radius = 25 + Math.sin(i * 0.05) * 10;
+        const arm = i % 2 === 0 ? 1 : -1; 
+        
+        vortexPos[i*3] = Math.cos(angle) * radius * arm;
+        vortexPos[i*3+1] = y;
+        vortexPos[i*3+2] = Math.sin(angle) * radius * arm;
+    }
+    vortexGeo.setAttribute('position', new THREE.BufferAttribute(vortexPos, 3));
+    const vortexMat = new THREE.PointsMaterial({ color: 0xffaa00, ...commonMat });
+    vortexSystem = new THREE.Points(vortexGeo, vortexMat);
+    vortexSystem.visible = false;
+    scene.add(vortexSystem);
 
     // Switcher Logic
     btnVisToggle.addEventListener('click', () => {
-        currentVisIndex = (currentVisIndex + 1) % 4; 
+        currentVisIndex = (currentVisIndex + 1) % 3; 
         
-        particleSystem.visible = false;
-        terrainMesh.visible = false;
-        knotMesh.visible = false;
-        pulsarSystem.visible = false;
+        nebulaSystem.visible = false;
+        coreSystem.visible = false;
+        vortexSystem.visible = false;
 
-        if (currentVisIndex === 0) particleSystem.visible = true;
-        if (currentVisIndex === 1) terrainMesh.visible = true;
-        if (currentVisIndex === 2) knotMesh.visible = true;
-        if (currentVisIndex === 3) pulsarSystem.visible = true;
+        if (currentVisIndex === 0) nebulaSystem.visible = true;
+        if (currentVisIndex === 1) coreSystem.visible = true;
+        if (currentVisIndex === 2) vortexSystem.visible = true;
     });
 
     renderVisualizer();
 }
 
-      function renderVisualizer() {
+ function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
 
     if (isEngineRunning) {
@@ -1346,75 +1369,83 @@
         for(let i = 0; i < 8; i++) bassSum += dataArray[i];
     }
     const bassAvg = bassSum / 8;
+    const audioEnergy = bassAvg / 255; // Normalized 0.0 to 1.0
 
-    // --- State 0: Alchemy Starfield ---
+    // --- State 0: The Suncat Nebula ---
     if (currentVisIndex === 0 && isEngineRunning) {
-        const positions = particleSystem.geometry.attributes.position.array;
-        const speedBoost = bassAvg > 200 ? 3.0 : 0.5;
+        const positions = nebulaSystem.geometry.attributes.position.array;
+        const speedBoost = audioEnergy > 0.8 ? 4.0 : 0.5; // Explosive burst on heavy bass
 
         for(let i = 0; i < positions.length / 3; i++) {
-            positions[i*3] += particleVelocities[i].x * speedBoost;
-            positions[i*3+1] += particleVelocities[i].y * speedBoost;
-            positions[i*3+2] += particleVelocities[i].z * speedBoost;
+            positions[i*3] += nebulaVelocities[i].x * speedBoost;
+            positions[i*3+1] += nebulaVelocities[i].y * speedBoost;
+            positions[i*3+2] += nebulaVelocities[i].z * speedBoost;
 
-            if (Math.abs(positions[i*3]) > 100 || Math.abs(positions[i*3+1]) > 100 || Math.abs(positions[i*3+2]) > 100) {
-                positions[i*3] = (Math.random() - 0.5) * 10;
-                positions[i*3+1] = (Math.random() - 0.5) * 10;
-                positions[i*3+2] = (Math.random() - 0.5) * 10;
+            // Constrain to a massive sphere
+            if (Math.abs(positions[i*3]) > 120 || Math.abs(positions[i*3+1]) > 120 || Math.abs(positions[i*3+2]) > 120) {
+                positions[i*3] = (Math.random() - 0.5) * 20;
+                positions[i*3+1] = (Math.random() - 0.5) * 20;
+                positions[i*3+2] = (Math.random() - 0.5) * 20;
             }
         }
-        particleSystem.geometry.attributes.position.needsUpdate = true;
+        nebulaSystem.geometry.attributes.position.needsUpdate = true;
         
-        const sysScale = 1 + (bassAvg / 255) * 0.5;
-        particleSystem.scale.set(sysScale, sysScale, sysScale);
-        particleSystem.rotation.y += 0.002;
+        // Gentle rotation + pulse
+        const sysScale = 1 + (audioEnergy * 0.3);
+        nebulaSystem.scale.set(sysScale, sysScale, sysScale);
+        nebulaSystem.rotation.y += 0.002;
+        nebulaSystem.rotation.z += 0.001;
     }
 
-    // --- State 1: The Cultivation Grid ---
+    // --- State 1: The Runestone Core ---
     else if (currentVisIndex === 1 && isEngineRunning) {
-        const positions = terrainMesh.geometry.attributes.position.array;
-        // The plane has 33x33 vertices. We map the audio data to the Z axis (height, since it's tilted)
-        for(let i = 0; i < positions.length / 3; i++) {
-            const xIndex = i % 33; // Loop across the grid columns
-            // Use the frequency data to create peaks and valleys
-            const audioVal = dataArray[xIndex * 3] || 0; 
-            positions[i*3 + 2] = (audioVal / 255) * 35; 
+        const positions = coreSystem.geometry.attributes.position.array;
+        
+        for(let i = 0; i < coreOriginalPositions.length; i++) {
+            // Map the 2048 points to the 128 audio bins
+            const audioBin = i % (bufferLength / 2); 
+            const freqVal = dataArray[audioBin] / 255;
+            
+            // Base radius is 20, expands up to 60 based on frequency
+            const dynamicRadius = 20 + Math.pow(freqVal, 2) * 40; 
+
+            const originalVec = coreOriginalPositions[i];
+            positions[i*3] = originalVec.x * dynamicRadius;
+            positions[i*3+1] = originalVec.y * dynamicRadius;
+            positions[i*3+2] = originalVec.z * dynamicRadius;
         }
-        terrainMesh.geometry.attributes.position.needsUpdate = true;
-        // Slowly move the terrain forward to simulate flying
-        terrainMesh.position.y -= 0.1;
-        if(terrainMesh.position.y < -25) terrainMesh.position.y = -20;
+        coreSystem.geometry.attributes.position.needsUpdate = true;
+        
+        // Shift color from Cyan to Purple based on bass
+        coreSystem.material.color.setHSL(0.5 - (audioEnergy * 0.2), 1, 0.6);
+        coreSystem.rotation.y += 0.005;
+        coreSystem.rotation.x += 0.003;
     }
 
-    // --- State 2: The Runestone Knot ---
-    else if (currentVisIndex === 2) {
-        knotMesh.rotation.x += 0.01;
-        knotMesh.rotation.y += 0.01;
+    // --- State 2: The Moondog Vortex ---
+    else if (currentVisIndex === 2 && isEngineRunning) {
+        const positions = vortexSystem.geometry.attributes.position.array;
         
-        if (isEngineRunning) {
-            const knotScale = 1 + (bassAvg / 255) * 0.8;
-            knotMesh.scale.set(knotScale, knotScale, knotScale);
-            // Color shift based on bass intensity
-            knotMesh.material.color.setHSL((bassAvg / 255) * 0.3 + 0.1, 1, 0.5);
+        for(let i = 0; i < vortexAngles.length; i++) {
+            // Audio expands the radius of the tornado
+            const audioBin = Math.floor((i / vortexAngles.length) * bufferLength);
+            const freqVal = dataArray[audioBin] / 255;
+            
+            const baseRadius = 20 + Math.sin(i * 0.05) * 10;
+            const dynamicRadius = baseRadius + (freqVal * 25);
+            
+            vortexAngles[i] += 0.02 + (audioEnergy * 0.05); // Spins faster with bass
+            const angle = vortexAngles[i];
+            const arm = i % 2 === 0 ? 1 : -1;
+            
+            positions[i*3] = Math.cos(angle) * dynamicRadius * arm;
+            // Y stays the same
+            positions[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
         }
-    }
-
-    // --- State 3: The Suncat Pulsar ---
-    else if (currentVisIndex === 3 && isEngineRunning) {
-        const positions = pulsarSystem.geometry.attributes.position.array;
+        vortexSystem.geometry.attributes.position.needsUpdate = true;
         
-        for(let i = 0; i < 128; i++) {
-            const angle = pulsarBaseAngles[i];
-            const audioVal = dataArray[i]; // Get frequency bin
-            
-            // Push points outward from the center based on frequency volume
-            const dynamicRadius = 20 + Math.pow((audioVal / 255), 2) * 50; 
-            
-            positions[i*3] = Math.cos(angle) * dynamicRadius;
-            positions[i*3+1] = Math.sin(angle) * dynamicRadius;
-        }
-        pulsarSystem.geometry.attributes.position.needsUpdate = true;
-        pulsarSystem.rotation.z -= 0.005; // Slow spin
+        // Tilt the tornado slightly towards the camera
+        vortexSystem.rotation.x = 0.2;
     }
 
     renderer.render(scene, camera);
