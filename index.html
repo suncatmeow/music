@@ -619,7 +619,7 @@
             animateWebGL();
         }
 
-       // --- UPGRADED WEBGL VISUALIZER (TRUE EMERGENT CYMATICS) ---
+      // --- UPGRADED WEBGL VISUALIZER (ORGANIC EMERGENT NOISE) ---
         let controls;
 
         function initWebGL() {
@@ -629,7 +629,7 @@
             scene = new THREE.Scene();
             
             camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
-            camera.position.set(0, 0, 15); 
+            camera.position.set(0, 0, 14); 
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
@@ -642,12 +642,14 @@
             controls.minDistance = 5;
             controls.maxDistance = 40;
 
-            // 1. High-Resolution Sphere for Complex Folding
-            const geometry = new THREE.SphereGeometry(3, 128, 128);
+            // A dense sphere gives the noise enough vertices to bend smoothly
+            const geometry = new THREE.SphereGeometry(3, 256, 256);
 
             shaderUniforms = { 
                 uTime: { value: 0.0 }, 
-                uAudioData: { value: null } 
+                uBass: { value: 0.0 },
+                uMid:  { value: 0.0 },
+                uTreble: { value: 0.0 }
             };
 
             const material = new THREE.ShaderMaterial({
@@ -656,55 +658,93 @@
                 transparent: true,
                 vertexShader: `
                     uniform float uTime;
-                    uniform sampler2D uAudioData;
+                    uniform float uBass;
+                    uniform float uMid;
+                    uniform float uTreble;
                     
-                    varying float vDeformation;
+                    varying float vNoise;
                     varying vec3 vNormal;
+
+                    // --- 3D SIMPLEX NOISE ALGORITHM ---
+                    // This generates the organic, fluid-like "cloud/fire" math
+                    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+                    vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+                    vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+                    vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+                    float snoise(vec3 v) {
+                        const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+                        const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+                        vec3 i  = floor(v + dot(v, C.yyy) );
+                        vec3 x0 = v - i + dot(i, C.xxx) ;
+                        vec3 g = step(x0.yzx, x0.xyz);
+                        vec3 l = 1.0 - g;
+                        vec3 i1 = min( g.xyz, l.zxy );
+                        vec3 i2 = max( g.xyz, l.zxy );
+                        vec3 x1 = x0 - i1 + C.xxx;
+                        vec3 x2 = x0 - i2 + C.yyy;
+                        vec3 x3 = x0 - D.yyy;
+                        i = mod289(i);
+                        vec4 p = permute( permute( permute( 
+                                    i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                                  + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+                                  + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+                        float n_ = 0.142857142857;
+                        vec3  ns = n_ * D.wyz - D.xzx;
+                        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+                        vec4 x_ = floor(j * ns.z);
+                        vec4 y_ = floor(j - 7.0 * x_ );
+                        vec4 x = x_ *ns.x + ns.yyyy;
+                        vec4 y = y_ *ns.x + ns.yyyy;
+                        vec4 h = 1.0 - abs(x) - abs(y);
+                        vec4 b0 = vec4( x.xy, y.xy );
+                        vec4 b1 = vec4( x.zw, y.zw );
+                        vec4 s0 = floor(b0)*2.0 + 1.0;
+                        vec4 s1 = floor(b1)*2.0 + 1.0;
+                        vec4 sh = -step(h, vec4(0.0));
+                        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+                        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+                        vec3 p0 = vec3(a0.xy,h.x);
+                        vec3 p1 = vec3(a0.zw,h.y);
+                        vec3 p2 = vec3(a1.xy,h.z);
+                        vec3 p3 = vec3(a1.zw,h.w);
+                        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+                        p0 *= norm.x;
+                        p1 *= norm.y;
+                        p2 *= norm.z;
+                        p3 *= norm.w;
+                        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+                        m = m * m;
+                        return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+                    }
+                    // --- END NOISE ALGORITHM ---
 
                     void main() {
                         vNormal = normal;
 
-                        // Calculate spherical coordinates (phi and theta)
-                        // This allows us to map patterns across the entire surface
-                        vec3 p = normalize(position);
-                        float phi = acos(p.y);
-                        float theta = atan(p.z, p.x);
+                        // The audio doesn't dictate shape; it dictates the ENVIRONMENT.
+                        // Bass drives the evolution of time (how fast the clouds boil)
+                        float timeFlow = uTime * (0.5 + uBass * 3.0);
                         
-                        // Sample different frequency bands
-                        // Bass (Low frequencies) shapes the macro structure
-                        float bass = texture2D(uAudioData, vec2(0.1, 0.0)).r;
-                        // Mids shape the secondary features
-                        float mid = texture2D(uAudioData, vec2(0.5, 0.0)).r;
-                        // Highs add surface texture
-                        float high = texture2D(uAudioData, vec2(0.9, 0.0)).r;
+                        // Mids drive the turbulence scale (how twisted the wood grain gets)
+                        float turbulence = 1.0 + (uMid * 2.0);
                         
-                        vec3 pos = position;
+                        // We sample the 3D noise space using the vertex position
+                        float noiseVal = snoise(vec3(position.x * turbulence, position.y * turbulence, position.z * turbulence + timeFlow));
                         
-                        // 1. Base Resonance (Macro Shape)
-                        // Driven by bass. Modifies the overall topology.
-                        float lobes = 3.0 + (bass * 5.0); // The number of "arms" or "lobes"
-                        float resonance = sin(lobes * phi) * cos(lobes * theta);
-                        
-                        // 2. Harmonic Interference (Detail)
-                        // Driven by mids. Creates intricate folds within the lobes.
-                        float interference = sin(10.0 * phi + uTime) * sin(10.0 * theta + uTime) * mid;
-                        
-                        // 3. Surface Tension (Micro Detail)
-                        // Driven by highs. Creates sharp spikes or ripples.
-                        float tension = sin(20.0 * p.x) * cos(20.0 * p.y) * high;
-                        
-                        // Combine the forces to calculate total deformation
-                        float deformation = (resonance * 1.5) + (interference * 0.8) + (tension * 0.3);
-                        vDeformation = deformation;
+                        // Add a second layer of smaller, faster noise (fractal layering) driven by treble
+                        noiseVal += 0.5 * snoise(vec3(position.x * 3.0, position.y * 3.0, position.z * 3.0 - (timeFlow * (1.0 + uTreble))));
 
-                        // Apply the deformation along the vertex normal
-                        pos += normal * deformation;
+                        vNoise = noiseVal;
+
+                        // The mesh breathes and distorts naturally along the noise field
+                        vec3 pos = position + (normal * noiseVal * (1.0 + uBass * 2.0));
 
                         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                     }
                 `,
                 fragmentShader: `
-                    varying float vDeformation;
+                    varying float vNoise;
                     varying vec3 vNormal;
 
                     vec3 hsv2rgb(vec3 c) {
@@ -714,21 +754,22 @@
                     }
 
                     void main() {
-                        // Color mapping based on how far the mesh is stretched (vDeformation)
-                        // Normalize deformation to a 0.0 - 1.0 range for coloring
-                        float normalizedDef = clamp((vDeformation + 2.0) / 4.0, 0.0, 1.0);
+                        // Normalize the chaotic noise value for coloring (-1.5 to 1.5 approx -> 0.0 to 1.0)
+                        float normalizedNoise = clamp((vNoise + 1.0) / 2.0, 0.0, 1.0);
                         
-                        // Hue shifts from cool blue (valleys) to hot red/yellow (peaks)
-                        float hue = 0.6 - (normalizedDef * 0.6); 
+                        // Colors emerge from the heat/density of the noise field
+                        float hue = 0.65 - (normalizedNoise * 0.7); 
                         vec3 baseColor = hsv2rgb(vec3(hue, 0.9, 1.0));
                         
-                        // Intensity increases at the peaks
-                        vec3 finalColor = baseColor * (0.4 + normalizedDef * 1.5);
+                        vec3 finalColor = baseColor * (0.5 + normalizedNoise * 2.0);
 
-                        gl_FragColor = vec4(finalColor, 0.4 + normalizedDef);
+                        gl_FragColor = vec4(finalColor, 0.3 + normalizedNoise);
                     }
                 `
             });
+
+            // Using double-sided rendering so you can see "into" the folds of the object
+            material.side = THREE.DoubleSide;
 
             particleSystem = new THREE.Mesh(geometry, material);
             scene.add(particleSystem);
@@ -744,21 +785,29 @@
         function animateWebGL() {
             requestAnimationFrame(animateWebGL);
             
-            if (isEngineRunning) {
+            if (isEngineRunning && analyser) {
                 analyser.getByteFrequencyData(dataArray);
-                dataTexture.needsUpdate = true; 
+                
+                let bassSum = 0, midSum = 0, trebleSum = 0;
+                
+                for(let i = 0; i < 10; i++) bassSum += dataArray[i];
+                for(let i = 10; i < 100; i++) midSum += dataArray[i];
+                for(let i = 100; i < 200; i++) trebleSum += dataArray[i];
+
+                // Smooth out the data transfer
+                shaderUniforms.uBass.value += ((bassSum / 10) / 255.0 - shaderUniforms.uBass.value) * 0.1;
+                shaderUniforms.uMid.value += ((midSum / 90) / 255.0 - shaderUniforms.uMid.value) * 0.1;
+                shaderUniforms.uTreble.value += ((trebleSum / 100) / 255.0 - shaderUniforms.uTreble.value) * 0.1;
             }
             
-            shaderUniforms.uTime.value += 0.01;
+            shaderUniforms.uTime.value += 0.005; // Base drift when silent
             
-            // Allow the object to rotate autonomously, but let user override with mouse
             if (particleSystem) {
                 particleSystem.rotation.y += 0.001;
                 particleSystem.rotation.z += 0.0005;
             }
             
-            controls.update(); // Required for damping/smooth camera drag
-            
+            controls.update(); 
             renderer.render(scene, camera);
         }
 
