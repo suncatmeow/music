@@ -205,6 +205,7 @@
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
     <noscript>
@@ -618,44 +619,33 @@
             animateWebGL();
         }
 
-        // --- UPGRADED WEBGL VISUALIZER (CALIBRATED ENTITY) ---
+       // --- UPGRADED WEBGL VISUALIZER (EMERGENT 3D CYMATICS) ---
+        let controls;
+
         function initWebGL() {
             const container = document.getElementById('visualizer-container');
             const canvas = document.getElementById('visualizer');
 
             scene = new THREE.Scene();
             
-            // Pulled back slightly more for comfortable containment
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
-            camera.position.set(0, 0, 18); 
-            camera.lookAt(0, 0, 0);
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(0, 0, 15); 
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
 
-            // 1. Generate Organic Cloud (Expanded Core)
-            const particleCount = 2000;
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            const freqIndices = new Float32Array(particleCount);
+            // Add OrbitControls for full XYZ rotation and zooming
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enablePan = false;
+            controls.minDistance = 5;
+            controls.maxDistance = 40;
 
-            for (let i = 0; i < particleCount; i++) {
-                // Expanded radius (3 to 8) to reduce central blowout density
-                const r = 3 + Math.random() * 5; 
-                const theta = Math.random() * 2 * Math.PI;
-                const phi = Math.acos((Math.random() * 2) - 1);
-
-                positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);     // x
-                positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta); // y
-                positions[i * 3 + 2] = r * Math.cos(phi);                   // z
-
-                // Assign frequency index (0.0 to 1.0)
-                freqIndices[i] = Math.random();
-            }
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('aFreq', new THREE.BufferAttribute(freqIndices, 1));
+            // 1. Generate a high-resolution continuous mesh
+            // Detail level 30 creates thousands of vertices for the sound to manipulate
+            const geometry = new THREE.IcosahedronGeometry(3, 30);
 
             shaderUniforms = { 
                 uTime: { value: 0.0 }, 
@@ -664,42 +654,43 @@
 
             const material = new THREE.ShaderMaterial({
                 uniforms: shaderUniforms,
+                wireframe: true, // Wireframe reveals the complex topological folding
                 transparent: true,
-                depthWrite: false,
-                blending: THREE.AdditiveBlending,
                 vertexShader: `
                     uniform float uTime;
                     uniform sampler2D uAudioData;
                     
-                    attribute float aFreq;
                     varying float vAudio;
-                    varying float vFreq;
+                    varying vec2 vUv;
+                    varying vec3 vNormal;
 
                     void main() {
-                        float audioData = texture2D(uAudioData, vec2(aFreq, 0.0)).r;
+                        vUv = uv;
+                        vNormal = normal;
+
+                        // Map the Y-axis of the sphere to the frequency bins (0.0 to 1.0)
+                        // This means low frequencies shape the bottom/equator, highs shape the poles
+                        float freqIndex = abs(normal.y); 
+                        
+                        // Sample the audio texture
+                        float audioData = texture2D(uAudioData, vec2(freqIndex, 0.0)).r;
                         vAudio = audioData;
-                        vFreq = aFreq;
                         
                         vec3 pos = position;
                         
-                        // Slow organic drift
-                        pos.x += sin(uTime * 0.5 + pos.y) * 0.5;
-                        pos.y += cos(uTime * 0.3 + pos.x) * 0.5;
-                        
-                        // Push outward based on frequency amplitude
-                        vec3 direction = normalize(pos);
-                        pos += direction * (audioData * 2.5);
+                        // Emergent Deformation: 
+                        // Push the vertex outward along its normal based on the frequency amplitude.
+                        // We add a slight twist using the vertex's X/Z coordinates and time to make it organic.
+                        float twist = sin(pos.x * 2.0 + uTime) * cos(pos.z * 2.0 + uTime) * 0.5;
+                        pos += normal * (audioData * 6.0 + twist);
 
-                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-                        gl_Position = projectionMatrix * mvPosition;
-                        
-                        // Reduced point size multiplier to prevent overlap blowout
-                        gl_PointSize = (2.0 + (audioData * 10.0)) * (20.0 / -mvPosition.z);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                     }
                 `,
                 fragmentShader: `
                     varying float vAudio;
-                    varying float vFreq;
+                    varying vec2 vUv;
+                    varying vec3 vNormal;
 
                     vec3 hsv2rgb(vec3 c) {
                         vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -708,26 +699,19 @@
                     }
 
                     void main() {
-                        vec2 xy = gl_PointCoord.xy - vec2(0.5);
-                        float distance = length(xy);
-                        if (distance > 0.5) discard;
+                        // Color mapping based on the structural deformation and original normal
+                        float hue = abs(vNormal.y) * 0.8; 
+                        vec3 baseColor = hsv2rgb(vec3(hue, 0.8, 1.0));
                         
-                        float alpha = (0.5 - distance) * 2.0;
+                        // The wireframe glows intensely where the deformation is highest
+                        vec3 finalColor = baseColor * (0.5 + vAudio * 2.0);
 
-                        // Physical Light Mapping: vFreq maps 0.0 (Red) to 0.8 (Violet)
-                        float hue = vFreq * 0.8; 
-                        vec3 baseColor = hsv2rgb(vec3(hue, 1.0, 1.0));
-                        
-                        // Toned down the extreme color multiplier
-                        vec3 finalColor = baseColor * (0.8 + vAudio);
-
-                        // DRASTICALLY lowered base opacity (0.05). It only gets bright when vAudio spikes.
-                        gl_FragColor = vec4(finalColor, alpha * (0.05 + vAudio * 0.15));
+                        gl_FragColor = vec4(finalColor, 0.3 + vAudio);
                     }
                 `
             });
 
-            particleSystem = new THREE.Points(geometry, material);
+            particleSystem = new THREE.Mesh(geometry, material);
             scene.add(particleSystem);
 
             window.addEventListener('resize', () => {
@@ -735,6 +719,27 @@
                 camera.updateProjectionMatrix();
                 renderer.setSize(container.clientWidth, container.clientHeight);
             });
+            renderer.render(scene, camera);
+        }
+
+        function animateWebGL() {
+            requestAnimationFrame(animateWebGL);
+            
+            if (isEngineRunning) {
+                analyser.getByteFrequencyData(dataArray);
+                dataTexture.needsUpdate = true; 
+            }
+            
+            shaderUniforms.uTime.value += 0.01;
+            
+            // Allow the object to rotate autonomously, but let user override with mouse
+            if (particleSystem) {
+                particleSystem.rotation.y += 0.001;
+                particleSystem.rotation.z += 0.0005;
+            }
+            
+            controls.update(); // Required for damping/smooth camera drag
+            
             renderer.render(scene, camera);
         }
 
