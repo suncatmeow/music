@@ -785,10 +785,12 @@
             const btnVisToggle = document.getElementById('btn-vis-toggle');
 
             // WebGL Globals
-            let scene, camera, renderer;
-            let timeDataArray; 
-            let currentVisIndex = 0; // 0 = Sun, 1 = Oscilloscope
-            let sunMesh, scopeLine;
+                let scene, camera, renderer;
+                let timeDataArray; 
+                let currentVisIndex = 0; // 0=Sun, 1=Scope, 2=Bars, 3=Alchemy
+                let sunMesh, scopeLine, particleSystem;
+                let bars = [];
+                let particleVelocities = [];
             
         // Custom Player Controls
             const btnMainPlay = document.getElementById('btn-main-play');
@@ -1246,84 +1248,175 @@
             }
 
             function initWebGL() {
-                const container = document.getElementById('visualizer-container');
-                
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-                camera.position.z = 50;
+    const container = document.getElementById('visualizer-container');
+    
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.z = 50;
 
-                renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('visualizer'), alpha: true, antialias: true });
-                renderer.setSize(container.clientWidth, container.clientHeight);
-                renderer.setPixelRatio(window.devicePixelRatio);
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('visualizer'), alpha: true, antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-                // --- State 0: The 3D Sun ---
-                const sunGeo = new THREE.IcosahedronGeometry(15, 2);
-                const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true });
-                sunMesh = new THREE.Mesh(sunGeo, sunMat);
-                scene.add(sunMesh);
+    // --- State 0: The Original Sun (Restored) ---
+    const sunGeo = new THREE.CircleGeometry(15, 64);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
+    sunMesh = new THREE.Mesh(sunGeo, sunMat);
+    scene.add(sunMesh);
 
-                // --- State 1: WMP Oscilloscope ---
-                const scopeGeo = new THREE.BufferGeometry();
-                const positions = new Float32Array(bufferLength * 3); 
-                scopeGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                const scopeMat = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2 });
-                scopeLine = new THREE.Line(scopeGeo, scopeMat);
-                scopeLine.visible = false; // Hidden by default
-                scene.add(scopeLine);
+    // --- State 1: WMP Oscilloscope ---
+    const scopeGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(bufferLength * 3); 
+    scopeGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const scopeMat = new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 2 });
+    scopeLine = new THREE.Line(scopeGeo, scopeMat);
+    scopeLine.visible = false; 
+    scene.add(scopeLine);
 
-                // Switcher Logic
-                btnVisToggle.addEventListener('click', () => {
-                    currentVisIndex = (currentVisIndex + 1) % 2;
-                    sunMesh.visible = (currentVisIndex === 0);
-                    scopeLine.visible = (currentVisIndex === 1);
-                });
+    // --- State 2: 3D EQ Bars ---
+    const barGeo = new THREE.BoxGeometry(1.5, 1, 1.5);
+    const barMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+    for(let i = 0; i < 32; i++) { // 32 bars across the screen
+        let bar = new THREE.Mesh(barGeo, barMat);
+        bar.position.x = (i - 16) * 2; // Spread them out
+        bar.position.y = -20;
+        bar.visible = false;
+        bars.push(bar);
+        scene.add(bar);
+    }
 
-                renderVisualizer();
-            }
+    // --- State 3: Alchemy Starfield ---
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 800; // Number of particles
+    const pPos = new Float32Array(pCount * 3);
+    for(let i = 0; i < pCount; i++) {
+        pPos[i*3] = (Math.random() - 0.5) * 50;     // X
+        pPos[i*3+1] = (Math.random() - 0.5) * 50;   // Y
+        pPos[i*3+2] = (Math.random() - 0.5) * 50;   // Z
+        
+        // Give each particle a random outward trajectory
+        particleVelocities.push(new THREE.Vector3(
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5
+        ));
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0xff00ff, size: 0.8, transparent: true, opacity: 0.8 });
+    particleSystem = new THREE.Points(pGeo, pMat);
+    particleSystem.visible = false;
+    scene.add(particleSystem);
+
+    // Switcher Logic (Now cycles through 4 states)
+    btnVisToggle.addEventListener('click', () => {
+        currentVisIndex = (currentVisIndex + 1) % 4; // Cycle 0, 1, 2, 3
+        
+        // Hide everything first
+        sunMesh.visible = false;
+        scopeLine.visible = false;
+        bars.forEach(b => b.visible = false);
+        particleSystem.visible = false;
+
+        // Reveal the active one
+        if (currentVisIndex === 0) sunMesh.visible = true;
+        if (currentVisIndex === 1) scopeLine.visible = true;
+        if (currentVisIndex === 2) bars.forEach(b => b.visible = true);
+        if (currentVisIndex === 3) particleSystem.visible = true;
+    });
+
+    renderVisualizer();
+}
 
             function renderVisualizer() {
-                requestAnimationFrame(renderVisualizer);
+    requestAnimationFrame(renderVisualizer);
 
-                // Grab audio data if engine is active
-                if (isEngineRunning) {
-                    analyser.getByteFrequencyData(dataArray);
-                    analyser.getByteTimeDomainData(timeDataArray);
-                }
+    if (isEngineRunning) {
+        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteTimeDomainData(timeDataArray);
+    }
 
-                // --- Logic for Active State ---
-                if (currentVisIndex === 0) {
-                    // Sun Transformation
-                    let scale = 1;
-                    if (isEngineRunning) {
-                        let bassSum = 0;
-                        for(let i = 0; i < 8; i++) bassSum += dataArray[i];
-                        scale = 1 + (bassSum / 8) / 128; // Pulse with bass
-                    }
-                    sunMesh.scale.set(scale, scale, scale);
-                    sunMesh.rotation.y += 0.01;
-                    sunMesh.rotation.x += 0.005;
-                } 
-                else if (currentVisIndex === 1 && isEngineRunning) {
-                    // Oscilloscope Vertex Updating
-                    const positions = scopeLine.geometry.attributes.position.array;
-                    const sliceWidth = 100 / bufferLength; 
-                    let x = -50; 
+    let bassSum = 0;
+    if (isEngineRunning) {
+        for(let i = 0; i < 8; i++) bassSum += dataArray[i];
+    }
+    const bassAvg = bassSum / 8;
 
-                    for (let i = 0; i < bufferLength; i++) {
-                        const v = timeDataArray[i] / 128.0; // Normalized 0 to 2
-                        const y = (v * 20) - 20; // Scale wave height
+    // --- State 0: Original Sun ---
+    if (currentVisIndex === 0) {
+        let scale = 1 + (bassAvg / 128); // Pulse scaling
+        sunMesh.scale.set(scale, scale, 1); // Keep it flat, scale X and Y
+        // Note: No rotation applied here so it behaves exactly like your 2D circle
+    } 
+    
+    // --- State 1: Oscilloscope ---
+    else if (currentVisIndex === 1 && isEngineRunning) {
+        const positions = scopeLine.geometry.attributes.position.array;
+        const sliceWidth = 100 / bufferLength; 
+        let x = -50; 
 
-                        positions[i * 3] = x;           // X
-                        positions[i * 3 + 1] = y;       // Y
-                        positions[i * 3 + 2] = 0;       // Z
+        for (let i = 0; i < bufferLength; i++) {
+            const v = timeDataArray[i] / 128.0; 
+            const y = (v * 20) - 20; 
 
-                        x += sliceWidth;
-                    }
-                    scopeLine.geometry.attributes.position.needsUpdate = true;
-                }
+            positions[i * 3] = x;           
+            positions[i * 3 + 1] = y;       
+            positions[i * 3 + 2] = 0;       
 
-                renderer.render(scene, camera);
+            x += sliceWidth;
+        }
+        scopeLine.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // --- State 2: 3D EQ Bars ---
+    else if (currentVisIndex === 2 && isEngineRunning) {
+        const step = Math.floor(bufferLength / 32); // Map 256 data points to 32 bars
+        
+        for(let i = 0; i < 32; i++) {
+            const dataValue = dataArray[i * step];
+            // Scale the Y axis based on frequency volume (add 0.1 so it never disappears entirely)
+            const scaleY = (dataValue / 255) * 30 + 0.1; 
+            
+            bars[i].scale.y = scaleY;
+            bars[i].position.y = -15 + (scaleY / 2); // Keep the bottoms anchored
+            
+            // Optional: Color shift based on height
+            bars[i].material.color.setHSL(0.5 + (dataValue / 255) * 0.5, 1, 0.5);
+        }
+    }
+
+    // --- State 3: Alchemy Particles ---
+    else if (currentVisIndex === 3 && isEngineRunning) {
+        const positions = particleSystem.geometry.attributes.position.array;
+        
+        // If bass hits hard, push particles out faster
+        const speedBoost = bassAvg > 200 ? 2.0 : 0.2;
+
+        for(let i = 0; i < positions.length / 3; i++) {
+            // Apply velocity
+            positions[i*3] += particleVelocities[i].x * speedBoost;
+            positions[i*3+1] += particleVelocities[i].y * speedBoost;
+            positions[i*3+2] += particleVelocities[i].z * speedBoost;
+
+            // If a particle drifts too far, snap it back to the center
+            if (Math.abs(positions[i*3]) > 60 || Math.abs(positions[i*3+1]) > 60 || Math.abs(positions[i*3+2]) > 60) {
+                positions[i*3] = (Math.random() - 0.5) * 10;
+                positions[i*3+1] = (Math.random() - 0.5) * 10;
+                positions[i*3+2] = (Math.random() - 0.5) * 10;
             }
+        }
+        
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+        // Pulse the overall starfield size with the beat
+        const sysScale = 1 + (bassAvg / 255);
+        particleSystem.scale.set(sysScale, sysScale, sysScale);
+        
+        // Slowly rotate the whole field
+        particleSystem.rotation.y += 0.002;
+        particleSystem.rotation.x += 0.001;
+    }
+
+    renderer.render(scene, camera);
+}
 
         initApp();
     </script>
