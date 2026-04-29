@@ -690,7 +690,22 @@
             <div class="playlist" id="playlist">
             </div>
         </section>
-
+        <section id="offline-manager" class="glass-panel animate-entry delay-4" style="margin-top: 2rem; margin-bottom: 2rem; text-align: center;">
+            <h2 class="bio-header">Offline Archive</h2>
+            <p class="bio-text" style="margin-bottom: 1.5rem;">Save the full Suncat Studios archive (72 tracks) for listening without internet.</p>
+            
+            <button id="btn-download-all" class="sort-btn active" style="width: 100%; padding: 1rem; font-weight: bold;">
+                📥 Download All Tracks
+            </button>
+            
+            <div id="download-status-box" style="display: none; margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                <div class="progress-container">
+                    <span id="download-progress-text" class="time-display" style="width: auto; flex: 1; text-align: left;">Preparing...</span>
+                    <span id="download-percent" class="time-display">0%</span>
+                </div>
+                <input type="range" id="download-visual-bar" value="0" min="0" max="100" style="pointer-events: none; height: 4px;">
+            </div>
+        </section>
         <footer class="glass-panel animate-entry delay-4" id="about">
             <h2 class="bio-header">Who is Suncat?</h2>
             <p class="bio-text">
@@ -1399,6 +1414,63 @@
         }
 
         initApp();
+
+        // --- OFFLINE DOWNLOAD LOGIC --- //
+        const downloadBtn = document.getElementById('btn-download-all');
+        const dnlStatusBox = document.getElementById('download-status-box');
+        const progressText = document.getElementById('download-progress-text');
+        const percentText = document.getElementById('download-percent');
+        const visualBar = document.getElementById('download-visual-bar');
+
+        // Check if already downloaded on load
+        if (localStorage.getItem('suncat_archive_offline') === 'true') {
+            downloadBtn.innerText = "✅ Archive Available Offline";
+            downloadBtn.disabled = true;
+            downloadBtn.classList.remove('active');
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if ('serviceWorker' in navigator) {
+                downloadBtn.disabled = true;
+                downloadBtn.innerText = "Syncing with Worker...";
+                dnlStatusBox.style.display = "block"; // Show the progress bar
+
+                navigator.serviceWorker.ready.then(reg => {
+                    // Send the entire track list from your playlistData to the Service Worker
+                    const allTrackUrls = playlistData.map(track => track.src);
+                    reg.active.postMessage({ 
+                        action: 'START_BULK_DOWNLOAD', 
+                        tracks: allTrackUrls 
+                    });
+                });
+            } else {
+                alert("Offline caching is not supported in this browser.");
+            }
+        });
+
+        // Listen for progress messages from sw.js
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data.action === 'DOWNLOAD_PROGRESS') {
+                const { current, total, track } = event.data;
+                const percent = Math.round((current / total) * 100);
+                
+                // Update the UI
+                visualBar.value = percent;
+                percentText.innerText = `${percent}%`;
+                
+                // Clean up the track name for the display
+                const cleanName = decodeURIComponent(track).replace('.mp3', '');
+                progressText.innerText = `Saving: ${cleanName}`;
+
+                if (current >= total) {
+                    progressText.innerText = "Deployment Complete. 100% Offline Ready.";
+                    downloadBtn.innerText = "✅ Archive Available Offline";
+                    downloadBtn.classList.remove('active');
+                    localStorage.setItem('suncat_archive_offline', 'true');
+                }
+            }
+        });
+        
     </script>
 </body>
 </html>
