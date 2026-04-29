@@ -1311,12 +1311,12 @@ function initWebGL() {
     const l2 = new THREE.PointLight(0x00ffff, 2, 300); l2.position.set(-50, -50, 50); scene.add(l2);
     lights.push(l1, l2);
 
-    // 0: Suncat Nebula
+     // --- State 0: The Suncat Nebula ---
     const nebGeo = new THREE.BufferGeometry();
     const nebPos = new Float32Array(2000 * 3);
     for(let i=0; i<2000; i++) {
-        nebPos[i*3] = (Math.random()-0.5)*150; nebPos[i*3+1] = (Math.random()-0.5)*150; nebPos[i*3+2] = (Math.random()-0.5)*150;   
-        nebulaVelocities.push(new THREE.Vector3((Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4, (Math.random()-0.5)*0.4));
+        nebPos[i*3] = (Math.random() - 0.5) * 150; nebPos[i*3+1] = (Math.random() - 0.5) * 150; nebPos[i*3+2] = (Math.random() - 0.5) * 150;   
+        nebulaVelocities.push(new THREE.Vector3((Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4));
     }
     nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos, 3));
     nebulaSystem = new THREE.Points(nebGeo, new THREE.PointsMaterial({ color: 0xff00aa, ...commonMat }));
@@ -1335,7 +1335,7 @@ function initWebGL() {
     coreSystem = new THREE.Points(coreGeo, new THREE.PointsMaterial({ color: 0x00ffff, ...commonMat, size: 2.0 }));
     coreSystem.visible = false; scene.add(coreSystem);
 
-    // 2: Moondog Vortex
+     // --- State 2: The Moondog Vortex ---
     const vortexGeo = new THREE.BufferGeometry();
     const vortexPos = new Float32Array(1500 * 3);
     for(let i=0; i<1500; i++) {
@@ -1408,16 +1408,21 @@ function renderVisualizer() {
     const audioEnergy = bassSum / 2040; 
     const time = Date.now() * 0.001;
 
-    // 0: Nebula
+       // --- State 0: Nebula ---
     if (currentVisIndex === 0 && isEngineRunning) {
-        const pos = nebulaSystem.geometry.attributes.position.array;
-        const speed = audioEnergy > 0.8 ? 4.0 : 0.5;
-        for(let i=0; i<pos.length/3; i++){
-            pos[i*3]+=nebulaVelocities[i].x*speed; pos[i*3+1]+=nebulaVelocities[i].y*speed; pos[i*3+2]+=nebulaVelocities[i].z*speed;
-            if(Math.abs(pos[i*3])>120) pos[i*3]=(Math.random()-0.5)*20;
+        const positions = nebulaSystem.geometry.attributes.position.array;
+        const speedBoost = audioEnergy > 0.8 ? 4.0 : 0.5; 
+        for(let i = 0; i < positions.length / 3; i++) {
+            positions[i*3] += nebulaVelocities[i].x * speedBoost;
+            positions[i*3+1] += nebulaVelocities[i].y * speedBoost;
+            positions[i*3+2] += nebulaVelocities[i].z * speedBoost;
+            if (Math.abs(positions[i*3]) > 120 || Math.abs(positions[i*3+1]) > 120 || Math.abs(positions[i*3+2]) > 120) {
+                positions[i*3] = (Math.random() - 0.5) * 20; positions[i*3+1] = (Math.random() - 0.5) * 20; positions[i*3+2] = (Math.random() - 0.5) * 20;
+            }
         }
         nebulaSystem.geometry.attributes.position.needsUpdate = true;
-        nebulaSystem.rotation.y += 0.002;
+        const sysScale = 1 + (audioEnergy * 0.3); nebulaSystem.scale.set(sysScale, sysScale, sysScale);
+        nebulaSystem.rotation.y += 0.002; nebulaSystem.rotation.z += 0.001;
     }
     // 1: Core
     else if (currentVisIndex === 1 && isEngineRunning) {
@@ -1429,15 +1434,15 @@ function renderVisualizer() {
         coreSystem.geometry.attributes.position.needsUpdate = true;
         coreSystem.rotation.y += 0.005;
     }
-    // 2: Vortex
+    // --- State 2: Vortex ---
     else if (currentVisIndex === 2 && isEngineRunning) {
-        const pos = vortexSystem.geometry.attributes.position.array;
+        const positions = vortexSystem.geometry.attributes.position.array;
         for(let i = 0; i < vortexAngles.length; i++) {
-            const freqVal = dataArray[Math.floor((i / vortexAngles.length) * 128)] / 255;
-            const dynamicRadius = 25 + (freqVal * 30);
+            const freqVal = dataArray[Math.floor((i / vortexAngles.length) * bufferLength)] / 255;
+            const dynamicRadius = 20 + Math.sin(i * 0.05) * 10 + (freqVal * 25);
             vortexAngles[i] += 0.02 + (audioEnergy * 0.05); 
             const angle = vortexAngles[i]; const arm = i % 2 === 0 ? 1 : -1;
-            pos[i*3] = Math.cos(angle) * dynamicRadius * arm; pos[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
+            positions[i*3] = Math.cos(angle) * dynamicRadius * arm; positions[i*3+2] = Math.sin(angle) * dynamicRadius * arm;
         }
         vortexSystem.geometry.attributes.position.needsUpdate = true;
         vortexSystem.rotation.x = 0.2;
