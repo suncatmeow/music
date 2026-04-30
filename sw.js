@@ -1,4 +1,4 @@
-const CACHE_NAME = 'suncat-audio-v3';
+const CACHE_NAME = 'suncat-audio-v4';
 const urlsToCache = [
   './',
   './index.html',
@@ -35,71 +35,109 @@ self.addEventListener('activate', event => {
 });
 
 // 3. MESSAGE: Handle the Bulk Download Request
-self.addEventListener('message', async event => {
-  if (event.data.action === 'START_BULK_DOWNLOAD') {
-    const tracks = event.data.tracks;
-    const cache = await caches.open(CACHE_NAME);
-    let count = 0;
+self.addEventListener('message', event => {
+    if (event.data.action === 'START_BULK_DOWNLOAD') {
+        const tracks = event.data.tracks;
+        const client = event.source; // Grab the specific browser tab talking to us, much faster than matchAll()
 
-    for (const track of tracks) {
-      try {
-        // Encode the URI to handle spaces in filenames like "Baby Boy.mp3"
-        const cleanUrl = encodeURI(track);
-        
-        // Check if we already cached it dynamically to save bandwidth
-        const existingResponse = await cache.match(cleanUrl);
-        
-        if (!existingResponse) {
-          const networkResponse = await fetch(cleanUrl);
-          if (networkResponse.ok) {
-            await cache.put(cleanUrl, networkResponse.clone());
-          }
-        }
-        
-        count++;
-        
-        // Report progress back to the frontend
-        const clients = await self.clients.matchAll();
-        clients.forEach(client => {
-          client.postMessage({
-            action: 'DOWNLOAD_PROGRESS',
-            current: count,
-            total: tracks.length,
-            track: track
-          });
-        });
+        // Tell the browser NOT to kill the Service Worker until this promise resolves
+        event.waitUntil((async () => {
+            const cache = await caches.open(CACHE_NAME);
+            let count = 0;
 
-      } catch (err) {
-        console.error(`Suncat SW: Failed to cache track ${track}`, err);
-        // We purposefully don't break the loop here. If one fails, keep going.
-      }
+            for (const track of tracks) {
+                try {
+                    const cleanUrl = encodeURI(track);
+                    const existingResponse = await cache.match(cleanUrl);
+
+                    // Only fetch if it's genuinely missing
+                    if (!existingResponse) {
+                        const networkResponse = await fetch(cleanUrl);
+                        if (networkResponse.ok) {
+                            await cache.put(cleanUrl, networkResponse.clone());
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Suncat SW: Failed to cache ${track}`, err);
+                } finally {
+                    // FINALLY block: ALWAYS increment the count, even if a fetch fails.
+                    // This guarantees your UI progress bar never permanently hangs.
+                    count++;
+                    
+                    // Talk directly to the tab instantly
+                    if (client) {
+                        client.postMessage({
+                            action: 'DOWNLOAD_PROGRESS',
+                            current: count,
+                            total: tracks.length,
+                            track: track
+                        });
+                    }
+                }
+            }
+        })());
     }
-  }
 });
 
 // 4. FETCH: Dynamic Caching & Offline Routing
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      // Return from cache if we have it
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    // 1. Is this an audio file?
+    if (event.request.url.endsWith('.mp3')) {
+        event.respondWith((async () => {
+            const cache = await caches.open(CACHE_NAME);
+            
+            // Look for the file in the cache (ignoring any weird URL parameters)
+            const cachedResponse = await cache.match(event.request, { ignoreSearch: true });
 
-      // Otherwise, fetch from the network
-      return fetch(event.request).then(networkResponse => {
-        // DYNAMIC CACHING: If it's an MP3 that isn't cached yet, save a copy silently
-        if (networkResponse.ok && event.request.url.endsWith('.mp3')) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Optional: Return a specific offline fallback page/audio if the network is totally dead
-        console.log('Suncat SW: Network request failed and not in cache.');
-      });
-    })
-  );
+            if (cachedResponse) {
+                // THE FIX: Does the browser want a specific chunk? (Range request)
+                const rangeHeader = event.request.headers.get('range');
+                if (rangeHeader) {
+                    const blob = await cachedResponse.blob();
+                    const size = blob.size;
+                    
+                    // Parse the range header (e.g., "bytes=0-1000")
+                    const parts = rangeHeader.replace(/bytes=/, "").split("-");
+                    const start = parseInt(parts[0], 10);
+                    const end = parts[1] ? parseInt(parts[1], 10) : size - 1;
+                    
+                    // Slice the cached blob into the exact chunk requested
+                    const chunk = blob.slice(start, end + 1);
+
+                    // Send back a "206 Partial Content" response so Android doesn't freak out
+                    return new Response(chunk, {
+                        status: 206,
+                        statusText: 'Partial Content',
+                        headers: new Headers({
+                            'Content-Type': 'audio/mpeg',
+                            'Content-Range': `bytes ${start}-${end}/${size}`,
+                            'Content-Length': chunk.size,
+                            'Accept-Ranges': 'bytes'
+                        })
+                    });
+                }
+                
+                // If it didn't ask for a range, just return the whole file
+                return cachedResponse;
+            }
+
+            // IF NOT CACHED: Fetch from network and save a copy silently
+            try {
+                const networkResponse = await fetch(event.request);
+                if (networkResponse.ok) {
+                    cache.put(event.request, networkResponse.clone());
+                }
+                return networkResponse;
+            } catch (err) {
+                console.log('Suncat SW: Network fetch failed for audio', err);
+            }
+        })());
+    } else {
+        // 2. For everything else (HTML, CSS, App Shell), do standard caching
+        event.respondWith(
+            caches.match(event.request).then(cachedResponse => {
+                return cachedResponse || fetch(event.request);
+            })
+        );
+    }
 });
