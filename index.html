@@ -747,7 +747,7 @@
             <p class="bio-text">
                 Suncat is an independent music producer and game developer based in Houston, Texas. Alongside a vast archive of original rock, pop, and avant-garde albums, Suncat Studios produces immersive video game soundtracks. 
                 <br><br>
-                You can hear the latest game audio in action by playing <a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" style="color: var(--accent-glow); text-decoration: none; font-weight: bold;">Runestones Online</a>, a free, browser-based card battler and dungeon crawler developed by Suncat.
+                You can hear the latest game audio in action by playing <a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" style="color: var(--accent-glow); text-decoration: none; font-weight: bold;">Runestones Online</a>, a free, browser-based tarot card battler and dungeon crawler developed by Suncat.
             </p>
         </footer>
     </div>
@@ -1238,6 +1238,7 @@
             }, 300);
 
             audioPlayer.src = track.src;
+            audioPlayer.load(); // <--- ADD THIS LINE HERE
             audioPlayer.play().catch(e => console.log("Waiting for user interaction..."));
 
             if ('mediaSession' in navigator) {
@@ -1274,83 +1275,111 @@
 
 
         function setupAudioEngine() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            
-            // Create the source from the HTML audio element
-            source = audioCtx.createMediaElementSource(audioPlayer);
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    
+    source = audioCtx.createMediaElementSource(audioPlayer);
 
-            // ----------------------------------------------------
-            // THE "INDUSTRY POLISH" MASTERING CHAIN
-            // ----------------------------------------------------
+    // ----------------------------------------------------
+    // 1. TAPE SATURATION (Warmth & Thickness)
+    // ----------------------------------------------------
+    const saturator = audioCtx.createWaveShaper();
+    saturator.curve = makeDistortionCurve(15); // Amount of "analog" drive
+    saturator.oversample = '4x'; // High-quality anti-aliasing
 
-            // 1. Bass Boost (Warmth & Punch)
-            const bassEQ = audioCtx.createBiquadFilter();
-            bassEQ.type = 'lowshelf';
-            bassEQ.frequency.value = 120; // Target the punchy low-end
-            bassEQ.gain.value = 6;      // +3.5dB boost
-
-            // 2. High-end "Air" (Clarity)
-            const trebleEQ = audioCtx.createBiquadFilter();
-            trebleEQ.type = 'highshelf';
-            trebleEQ.frequency.value = 8000; // Target the crisp highs
-            trebleEQ.gain.value = 2.0;       // +2.0dB boost
-            // 3. Mid-Range Presence (Acoustic Guitar / Vocal Articulation)
-            const midEQ = audioCtx.createBiquadFilter();
-            midEQ.type = 'peaking';
-            midEQ.frequency.value = 1800; // 1.8kHz sits beautifully for acoustic presence
-            midEQ.Q.value = 1.2;          // A slightly wider bell curve for a more musical, natural sound
-            midEQ.gain.value = 2.5;       // A gentle +2.5dB nudge forward
-            // The X-Axis: Stereo Width
-            const panner = audioCtx.createStereoPanner();
-            panner.pan.value = 0; // You can automate this later to sweep left/right!
-
-            // The Z-Axis: Slapback Room Depth (Simulating a wall reflection)
-            const delay = audioCtx.createDelay();
-            delay.delayTime.value = 0.04; // 40 milliseconds feels like a small club room
-            const delayGain = audioCtx.createGain();
-            delayGain.gain.value = 0.15; // Keep it quiet so it doesn't muddy the mix, just adds depth
-            // 3. Overall Volume Boost (Makeup Gain)
-            const makeupGain = audioCtx.createGain();
-            makeupGain.gain.value = 1.6; // Boost overall volume by 60%
-
-            // 4. Dynamics Compressor (The Anti-Popping "Spotify" Glue)
-            const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20; // Start compressing early
-            compressor.knee.value = 20;       // Smooth curve
-            compressor.ratio.value = 4;       // Moderate compression ratio
-            compressor.attack.value = 0.005;  // Very fast attack to catch clipping peaks instantly
-            compressor.release.value = 0.15;  // Fast release to keep the energy pumping
-
-            // ----------------------------------------------------
-            // ROUTING THE AUDIO
-            // ----------------------------------------------------
-            
-            // Connect the dry chain
-                source.connect(bassEQ);
-                bassEQ.connect(midEQ);       
-                midEQ.connect(trebleEQ);     
-                trebleEQ.connect(panner);    
-                panner.connect(makeupGain);
-
-                // Connect the wet (Depth) chain
-                panner.connect(delay);       // Send a copy to the delay
-                delay.connect(delayGain);    // Control the volume of the room echo
-                delayGain.connect(makeupGain); // Mix it back in with the dry signal
-
-                // Final Polish
-                makeupGain.connect(compressor);
-                compressor.connect(analyser); 
-                analyser.connect(audioCtx.destination);
-            
-            // Set up visualizer data
-            analyser.fftSize = 256; 
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-            
-            isEngineRunning = true;
-            renderVisualizer();
+    // Helper function to create the analog tape curve
+    function makeDistortionCurve(amount) {
+        const k = amount;
+        const n_samples = 44100;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n_samples; ++i) {
+            let x = i * 2 / n_samples - 1;
+            curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
         }
+        return curve;
+    }
+
+    // ----------------------------------------------------
+    // 2. THE "SMILE" EQ (Big Bottom, Clear Top, No Mud)
+    // ----------------------------------------------------
+    const bassEQ = audioCtx.createBiquadFilter();
+    bassEQ.type = 'lowshelf';
+    bassEQ.frequency.value = 90;
+    bassEQ.gain.value = 4.5; // Big, round bass
+
+    const mudCutEQ = audioCtx.createBiquadFilter();
+    mudCutEQ.type = 'peaking';
+    mudCutEQ.frequency.value = 300; // The "mud" frequency
+    mudCutEQ.Q.value = 1.0;
+    mudCutEQ.gain.value = -2.5; // Scoop out the boxiness
+
+    const airEQ = audioCtx.createBiquadFilter();
+    airEQ.type = 'highshelf';
+    airEQ.frequency.value = 10000;
+    airEQ.gain.value = 4.0; // Shimmering, expensive-sounding highs
+
+    // ----------------------------------------------------
+    // 3. PARALLEL "NEW YORK" COMPRESSION (Huge Dynamics)
+    // ----------------------------------------------------
+    // We split the signal: One dry, one crushed
+    const dryGain = audioCtx.createGain();
+    dryGain.gain.value = 0.8; // Let the punchy transients live
+
+    const parallelCompressor = audioCtx.createDynamicsCompressor();
+    parallelCompressor.threshold.value = -35; // Catch absolutely everything
+    parallelCompressor.knee.value = 0;        // Hard knee
+    parallelCompressor.ratio.value = 12;      // Smash it
+    parallelCompressor.attack.value = 0.005;  // Instant grab
+    parallelCompressor.release.value = 0.1;   // Fast release for a "pumping" energy
+
+    const wetGain = audioCtx.createGain();
+    wetGain.gain.value = 0.6; // Blend the crushed signal underneath the dry one
+
+    // ----------------------------------------------------
+    // 4. BRICKWALL LIMITER (Maximum Loudness, No Clipping)
+    // ----------------------------------------------------
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1.4; // Drive the final volume up
+
+    const limiter = audioCtx.createDynamicsCompressor();
+    limiter.threshold.value = -0.5;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.001;
+    limiter.release.value = 0.05;
+
+    // ----------------------------------------------------
+    // AUDIO ROUTING 
+    // ----------------------------------------------------
+    
+    // 1. Source -> Tape Saturation -> EQ
+    source.connect(saturator);
+    saturator.connect(bassEQ);
+    bassEQ.connect(mudCutEQ);
+    mudCutEQ.connect(airEQ);
+
+    // 2. Split the signal for Parallel Compression
+    airEQ.connect(dryGain); // Path A: Punchy & Dry
+    airEQ.connect(parallelCompressor); // Path B: Smashed
+    parallelCompressor.connect(wetGain);
+
+    // 3. Re-combine into the Master Gain -> Limiter
+    dryGain.connect(masterGain);
+    wetGain.connect(masterGain);
+    masterGain.connect(limiter);
+    
+    // 4. To Visualizer and Speakers
+    limiter.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    
+    // Set up visualizer data
+    analyser.fftSize = 256; 
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+    
+    isEngineRunning = true;
+    renderVisualizer();
+}
 
         function resizeCanvas() {
             const container = document.getElementById('visualizer-container');
