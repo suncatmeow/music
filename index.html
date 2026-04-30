@@ -1520,8 +1520,8 @@
         const percentText = document.getElementById('download-percent');
         const visualBar = document.getElementById('download-visual-bar');
 
-        // Check if already downloaded on load
-        if (localStorage.getItem('suncat_archive_offline') === 'true') {
+        // Change the key here
+        if (localStorage.getItem('suncat_archive_103') === 'true') {
             downloadBtn.innerText = "✅ Archive Available Offline";
             downloadBtn.disabled = true;
             downloadBtn.classList.remove('active');
@@ -1564,7 +1564,8 @@
                     progressText.innerText = "Deployment Complete. 100% Offline Ready.";
                     downloadBtn.innerText = "✅ Archive Available Offline";
                     downloadBtn.classList.remove('active');
-                    localStorage.setItem('suncat_archive_offline', 'true');
+                    // Change the key here too
+                    localStorage.setItem('suncat_archive_103', 'true'); 
                 }
             }
         });
