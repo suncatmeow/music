@@ -747,7 +747,7 @@
             <p class="bio-text">
                 Suncat is an independent music producer and game developer based in Houston, Texas. Alongside a vast archive of original rock, pop, and avant-garde albums, Suncat Studios produces immersive video game soundtracks. 
                 <br><br>
-                You can hear the latest game audio in action by playing <a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" style="color: var(--accent-glow); text-decoration: none; font-weight: bold;">Runestones Online</a>, a free, browser-based card battler and dungeon crawler developed by Suncat.
+                You can hear the latest game audio in action by playing <a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" style="color: var(--accent-glow); text-decoration: none; font-weight: bold;">Runestones Online</a>, a free, browser-based tarot card battler and dungeon crawler developed by Suncat.
             </p>
         </footer>
     </div>
@@ -1238,6 +1238,7 @@
             }, 300);
 
             audioPlayer.src = track.src;
+            audioPlayer.load(); // <--- ADD THIS LINE HERE
             audioPlayer.play().catch(e => console.log("Waiting for user interaction..."));
 
             if ('mediaSession' in navigator) {
@@ -1274,83 +1275,79 @@
 
 
         function setupAudioEngine() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            
-            // Create the source from the HTML audio element
-            source = audioCtx.createMediaElementSource(audioPlayer);
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    
+    // Ensure we are handling CORS if loading from an external host/repository
+    audioPlayer.crossOrigin = "anonymous";
+    source = audioCtx.createMediaElementSource(audioPlayer);
 
-            // ----------------------------------------------------
-            // THE "INDUSTRY POLISH" MASTERING CHAIN
-            // ----------------------------------------------------
+    // ----------------------------------------------------
+    // THE AI-AUDIO MASTERING CHAIN
+    // ----------------------------------------------------
 
-            // 1. Bass Boost (Warmth & Punch)
-            const bassEQ = audioCtx.createBiquadFilter();
-            bassEQ.type = 'lowshelf';
-            bassEQ.frequency.value = 120; // Target the punchy low-end
-            bassEQ.gain.value = 6;      // +3.5dB boost
+    // 1. Bass Boost (Sub warmth, no mud)
+    const bassEQ = audioCtx.createBiquadFilter();
+    bassEQ.type = 'lowshelf';
+    bassEQ.frequency.value = 90; // Moved down to target sub-bass, avoiding mud
+    bassEQ.gain.value = 4.0;     // +4dB (Safer than 6dB)
 
-            // 2. High-end "Air" (Clarity)
-            const trebleEQ = audioCtx.createBiquadFilter();
-            trebleEQ.type = 'highshelf';
-            trebleEQ.frequency.value = 8000; // Target the crisp highs
-            trebleEQ.gain.value = 2.0;       // +2.0dB boost
-            // 3. Mid-Range Presence (Acoustic Guitar / Vocal Articulation)
-            const midEQ = audioCtx.createBiquadFilter();
-            midEQ.type = 'peaking';
-            midEQ.frequency.value = 1800; // 1.8kHz sits beautifully for acoustic presence
-            midEQ.Q.value = 1.2;          // A slightly wider bell curve for a more musical, natural sound
-            midEQ.gain.value = 2.5;       // A gentle +2.5dB nudge forward
-            // The X-Axis: Stereo Width
-            const panner = audioCtx.createStereoPanner();
-            panner.pan.value = 0; // You can automate this later to sweep left/right!
+    // 2. Mud Cut (Suno tracks are notoriously muddy here)
+    const mudCut = audioCtx.createBiquadFilter();
+    mudCut.type = 'peaking';
+    mudCut.frequency.value = 350; // The frequency of "boxiness"
+    mudCut.Q.value = 1.0;
+    mudCut.gain.value = -3.0;     // Scoop out 3dB of mud
 
-            // The Z-Axis: Slapback Room Depth (Simulating a wall reflection)
-            const delay = audioCtx.createDelay();
-            delay.delayTime.value = 0.04; // 40 milliseconds feels like a small club room
-            const delayGain = audioCtx.createGain();
-            delayGain.gain.value = 0.15; // Keep it quiet so it doesn't muddy the mix, just adds depth
-            // 3. Overall Volume Boost (Makeup Gain)
-            const makeupGain = audioCtx.createGain();
-            makeupGain.gain.value = 1.6; // Boost overall volume by 60%
+    // 3. Mid-Range Presence (Guitars and Vocals)
+    const midEQ = audioCtx.createBiquadFilter();
+    midEQ.type = 'peaking';
+    midEQ.frequency.value = 2500; // Shifted up to catch the bite of electric guitars
+    midEQ.Q.value = 1.2;          
+    midEQ.gain.value = 2.5;       
 
-            // 4. Dynamics Compressor (The Anti-Popping "Spotify" Glue)
-            const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20; // Start compressing early
-            compressor.knee.value = 20;       // Smooth curve
-            compressor.ratio.value = 4;       // Moderate compression ratio
-            compressor.attack.value = 0.005;  // Very fast attack to catch clipping peaks instantly
-            compressor.release.value = 0.15;  // Fast release to keep the energy pumping
+    // 4. High-end "Air"
+    const trebleEQ = audioCtx.createBiquadFilter();
+    trebleEQ.type = 'highshelf';
+    trebleEQ.frequency.value = 8000; 
+    trebleEQ.gain.value = 2.0;       
 
-            // ----------------------------------------------------
-            // ROUTING THE AUDIO
-            // ----------------------------------------------------
-            
-            // Connect the dry chain
-                source.connect(bassEQ);
-                bassEQ.connect(midEQ);       
-                midEQ.connect(trebleEQ);     
-                trebleEQ.connect(panner);    
-                panner.connect(makeupGain);
+    // 5. Dynamics Compressor (The "Glue" and Limiter)
+    const compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.value = -12; // Only compress the loud peaks, let the rest breathe
+    compressor.knee.value = 30;       // Very smooth transition
+    compressor.ratio.value = 3;       // Gentle glue ratio
+    compressor.attack.value = 0.015;  // 15ms attack: Lets the "punch" of the kick drum through, prevents distortion popping
+    compressor.release.value = 0.25;  // 250ms release: Stops the volume from aggressively "pumping"
 
-                // Connect the wet (Depth) chain
-                panner.connect(delay);       // Send a copy to the delay
-                delay.connect(delayGain);    // Control the volume of the room echo
-                delayGain.connect(makeupGain); // Mix it back in with the dry signal
+    // 6. Overall Volume Boost (Moved AFTER the compressor)
+    const makeupGain = audioCtx.createGain();
+    makeupGain.gain.value = 1.3; // Gentle 30% boost to the final polished signal
 
-                // Final Polish
-                makeupGain.connect(compressor);
-                compressor.connect(analyser); 
-                analyser.connect(audioCtx.destination);
-            
-            // Set up visualizer data
-            analyser.fftSize = 256; 
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-            
-            isEngineRunning = true;
-            renderVisualizer();
-        }
+    // ----------------------------------------------------
+    // ROUTING THE AUDIO
+    // ----------------------------------------------------
+    
+    // Connect the linear chain
+    source.connect(bassEQ);
+    bassEQ.connect(mudCut);      
+    mudCut.connect(midEQ);       
+    midEQ.connect(trebleEQ);     
+    
+    // Final Polish
+    trebleEQ.connect(compressor);
+    compressor.connect(makeupGain); // Gain happens last!
+    makeupGain.connect(analyser); 
+    analyser.connect(audioCtx.destination);
+
+    // Set up visualizer data
+    analyser.fftSize = 256; 
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+    
+    isEngineRunning = true;
+    renderVisualizer();
+}
 
         function resizeCanvas() {
             const container = document.getElementById('visualizer-container');
@@ -1491,8 +1488,8 @@
         const percentText = document.getElementById('download-percent');
         const visualBar = document.getElementById('download-visual-bar');
 
-        // Check if already downloaded on load
-        if (localStorage.getItem('suncat_archive_offline') === 'true') {
+        // Change the key here
+        if (localStorage.getItem('suncat_archive_103') === 'true') {
             downloadBtn.innerText = "✅ Archive Available Offline";
             downloadBtn.disabled = true;
             downloadBtn.classList.remove('active');
@@ -1535,7 +1532,8 @@
                     progressText.innerText = "Deployment Complete. 100% Offline Ready.";
                     downloadBtn.innerText = "✅ Archive Available Offline";
                     downloadBtn.classList.remove('active');
-                    localStorage.setItem('suncat_archive_offline', 'true');
+                    // Change the key here too
+                    localStorage.setItem('suncat_archive_103', 'true'); 
                 }
             }
         });
