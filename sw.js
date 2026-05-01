@@ -1,4 +1,4 @@
-const CACHE_NAME = 'suncat-audio-v6';
+const CACHE_NAME = 'suncat-audio-v7';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,7 +9,7 @@ const urlsToCache = [
 
 // 1. INSTALL: Cache the core App Shell
 self.addEventListener('install', event => {
-  self.skipWaiting(); // Force the waiting service worker to become the active service worker
+  self.skipWaiting(); 
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       console.log('Suncat SW: Caching App Shell');
@@ -18,7 +18,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// 2. ACTIVATE: Clean up old caches (like v1)
+// 2. ACTIVATE: Clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -30,7 +30,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim()) // Take control of all open pages immediately
+    }).then(() => self.clients.claim()) 
   );
 });
 
@@ -46,15 +46,17 @@ self.addEventListener('message', event => {
 
             for (const track of tracks) {
                 try {
-                    const cleanUrl = encodeURI(track);
-                    const existingResponse = await cache.match(cleanUrl);
+                    // THE CRITICAL FIX: Convert relative paths ("Baby Boy.mp3") 
+                    // to absolute URLs so the fetch event can find them in the cache later!
+                    const absoluteUrl = new URL(track, self.location.href).href;
+                    
+                    const existingResponse = await cache.match(absoluteUrl);
 
-                    // THE FIX: Only skip if it's already cached AND it's a full 200 file
+                    // Only skip if it's already cached AND it's a full 200 file
                     if (!existingResponse || existingResponse.status !== 200) {
-                        const networkResponse = await fetch(cleanUrl);
-                        // Only cache if the network gives us the full file
+                        const networkResponse = await fetch(absoluteUrl);
                         if (networkResponse.status === 200) {
-                            await cache.put(cleanUrl, networkResponse.clone());
+                            await cache.put(absoluteUrl, networkResponse.clone());
                         }
                     }
                 } catch (err) {
@@ -81,7 +83,9 @@ self.addEventListener('fetch', event => {
     if (event.request.url.includes('.mp3')) {
         event.respondWith((async () => {
             const cache = await caches.open(CACHE_NAME);
-            const cachedResponse = await cache.match(event.request, { ignoreSearch: true });
+            
+            // Match against the exact absolute URL the browser is requesting
+            const cachedResponse = await cache.match(event.request.url, { ignoreSearch: true });
 
             if (cachedResponse) {
                 // Slice the cache for Range requests so Android doesn't panic
@@ -114,14 +118,16 @@ self.addEventListener('fetch', event => {
             try {
                 const networkResponse = await fetch(event.request);
                 
-                // THE FIX: NEVER dynamically cache a 206 Partial Chunk! 
+                // NEVER dynamically cache a 206 Partial Chunk! 
                 // Only cache full 200 OK responses.
                 if (networkResponse.status === 200) {
-                    cache.put(event.request, networkResponse.clone());
+                    cache.put(event.request.url, networkResponse.clone());
                 }
                 return networkResponse;
             } catch (err) {
-                console.log('Suncat SW: Network fetch failed for audio', err);
+                console.log('Suncat SW: Network fetch failed for audio (Offline)', err);
+                // Return a graceful 503 so the audio engine knows it's offline rather than hanging
+                return new Response("Offline", { status: 503 });
             }
         })());
     } else {
