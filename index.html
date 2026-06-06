@@ -1289,16 +1289,17 @@
                 // INJECT THE GENRE HTML NEXT TO THE ALBUM
                 trackEl.innerHTML = `
                     <div class="track-info-left">
-                        <span class="track-name">${track.title}</span>
-                        <span class="track-album">${track.album}${genreHTML}</span>
-                        <span class="track-rating">${filledStars}${emptyStars}</span>
-                    </div>
-                    <div class="track-info-right">
-                        ${offlineLight}
-                        <span class="track-duration">${track.duration}</span>
-                        <button class="heart-btn ${heartClass}" title="Save to Playlist">${heartIcon}</button>
-                        <button class="info-btn" title="Track Info">ℹ️</button>
-                    </div>
+                    <span class="track-name">${track.title}</span>
+                    <span class="track-album">${track.album}${genreHTML}</span>
+                    <span class="track-rating">${filledStars}${emptyStars}</span>
+                </div>
+                <div class="track-info-right">
+                    ${offlineLight}
+                    <span class="track-duration">${track.duration}</span>
+                    <button class="share-btn" title="Share Track" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; transition: color 0.2s;">🔗</button>
+                    <button class="heart-btn ${heartClass}" title="Save to Playlist">${heartIcon}</button>
+                    <button class="info-btn" title="Track Info">ℹ️</button>
+                </div>
                 `;
                             
                 trackEl.addEventListener('click', () => {
@@ -1321,6 +1322,32 @@
                     e.stopPropagation();
                     togglePlaylist(masterIndex, heartBtn);
                 });
+                const shareBtn = trackEl.querySelector('.share-btn');
+                    shareBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation(); // Stop the track from playing when clicking share
+                        
+                        const cleanTrackName = track.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const shareUrl = new URL(`?track=${cleanTrackName}`, window.location.href).href;
+                        
+                        if (navigator.share) {
+                            try {
+                                await navigator.share({
+                                    title: `${track.title} | Suncat Studios`,
+                                    text: `Listen to "${track.title}" by Suncat on the Digital Archive.`,
+                                    url: shareUrl
+                                });
+                            } catch (err) {
+                                console.log('Share canceled or failed', err);
+                            }
+                        } else {
+                            // Fallback for older desktop browsers: Copy to clipboard
+                            navigator.clipboard.writeText(shareUrl).then(() => {
+                                // Temporarily change the icon to a checkmark to show it worked
+                                shareBtn.innerText = '✅';
+                                setTimeout(() => shareBtn.innerText = '🔗', 2000);
+                            });
+                        }
+                    });
                 const offlineBtn = trackEl.querySelector('.offline-btn');
                 offlineBtn.addEventListener('click', async (e) => {
                     e.stopPropagation(); // Prevents the track from playing when you click the button
@@ -1392,7 +1419,13 @@
 
             currentTrackIndex = masterIndex;
             const track = playlistData[masterIndex];
-            
+            // --- UPDATE URL FOR SHARING ---
+            const cleanTrackName = track.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const newUrl = `${window.location.pathname}?track=${cleanTrackName}`;
+            // Update the address bar silently
+            window.history.pushState({path: newUrl}, '', newUrl);
+            // Update the document title for SEO and browser tabs
+            document.title = `${track.title} | Suncat Studios`;
             // renderPlaylist();
             
             document.querySelectorAll('.track-item').forEach(el => {
