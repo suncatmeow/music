@@ -983,6 +983,34 @@
                 }
             });
             scanCacheForOfflineTracks();
+            // --- DEEP LINKING SETUP ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestedTrack = urlParams.get('track');
+
+            if (requestedTrack) {
+                // Strip spaces and special characters to make URLs cleaner and matching foolproof
+                // e.g., ?track=leftonreadbyaghost
+                const cleanSearch = requestedTrack.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const trackIndex = playlistData.findIndex(t => 
+                    t.title.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanSearch
+                );
+                
+                if (trackIndex !== -1) {
+                    // 1. Update the document title so Google and social media cards read the track name
+                    document.title = `${playlistData[trackIndex].title} | Suncat Studios`;
+                    
+                    // 2. Load the track into the player (Browser will block autoplay until they click)
+                    loadAndPlayTrack(trackIndex);
+                    
+                    // 3. Scroll the playlist so the selected track is in the center of the screen
+                    setTimeout(() => {
+                        const activeTrackEl = document.querySelector(`.track-item[data-index="${trackIndex}"]`);
+                        if (activeTrackEl) {
+                            activeTrackEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 500); 
+                }
+            }
         }
 
         // --- PROGRESS BAR LOGIC --- //
