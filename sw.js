@@ -1,4 +1,4 @@
-const CACHE_NAME = 'suncat-audio-v9';
+const CACHE_NAME = 'suncat-audio-v9.1';
 const urlsToCache = [
   './',
   './index.html',
@@ -116,14 +116,8 @@ self.addEventListener('fetch', event => {
 
             // IF NOT CACHED: Fetch from network
             try {
-                const networkResponse = await fetch(event.request);
-                
-                // NEVER dynamically cache a 206 Partial Chunk! 
-                // Only cache full 200 OK responses.
-                if (networkResponse.status === 200) {
-                    cache.put(event.request.url, networkResponse.clone());
-                }
-                return networkResponse;
+                // BUG FIX: Return the fetch directly without auto-caching to preserve user storage
+                return await fetch(event.request);
             } catch (err) {
                 console.log('Suncat SW: Network fetch failed for audio (Offline)', err);
                 // Return a graceful 503 so the audio engine knows it's offline rather than hanging
