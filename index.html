@@ -768,7 +768,29 @@
             <p class="modal-body-text" id="modal-track-lyrics">Lyrics go here...</p>
         </div>
     </div>
+    <div class="modal-overlay" id="share-modal">
+    <div class="modal-content glass-panel" style="max-width: 400px; text-align: center;">
+        <div class="modal-header" style="border: none; margin-bottom: 0.5rem;">
+            <h2 class="modal-title" style="font-size: 1.3rem;">Share Track</h2>
+            <button class="close-btn" onclick="closeShareModal()">×</button>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎵</div>
+            <h3 id="share-modal-track-title" style="color: var(--text-main); font-size: 1.2rem; margin-bottom: 0.25rem;">Track Title</h3>
+            <p id="share-modal-track-album" style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Album Name</p>
+        </div>
 
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <button id="btn-copy-link" class="sort-btn active" style="width: 100%; padding: 0.8rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                📋 Copy Share Link
+            </button>
+            <button id="btn-native-share" class="sort-btn" style="width: 100%; padding: 0.8rem; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                📱 More Options (Text, Apps)
+            </button>
+        </div>
+    </div>
+</div>
     <script>
         // 1. Data Source
         let playlistData = [
@@ -1323,29 +1345,49 @@
                     togglePlaylist(masterIndex, heartBtn);
                 });
                 const shareBtn = trackEl.querySelector('.share-btn');
-                    shareBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation(); // Stop the track from playing when clicking share
-                        
+                    shareBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Stop the track from playing
+
                         const cleanTrackName = track.title.toLowerCase().replace(/[^a-z0-9]/g, '');
                         const shareUrl = new URL(`?track=${cleanTrackName}`, window.location.href).href;
-                        
-                        if (navigator.share) {
-                            try {
-                                await navigator.share({
-                                    title: `${track.title} | Suncat Studios`,
-                                    text: `Listen to "${track.title}" by Suncat on the Digital Archive.`,
-                                    url: shareUrl
-                                });
-                            } catch (err) {
-                                console.log('Share canceled or failed', err);
-                            }
-                        } else {
-                            // Fallback for older desktop browsers: Copy to clipboard
+
+                        // 1. Populate the share modal UI text
+                        document.getElementById('share-modal-track-title').innerText = track.title;
+                        document.getElementById('share-modal-track-album').innerText = track.album;
+
+                        // 2. Open the modal
+                        const shareModal = document.getElementById('share-modal');
+                        shareModal.classList.add('show');
+
+                        // 3. Set up Copy Button Logic
+                        const copyBtn = document.getElementById('btn-copy-link');
+                        copyBtn.innerText = "📋 Copy Share Link"; // Reset text
+                        copyBtn.onclick = () => {
                             navigator.clipboard.writeText(shareUrl).then(() => {
-                                // Temporarily change the icon to a checkmark to show it worked
-                                shareBtn.innerText = '✅';
-                                setTimeout(() => shareBtn.innerText = '🔗', 2000);
+                                copyBtn.innerText = "✅ Link Copied to Clipboard!";
+                                setTimeout(() => { shareModal.classList.remove('show'); }, 1000);
                             });
+                        };
+
+                        // 4. Set up Native OS Share Fallback Button
+                        const nativeBtn = document.getElementById('btn-native-share');
+                        if (navigator.share) {
+                            nativeBtn.style.display = "flex";
+                            nativeBtn.onclick = async () => {
+                                try {
+                                    await navigator.share({
+                                        title: `${track.title} | Suncat Studios`,
+                                        text: `Listen to "${track.title}" by Suncat on the Digital Archive.`,
+                                        url: shareUrl
+                                    });
+                                    shareModal.classList.remove('show');
+                                } catch (err) {
+                                    console.log('Native share canceled/failed', err);
+                                }
+                            };
+                        } else {
+                            // Hide option completely if desktop browser doesn't support native menu
+                            nativeBtn.style.display = "none";
                         }
                     });
                 const offlineBtn = trackEl.querySelector('.offline-btn');
@@ -1733,6 +1775,14 @@
             if (!filterMenu.contains(event.target)) {
                 filterMenu.classList.remove('show');
             }
+        });
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.remove('show');
+        }
+
+        // Close share modal if clicking outside of the card context
+        document.getElementById('share-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('share-modal')) closeShareModal();
         });
         async function scanCacheForOfflineTracks() {
             if (!('caches' in window)) return;
