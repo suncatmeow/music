@@ -1670,50 +1670,56 @@
             }
         }
 
-        // --- RETRO PS1 / WINAMP STYLE VISUALIZER ---
+        // --- RETRO REACTIVE TRIANGLE VISUALIZER ---
         function renderVisualizer() {
             requestAnimationFrame(renderVisualizer);
             
             // Save battery if the user switches browser tabs
             if (document.hidden) return; 
 
-            // 1. Get Frequency Data (for bass pulsing)
+            // 1. Get both Frequency Data and Waveform Data
             analyser.getByteFrequencyData(dataArray);
-
-            // 2. Get Time-Domain Data (for the raw soundwave shape)
-            // We create a new array for this on the fly if it doesn't exist
             if (!window.waveArray) window.waveArray = new Uint8Array(bufferLength);
             analyser.getByteTimeDomainData(window.waveArray);
 
             const cx = canvas.clientWidth / 2;
             const cy = canvas.clientHeight / 2;
-            const time = Date.now() * 0.001; // Used to drive rotation and color shifting
+            const time = Date.now() * 0.001; 
 
-            // 3. THE 90s TRAIL EFFECT: Draw a semi-transparent background instead of clearing
+            // Motion Trail Background
             ctx.fillStyle = 'rgba(2, 2, 5, 0.25)'; 
             ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-            // Calculate bass intensity for dynamic sizing
-            let bassSum = 0;
-            for(let i = 0; i < 8; i++) bassSum += dataArray[i];
-            const pulse = (bassSum / 8) / 255;
-            const baseRadius = 60 + (pulse * 30);
+            // ==========================================
+            // FREQUENCY TO COLOR MAPPING
+            // ==========================================
+            // Break the audio spectrum into Bass, Mids, and Treble
+            let bass = 0, mid = 0, treb = 0;
+            for(let i = 0; i < 8; i++) bass += dataArray[i];       // 0-8: Lows
+            for(let i = 8; i < 40; i++) mid += dataArray[i];       // 8-40: Mids
+            for(let i = 40; i < 100; i++) treb += dataArray[i];    // 40-100: Highs
+            
+            // Normalize the values (0 to ~255) and boost mids/highs so they are visible
+            bass = bass / 8;
+            mid = (mid / 32) * 1.5;   
+            treb = (treb / 60) * 2.0; 
+
+            // Map Bass to Red, Mids to Green, Treble to Blue for the main ring
+            const ringColor = `rgb(${Math.floor(bass)}, ${Math.floor(mid)}, ${Math.floor(treb)})`;
 
             // ==========================================
-            // LAYER 1: THE OSCILLOSCOPE RING
+            // LAYER 1: THE COLOR-SHIFTING OSCILLOSCOPE
             // ==========================================
             ctx.beginPath();
-            const numPoints = window.waveArray.length; // Usually 128 points
+            const numPoints = window.waveArray.length; 
+            const baseRadius = 80 + (bass * 0.2); // Ring breathes with the bass
             
             for (let i = 0; i < numPoints; i++) {
-                // Convert wave data (0 to 255) to a multiplier (-1.0 to 1.0)
                 const wave = (window.waveArray[i] / 128.0) - 1.0; 
+                const angle = (i / numPoints) * Math.PI * 2 + (time * 0.2); 
                 
-                // Map the points in a circle, spinning over time
-                const angle = (i / numPoints) * Math.PI * 2 + (time * 0.5); 
-                
-                // Push the circle outward based on the waveform's distortion
-                const r = baseRadius + (wave * 70); 
+                // The squiggly lines get more aggressive the louder the bass is
+                const r = baseRadius + (wave * (50 + bass * 0.3)); 
                 
                 const x = cx + Math.cos(angle) * r;
                 const y = cy + Math.sin(angle) * r;
@@ -1723,35 +1729,38 @@
             }
             
             ctx.closePath();
-            
-            // Psychedelic Color Cycling (Hue shifts infinitely over time)
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = `hsl(${(time * 50) % 360}, 100%, 60%)`; 
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = ringColor; // Applies the mapped RGB color
             ctx.stroke();
 
             // ==========================================
-            // LAYER 2: INNER KALEIDOSCOPE (Reacts to Frequency)
+            // LAYER 2: THE FREQUENCY TRIANGLES
             // ==========================================
-            ctx.beginPath();
-            for (let i = 0; i < 3; i++) { // Draw a geometric 
-                // Spin in the opposite direction
-                const angle = (i / 3) * Math.PI * 2 - time; 
-                
-                // Reacts strictly to frequency data rather than the waveform
-                const r = (baseRadius * 0.3) + (dataArray[i * 4] / 255) * 35; 
-                
-                const x = cx + Math.cos(angle) * r;
-                const y = cy + Math.sin(angle) * r;
-                
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+            // Reusable function to draw spinning, pulsing triangles
+            function drawTriangle(radius, rotation, color, lineWidth) {
+                ctx.beginPath();
+                for (let i = 0; i < 3; i++) {
+                    // Calculate 3 points of a triangle (offset by -PI/2 so it points UP)
+                    const angle = (i / 3) * Math.PI * 2 - (Math.PI / 2) + rotation;
+                    const x = cx + Math.cos(angle) * radius;
+                    const y = cy + Math.sin(angle) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = color;
+                ctx.stroke();
             }
-            ctx.closePath();
+
+            // 1. The Bass Triangle (Red/Pink): Pulses largely, spins slowly
+            drawTriangle(20 + (bass * 0.35), time * 0.5, 'rgba(255, 50, 100, 0.9)', 3);
             
-            // Complementary color (180 degrees opposite on the color wheel)
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = `hsl(${((time * 50) + 180) % 360}, 100%, 60%)`;
-            ctx.stroke();
+            // 2. The Midrange Triangle (Cyan): Pulses moderately, spins backwards
+            drawTriangle(10 + (mid * 0.5), -time * 1.2, 'rgba(0, 230, 255, 0.8)', 2);
+            
+            // 3. The Treble Triangle (Yellow): Pulses slightly, spins fast
+            drawTriangle(5 + (treb * 0.6), time * 2.5, 'rgba(255, 255, 100, 0.9)', 1.5);
         }
 
         // Keep this simple so it doesn't clash with the intro animations
