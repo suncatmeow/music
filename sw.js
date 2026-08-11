@@ -127,8 +127,20 @@ self.addEventListener('fetch', event => {
     } else {
         // Standard caching for HTML, CSS, JS
         event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-                return cachedResponse || fetch(event.request);
+            caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
+                // 1. If we found a match (ignoring query strings like ?track=), return it!
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                
+                // 2. If not in cache, try the network
+                return fetch(event.request).catch(() => {
+                    // 3. If the network fails (offline) AND the user is trying to load a webpage
+                    // Force the service worker to serve the cached App Shell
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
+                });
             })
         );
     }
