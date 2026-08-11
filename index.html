@@ -1670,7 +1670,7 @@
             }
         }
 
-        // --- RETRO REACTIVE TRIANGLE VISUALIZER ---
+        // --- INTENSE TRIANGLE OSCILLOSCOPE VISUALIZER ---
         function renderVisualizer() {
             requestAnimationFrame(renderVisualizer);
             
@@ -1693,32 +1693,28 @@
             // ==========================================
             // FREQUENCY TO COLOR MAPPING
             // ==========================================
-            // Break the audio spectrum into Bass, Mids, and Treble
             let bass = 0, mid = 0, treb = 0;
             for(let i = 0; i < 8; i++) bass += dataArray[i];       // 0-8: Lows
             for(let i = 8; i < 40; i++) mid += dataArray[i];       // 8-40: Mids
             for(let i = 40; i < 100; i++) treb += dataArray[i];    // 40-100: Highs
             
-            // Normalize the values (0 to ~255) and boost mids/highs so they are visible
             bass = bass / 8;
             mid = (mid / 32) * 1.5;   
             treb = (treb / 60) * 2.0; 
 
-            // Map Bass to Red, Mids to Green, Treble to Blue for the main ring
             const ringColor = `rgb(${Math.floor(bass)}, ${Math.floor(mid)}, ${Math.floor(treb)})`;
 
             // ==========================================
-            // LAYER 1: THE COLOR-SHIFTING OSCILLOSCOPE
+            // LAYER 1: THE COLOR-SHIFTING CIRCLE OSCILLOSCOPE
             // ==========================================
             ctx.beginPath();
             const numPoints = window.waveArray.length; 
-            const baseRadius = 80 + (bass * 0.2); // Ring breathes with the bass
+            const baseRadius = 80 + (bass * 0.2); 
             
             for (let i = 0; i < numPoints; i++) {
                 const wave = (window.waveArray[i] / 128.0) - 1.0; 
                 const angle = (i / numPoints) * Math.PI * 2 + (time * 0.2); 
                 
-                // The squiggly lines get more aggressive the louder the bass is
                 const r = baseRadius + (wave * (50 + bass * 0.3)); 
                 
                 const x = cx + Math.cos(angle) * r;
@@ -1729,38 +1725,66 @@
             }
             
             ctx.closePath();
+            ctx.lineJoin = 'round'; // Smooths out sharp jagged spikes
             ctx.lineWidth = 2;
-            ctx.strokeStyle = ringColor; // Applies the mapped RGB color
+            ctx.strokeStyle = ringColor; 
             ctx.stroke();
 
             // ==========================================
-            // LAYER 2: THE FREQUENCY TRIANGLES
+            // LAYER 2: THE INTENSE TRIANGLE OSCILLOSCOPE
             // ==========================================
-            // Reusable function to draw spinning, pulsing triangles
-            function drawTriangle(radius, rotation, color, lineWidth) {
-                ctx.beginPath();
-                for (let i = 0; i < 3; i++) {
-                    // Calculate 3 points of a triangle (offset by -PI/2 so it points UP)
-                    const angle = (i / 3) * Math.PI * 2 - (Math.PI / 2) + rotation;
-                    const x = cx + Math.cos(angle) * radius;
-                    const y = cy + Math.sin(angle) * radius;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.lineWidth = lineWidth;
-                ctx.strokeStyle = color;
-                ctx.stroke();
+            // 1. Define the 3 corners of the spinning triangle
+            const triRadius = 35 + (bass * 0.15); // Slightly smaller to fit inside
+            const triRotation = time * -0.8; // Spins in the opposite direction
+            const vertices = [];
+            
+            for(let j = 0; j < 3; j++) {
+                // -Math.PI/2 keeps the top point aimed upward
+                const angle = (j / 3) * Math.PI * 2 - (Math.PI / 2) + triRotation;
+                vertices.push({
+                    x: Math.cos(angle) * triRadius,
+                    y: Math.sin(angle) * triRadius
+                });
             }
 
-            // 1. The Bass Triangle (Red/Pink): Pulses largely, spins slowly
-            drawTriangle(20 + (bass * 0.35), time * 0.5, 'rgba(255, 50, 100, 0.9)', 3);
+            // 2. Map the waveform data around the 3 straight edges
+            ctx.beginPath();
+            for (let i = 0; i < numPoints; i++) {
+                const wave = (window.waveArray[i] / 128.0) - 1.0; 
+                
+                // Find exactly where we are on the triangle's perimeter (0.0 to 1.0)
+                const progress = i / numPoints; 
+                
+                // Multiply by 3 to figure out which of the 3 sides we are drawing
+                const sideFloat = progress * 3; 
+                const side = Math.floor(sideFloat); 
+                const t = sideFloat - side; // Percentage (0.0 to 1.0) along the current side
+                
+                // Get the start and end corners for the current side
+                const p1 = vertices[side];
+                const p2 = vertices[(side + 1) % 3];
+                
+                // Linearly interpolate to find the flat base point on the edge
+                const baseX = p1.x + (p2.x - p1.x) * t;
+                const baseY = p1.y + (p2.y - p1.y) * t;
+                
+                // Calculate the angle from the center so the wave explodes outward
+                const angleFromCenter = Math.atan2(baseY, baseX);
+                const distortion = wave * (40 + bass * 0.4); 
+                
+                const finalX = cx + baseX + Math.cos(angleFromCenter) * distortion;
+                const finalY = cy + baseY + Math.sin(angleFromCenter) * distortion;
+                
+                if (i === 0) ctx.moveTo(finalX, finalY);
+                else ctx.lineTo(finalX, finalY);
+            }
             
-            // 2. The Midrange Triangle (Cyan): Pulses moderately, spins backwards
-            drawTriangle(10 + (mid * 0.5), -time * 1.2, 'rgba(0, 230, 255, 0.8)', 2);
+            ctx.closePath();
             
-            // 3. The Treble Triangle (Yellow): Pulses slightly, spins fast
-            drawTriangle(5 + (treb * 0.6), time * 2.5, 'rgba(255, 255, 100, 0.9)', 1.5);
+            // Fast-shifting, intense color cycle
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = `hsl(${(time * 200) % 360}, 100%, 55%)`; 
+            ctx.stroke();
         }
 
         // Keep this simple so it doesn't clash with the intro animations
