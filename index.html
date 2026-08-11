@@ -1733,9 +1733,9 @@
             // LAYER 2: INNER KALEIDOSCOPE (Reacts to Frequency)
             // ==========================================
             ctx.beginPath();
-            for (let i = 0; i < 5; i++) { // Draw a geometric pentagon
+            for (let i = 0; i < 5; i++) { // Draw a geometric 
                 // Spin in the opposite direction
-                const angle = (i / 5) * Math.PI * 2 - time; 
+                const angle = (i / 3) * Math.PI * 2 - time; 
                 
                 // Reacts strictly to frequency data rather than the waveform
                 const r = (baseRadius * 0.3) + (dataArray[i * 4] / 255) * 35; 
