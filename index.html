@@ -1770,58 +1770,68 @@
             ctx.lineWidth = 2;
             ctx.strokeStyle = noteColor; // Dynamic pitch color
             ctx.stroke();
+    // ==========================================
+    // LAYER 2: THE RADIAL IRIS (Crisp & Structured)
+    // ==========================================
+    // By disconnecting the points into individual bars, we completely eliminate
+    // the "blob" effect. This creates a sharp, mechanical look that contrasts 
+    // perfectly with the wild outer waveform.
 
-            // ==========================================
-            // LAYER 2: THE FREQUENCY CORE (Inner Oscillator)
-            // ==========================================
-            // Instead of a triangle, this draws a glowing, sphere-like core 
-            // that morphs its shape based on the EQ/Frequency spectrum.
+    const coreBaseRadius = (maxAllowedRadius * 0.15) + (bassScale * maxAllowedRadius * 0.05);
+    const numBars = 72; // A nice even number for 360-degree symmetry
 
-            ctx.beginPath();
-            
-            // The core breathes slightly with the bass, but stays smaller than the outer ring
-            const coreBaseRadius = (maxAllowedRadius * 0.15) + (bassScale * maxAllowedRadius * 0.05); 
-            
-            // We map 120 points of EQ data around the circle
-            const numFreqPoints = 120; 
-            
-            for (let i = 0; i < numFreqPoints; i++) {
-                // We mirror the data array so the left and right sides of the circle match (looks cleaner)
-                const dataIndex = i < (numFreqPoints / 2) ? i : numFreqPoints - i; 
-                
-                // Normalize the frequency bin from 0-255 down to 0.0-1.0. (+4 skips the inaudible sub-rumble)
-                const freqValue = dataArray[dataIndex + 4] / 255.0; 
-                
-                // Spin the inner core slowly in the OPPOSITE direction of the outer ring
-                const angle = (i / numFreqPoints) * Math.PI * 2 + (time * -0.3); 
-                
-                // The core bulges outward exactly where the EQ frequencies spike
-                const r = coreBaseRadius + (freqValue * maxAllowedRadius * 0.2);
-                
-                const x = cx + Math.cos(angle) * r;
-                const y = cy + Math.sin(angle) * r;
-                
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            
-            ctx.closePath();
-            
-            // Give it a semi-transparent fill so it looks like a glowing 3D orb
-            ctx.fillStyle = `hsla(${window.currentHue}, 80%, 20%, 0.4)`;
-            ctx.fill();
-            
-            // Outline it with the pitch-tracked color
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = noteColorGlow;
-            ctx.stroke();
-            
-            // Optional: Draw a tiny, intense solid center point (the "nucleus")
-            ctx.beginPath();
-            ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-            ctx.fillStyle = noteColor;
-            ctx.fill();
-        }
+    // 1. Draw a clean, perfect anchor ring in the center
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreBaseRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = `hsla(${window.currentHue}, 80%, 30%, 0.5)`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 2. Draw the sharp frequency spikes shooting outward
+    for (let i = 0; i < numBars; i++) {
+        // We skip the first 4 bins (sub-bass rumble) and step by 2 to cover a wide spectrum
+        const dataIndex = 4 + (i * 2); 
+        const freqValue = dataArray[dataIndex] / 255.0; // Normalized 0.0 to 1.0
+
+        // Spin counter-clockwise to contrast the outer ring's clockwise spin
+        const angle = (i / numBars) * Math.PI * 2 + (time * -0.2); 
+
+        // The exact length of this specific frequency spike
+        const barLength = freqValue * maxAllowedRadius * 0.25;
+
+        // Inner coordinate (anchored to the perfect circle)
+        const innerX = cx + Math.cos(angle) * coreBaseRadius;
+        const innerY = cy + Math.sin(angle) * coreBaseRadius;
+
+        // Outer coordinate (shooting outward)
+        const outerX = cx + Math.cos(angle) * (coreBaseRadius + barLength);
+        const outerY = cy + Math.sin(angle) * (coreBaseRadius + barLength);
+
+        ctx.beginPath();
+        ctx.moveTo(innerX, innerY);
+        ctx.lineTo(outerX, outerY);
+        
+        // Thicker lines for loud frequencies, thinner for quiet ones
+        ctx.lineWidth = 1 + (freqValue * 3);
+        
+        // Brighten and increase opacity dynamically based on intensity
+        const lightness = 40 + (freqValue * 20); // 40% to 60% lightness
+        const alpha = 0.2 + (freqValue * 0.8);   // 0.2 to 1.0 opacity
+        ctx.strokeStyle = `hsla(${window.currentHue}, 80%, ${lightness}%, ${alpha})`;
+        
+        ctx.stroke();
+    }
+    
+    // 3. Draw a tiny, intense glowing nucleus in the exact center
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
+    ctx.fillStyle = noteColor;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = noteColor;
+    ctx.fill();
+    ctx.shadowBlur = 0; // Reset shadow so it doesn't bleed into the next frame
+}
+
 
         // Keep this simple so it doesn't clash with the intro animations
         function drawIdleState() {
