@@ -1770,67 +1770,55 @@
             ctx.lineWidth = 2;
             ctx.strokeStyle = noteColor; // Dynamic pitch color
             ctx.stroke();
+        // ==========================================
+    // LAYER 2: THE INNER COLLIDING OSCILLOSCOPE
     // ==========================================
-    // LAYER 2: THE RADIAL IRIS (Crisp & Structured)
-    // ==========================================
-    // By disconnecting the points into individual bars, we completely eliminate
-    // the "blob" effect. This creates a sharp, mechanical look that contrasts 
-    // perfectly with the wild outer waveform.
-
-    const coreBaseRadius = (maxAllowedRadius * 0.15) + (bassScale * maxAllowedRadius * 0.05);
-    const numBars = 72; // A nice even number for 360-degree symmetry
-
-    // 1. Draw a clean, perfect anchor ring in the center
     ctx.beginPath();
-    ctx.arc(cx, cy, coreBaseRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `hsla(${window.currentHue}, 80%, 30%, 0.5)`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 2. Draw the sharp frequency spikes shooting outward
-    for (let i = 0; i < numBars; i++) {
-        // We skip the first 4 bins (sub-bass rumble) and step by 2 to cover a wide spectrum
-        const dataIndex = 4 + (i * 2); 
-        const freqValue = dataArray[dataIndex] / 255.0; // Normalized 0.0 to 1.0
-
-        // Spin counter-clockwise to contrast the outer ring's clockwise spin
-        const angle = (i / numBars) * Math.PI * 2 + (time * -0.2); 
-
-        // The exact length of this specific frequency spike
-        const barLength = freqValue * maxAllowedRadius * 0.25;
-
-        // Inner coordinate (anchored to the perfect circle)
-        const innerX = cx + Math.cos(angle) * coreBaseRadius;
-        const innerY = cy + Math.sin(angle) * coreBaseRadius;
-
-        // Outer coordinate (shooting outward)
-        const outerX = cx + Math.cos(angle) * (coreBaseRadius + barLength);
-        const outerY = cy + Math.sin(angle) * (coreBaseRadius + barLength);
-
-        ctx.beginPath();
-        ctx.moveTo(innerX, innerY);
-        ctx.lineTo(outerX, outerY);
+    
+    // Set the base radius smaller than the outer ring (0.25 vs 0.45)
+    const innerBaseRadius = maxAllowedRadius * 0.25; 
+    
+    // Give it an aggressive fluctuation multiplier so it stretches out and overlaps the main ring
+    const innerFluctuation = maxAllowedRadius * 0.35 * (0.4 + 0.6 * bassScale);
+    
+    for (let i = 0; i < numPoints; i += 4) {
+        // Read the wave array BACKWARDS so it tracks the opposite side of the immediate sound wave
+        const waveIndex = numPoints - 1 - i; 
+        const wave = (window.waveArray[waveIndex] / 128.0) - 1.0; 
         
-        // Thicker lines for loud frequencies, thinner for quiet ones
-        ctx.lineWidth = 1 + (freqValue * 3);
+        // Spin it in the opposite direction (time * -0.3) for maximum intersection chaos
+        const angle = (i / numPoints) * Math.PI * 2 + (time * -0.3); 
         
-        // Brighten and increase opacity dynamically based on intensity
-        const lightness = 40 + (freqValue * 20); // 40% to 60% lightness
-        const alpha = 0.2 + (freqValue * 0.8);   // 0.2 to 1.0 opacity
-        ctx.strokeStyle = `hsla(${window.currentHue}, 80%, ${lightness}%, ${alpha})`;
+        const r = innerBaseRadius + (wave * innerFluctuation); 
         
-        ctx.stroke();
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
     }
     
-    // 3. Draw a tiny, intense glowing nucleus in the exact center
+    ctx.closePath();
+    ctx.lineWidth = 2;
+    
+    // Use the pitch-tracking color, but shift the hue slightly (+40 degrees) 
+    // so you can distinctly see the two lines crossing and overlapping.
+    const innerHue = (window.currentHue + 40) % 360;
+    ctx.strokeStyle = `hsl(${innerHue}, 80%, 65%)`; 
+    ctx.stroke();
+
+    // ==========================================
+    // 3. THE GLOWING NUCLEUS
+    // ==========================================
     ctx.beginPath();
     ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-    ctx.fillStyle = noteColor;
+    ctx.fillStyle = `hsl(${innerHue}, 80%, 70%)`; 
     ctx.shadowBlur = 10;
-    ctx.shadowColor = noteColor;
+    ctx.shadowColor = `hsl(${innerHue}, 80%, 70%)`;
     ctx.fill();
-    ctx.shadowBlur = 0; // Reset shadow so it doesn't bleed into the next frame
-}
+    ctx.shadowBlur = 0; // Reset shadow for the next frame
+} // End of renderVisualizer
+
 
 
         // Keep this simple so it doesn't clash with the intro animations
