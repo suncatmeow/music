@@ -1624,7 +1624,7 @@
             makeupGain.connect(audioCtx.destination);
             makeupGain.connect(analyser); 
 
-            analyser.fftSize = 256; 
+            analyser.fftSize = 4096; 
             bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
             
@@ -1670,14 +1670,16 @@
             }
         }
 
-        // --- RETRO REACTIVE TRIANGLE VISUALIZER ---
+        // Add these globals just above renderVisualizer to allow smooth color fading
+        if (typeof window.currentHue === 'undefined') window.currentHue = 0;
+        if (typeof window.targetHue === 'undefined') window.targetHue = 0;
+
         function renderVisualizer() {
             requestAnimationFrame(renderVisualizer);
             
             // Save battery if the user switches browser tabs
             if (document.hidden) return; 
 
-            // 1. Get both Frequency Data and Waveform Data
             analyser.getByteFrequencyData(dataArray);
             if (!window.waveArray) window.waveArray = new Uint8Array(bufferLength);
             analyser.getByteTimeDomainData(window.waveArray);
@@ -1691,35 +1693,71 @@
             ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
             // ==========================================
-            // FREQUENCY TO COLOR MAPPING
+            // 1. PITCH TO COLOR MAPPING
             // ==========================================
-            // Break the audio spectrum into Bass, Mids, and Treble
-            let bass = 0, mid = 0, treb = 0;
-            for(let i = 0; i < 8; i++) bass += dataArray[i];       // 0-8: Lows
-            for(let i = 8; i < 40; i++) mid += dataArray[i];       // 8-40: Mids
-            for(let i = 40; i < 100; i++) treb += dataArray[i];    // 40-100: Highs
+            let maxVal = -1;
+            let maxIndex = -1;
             
-            // Normalize the values (0 to ~255) and boost mids/highs so they are visible
-            bass = bass / 8;
-            mid = (mid / 32) * 1.5;   
-            treb = (treb / 60) * 2.0; 
+            // Scan frequencies, skipping bins 0-3 (sub-bass rumble) to find the melodic root
+            for (let i = 4; i < bufferLength / 2; i++) {
+                if (dataArray[i] > maxVal) {
+                    maxVal = dataArray[i];
+                    maxIndex = i;
+                }
+            }
 
-            // Map Bass to Red, Mids to Green, Treble to Blue for the main ring
-            const ringColor = `rgb(${Math.floor(bass)}, ${Math.floor(mid)}, ${Math.floor(treb)})`;
+            // Only change target color if there's a strong, prominent note
+            if (maxVal > 120) {
+                let sampleRate = audioCtx.sampleRate || 44100;
+                let freq = maxIndex * sampleRate / analyser.fftSize;
+
+                if (freq > 20) {
+                    // Convert frequency to MIDI Note (MIDI 69 = A4 = 440Hz)
+                    let note = Math.round(12 * Math.log2(freq / 440) + 69);
+                    let pitchClass = note % 12; // 0 = C, 1 = C#, 2 = D, etc.
+
+                    // Map the 12 notes to the 360-degree color wheel (30 degrees per note)
+                    window.targetHue = pitchClass * 30;
+                }
+            }
+
+            // Smoothly interpolate current color towards the target color so it doesn't flash violently
+            let diff = window.targetHue - window.currentHue;
+            diff = ((diff + 540) % 360) - 180; // Find the shortest path around the color wheel
+            window.currentHue += diff * 0.05;  // Smoothing speed
+            window.currentHue = (window.currentHue + 360) % 360;
+
+            // Output colors tracking the exact melody notes!
+            const noteColor = `hsl(${window.currentHue}, 80%, 60%)`;
+            const noteColorGlow = `hsla(${window.currentHue}, 80%, 60%, 0.9)`;
+
+            // Calculate Bass for pulsing effects
+            let bass = 0;
+            for(let i = 2; i < 10; i++) bass += dataArray[i];
+            const bassScale = (bass / 8) / 255; // Normalized 0.0 to 1.0
+
+            // ==========================================
+            // 2. DYNAMIC BOUNDS CALCULATION (NO CUTOFFS)
+            // ==========================================
+            // Ensure the visuals never exceed the shortest side of the canvas
+            const maxAllowedRadius = Math.min(cx, cy) - 10; // 10px safety padding
+            
+            const dynamicBaseRadius = maxAllowedRadius * 0.45; 
+            const maxFluctuation = maxAllowedRadius - dynamicBaseRadius;
+            const fluctuationAmount = maxFluctuation * (0.3 + 0.7 * bassScale); 
 
             // ==========================================
             // LAYER 1: THE COLOR-SHIFTING OSCILLOSCOPE
             // ==========================================
             ctx.beginPath();
             const numPoints = window.waveArray.length; 
-            const baseRadius = 80 + (bass * 0.2); // Ring breathes with the bass
             
-            for (let i = 0; i < numPoints; i++) {
+            for (let i = 0; i < numPoints; i += 4) { // Step by 4 for a slightly cooler retro jagged look
                 const wave = (window.waveArray[i] / 128.0) - 1.0; 
                 const angle = (i / numPoints) * Math.PI * 2 + (time * 0.2); 
                 
-                // The squiggly lines get more aggressive the louder the bass is
-                const r = baseRadius + (wave * (50 + bass * 0.3)); 
+                // Radius safely bound to maxFluctuation
+                const r = dynamicBaseRadius + (wave * fluctuationAmount); 
                 
                 const x = cx + Math.cos(angle) * r;
                 const y = cy + Math.sin(angle) * r;
@@ -1730,17 +1768,15 @@
             
             ctx.closePath();
             ctx.lineWidth = 2;
-            ctx.strokeStyle = ringColor; // Applies the mapped RGB color
+            ctx.strokeStyle = noteColor; // Dynamic pitch color
             ctx.stroke();
 
             // ==========================================
-            // LAYER 2: THE FREQUENCY TRIANGLES
+            // LAYER 2: THE FREQUENCY TRIANGLE
             // ==========================================
-            // Reusable function to draw spinning, pulsing triangles
             function drawTriangle(radius, rotation, color, lineWidth) {
                 ctx.beginPath();
                 for (let i = 0; i < 3; i++) {
-                    // Calculate 3 points of a triangle (offset by -PI/2 so it points UP)
                     const angle = (i / 3) * Math.PI * 2 - (Math.PI / 2) + rotation;
                     const x = cx + Math.cos(angle) * radius;
                     const y = cy + Math.sin(angle) * radius;
@@ -1753,10 +1789,10 @@
                 ctx.stroke();
             }
 
-            // 1. The Bass Triangle (Red/Pink): Pulses largely, spins slowly
-            drawTriangle(3 + (bass * 0.35), time * 0.5, 'rgba(255, 50, 100, 0.9)', 3);
-            
-           }
+            // Triangle size bounded to 20-40% of max radius, pulsing with bass
+            const triRadius = (maxAllowedRadius * 0.2) + (bassScale * maxAllowedRadius * 0.2);
+            drawTriangle(triRadius, time * 0.5, noteColorGlow, 3); // Dynamic pitch color applied!
+        }
 
         // Keep this simple so it doesn't clash with the intro animations
         function drawIdleState() {
