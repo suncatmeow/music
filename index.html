@@ -13,22 +13,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Suncat Studios | Digital Audio Archive</title>
+    <title>Suncat | Digital Audio Archive</title>
     <meta name="description" content="Listen to original rock, pop, blues, avant-garde music, and the official Runestones Online game soundtrack by independent artist and developer Suncat.">    
-    <meta name="keywords" content="Suncat, Suncat Studios, music artist, music producer, video game music, game soundtrack, Runestones Online, indie developer, rock, avant garde">
+    <meta name="keywords" content="Suncat, Suncat Studios, Suncat Studio, music artist, music producer, video game music, game soundtrack, Runestones Online, indie developer, rock, avant garde">
     <meta name="author" content="Suncat">
     <link rel="canonical" href="https://suncatmeow.github.io/music/">
     
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 
-    <meta property="og:title" content="Suncat Studios | Digital Audio Archive">
+    <meta property="og:title" content="Suncat | Digital Audio Archive">
     <meta property="og:description" content="The comprehensive digital archive of Suncat. Original rock, pop, blues, avant-garde music, and the official Runestones Online video game soundtrack.">
     <meta property="og:type" content="music.musician">
     <meta property="og:url" content="https://suncatmeow.github.io/music/">
     <meta property="og:image" content="https://suncatmeow.github.io/music/assets/suncat-og-image.jpg"> 
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Suncat Studios | Digital Audio Archive">
+    <meta name="twitter:title" content="Suncat | Digital Audio Archive">
     <meta name="twitter:description" content="Stream original rock, pop, blues, avant-garde music, and the official Runestones Online game soundtrack by Suncat.">
     <meta name="twitter:image" content="https://suncatmeow.github.io/music/assets/suncat-og-image.jpg">
 
@@ -636,7 +636,7 @@
     <div class="app-container">
         <main class="glass-panel player-panel">
             <header>
-                <h1>Suncat Studios</h1>
+                <h1>Suncat</h1>
             </header>
             
             <div id="visualizer-container">
@@ -725,7 +725,7 @@
         </section>
         <section id="offline-manager" class="glass-panel animate-entry delay-4" style="margin-top: 2rem; margin-bottom: 2rem; text-align: center;">
             <h2 class="bio-header">Offline Archive</h2>
-            <p class="bio-text" style="margin-bottom: 1.5rem;">Save the full Suncat Studios archive (103 tracks) for listening without internet.</p>
+            <p class="bio-text" style="margin-bottom: 1.5rem;">Save the full Suncat archive (103 tracks) for listening without internet.</p>
             
             <button id="btn-download-all" class="sort-btn active" style="width: 100%; padding: 1rem; font-weight: bold;">
                 📥 Download All Tracks
@@ -742,7 +742,7 @@
         <footer class="glass-panel animate-entry delay-4" id="about">
             <h2 class="bio-header">About Suncat</h2>
             <p class="bio-text">
-                Suncat is an independent music producer and game developer based in Houston, Texas. Alongside a vast archive of original rock, pop, and avant-garde albums, Suncat Studios produces immersive video game soundtracks. 
+                Suncat is an independent music producer and game developer based in Houston, Texas. Alongside a vast archive of original rock, pop, and avant-garde albums, Suncat produces immersive video game soundtracks. 
                 <br><br>
                 You can hear the latest game audio in action by playing <a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" style="color: var(--accent-glow); text-decoration: none; font-weight: bold;">Runestones Online</a>, a free, browser-based tarot card battler and dungeon crawler developed by Suncat.
             </p>
@@ -1035,7 +1035,7 @@
                     
                     if (trackIndex !== -1) {
                         // 1. Update the document title so Google and social media cards read the track name
-                        document.title = `${playlistData[trackIndex].title} | Suncat Studios`;
+                        document.title = `${playlistData[trackIndex].title} | Suncat`;
                         
                         // 2. Load the track into the player (Browser will block autoplay until they click)
                         loadAndPlayTrack(trackIndex);
@@ -1394,7 +1394,7 @@
                             nativeBtn.onclick = async () => {
                                 try {
                                     await navigator.share({
-                                        title: `${track.title} | Suncat Studios`,
+                                        title: `${track.title} | Suncat`,
                                         text: `Listen to "${track.title}" by Suncat on the Digital Archive.`,
                                         url: shareUrl
                                     });
@@ -1485,7 +1485,7 @@
             // Update the address bar silently
             window.history.pushState({path: newUrl}, '', newUrl);
             // Update the document title for SEO and browser tabs
-            document.title = `${track.title} | Suncat Studios`;
+            document.title = `${track.title} | Suncat`;
             // renderPlaylist();
             
             document.querySelectorAll('.track-item').forEach(el => {
@@ -1772,26 +1772,55 @@
             ctx.stroke();
 
             // ==========================================
-            // LAYER 2: THE FREQUENCY TRIANGLE
+            // LAYER 2: THE FREQUENCY CORE (Inner Oscillator)
             // ==========================================
-            function drawTriangle(radius, rotation, color, lineWidth) {
-                ctx.beginPath();
-                for (let i = 0; i < 3; i++) {
-                    const angle = (i / 3) * Math.PI * 2 - (Math.PI / 2) + rotation;
-                    const x = cx + Math.cos(angle) * radius;
-                    const y = cy + Math.sin(angle) * radius;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.lineWidth = lineWidth;
-                ctx.strokeStyle = color;
-                ctx.stroke();
-            }
+            // Instead of a triangle, this draws a glowing, sphere-like core 
+            // that morphs its shape based on the EQ/Frequency spectrum.
 
-            // Triangle size bounded to 20-40% of max radius, pulsing with bass
-            const triRadius = (maxAllowedRadius * 0.2) + (bassScale * maxAllowedRadius * 0.2);
-            drawTriangle(triRadius, time * 0.5, noteColorGlow, 3); // Dynamic pitch color applied!
+            ctx.beginPath();
+            
+            // The core breathes slightly with the bass, but stays smaller than the outer ring
+            const coreBaseRadius = (maxAllowedRadius * 0.15) + (bassScale * maxAllowedRadius * 0.05); 
+            
+            // We map 120 points of EQ data around the circle
+            const numFreqPoints = 120; 
+            
+            for (let i = 0; i < numFreqPoints; i++) {
+                // We mirror the data array so the left and right sides of the circle match (looks cleaner)
+                const dataIndex = i < (numFreqPoints / 2) ? i : numFreqPoints - i; 
+                
+                // Normalize the frequency bin from 0-255 down to 0.0-1.0. (+4 skips the inaudible sub-rumble)
+                const freqValue = dataArray[dataIndex + 4] / 255.0; 
+                
+                // Spin the inner core slowly in the OPPOSITE direction of the outer ring
+                const angle = (i / numFreqPoints) * Math.PI * 2 + (time * -0.3); 
+                
+                // The core bulges outward exactly where the EQ frequencies spike
+                const r = coreBaseRadius + (freqValue * maxAllowedRadius * 0.2);
+                
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            
+            ctx.closePath();
+            
+            // Give it a semi-transparent fill so it looks like a glowing 3D orb
+            ctx.fillStyle = `hsla(${window.currentHue}, 80%, 20%, 0.4)`;
+            ctx.fill();
+            
+            // Outline it with the pitch-tracked color
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = noteColorGlow;
+            ctx.stroke();
+            
+            // Optional: Draw a tiny, intense solid center point (the "nucleus")
+            ctx.beginPath();
+            ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
+            ctx.fillStyle = noteColor;
+            ctx.fill();
         }
 
         // Keep this simple so it doesn't clash with the intro animations
