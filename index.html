@@ -1770,8 +1770,8 @@
             ctx.lineWidth = 2;
             ctx.strokeStyle = noteColor; // Dynamic pitch color
             ctx.stroke();
-        // ==========================================
-    // LAYER 2: THE INNER COLLIDING OSCILLOSCOPE
+            // ==========================================
+    // LAYER 2: THE INNER COLLIDING OSCILLOSCOPE (Exact Color Match)
     // ==========================================
     ctx.beginPath();
     
@@ -1801,10 +1801,8 @@
     ctx.closePath();
     ctx.lineWidth = 2;
     
-    // Use the pitch-tracking color, but shift the hue slightly (+40 degrees) 
-    // so you can distinctly see the two lines crossing and overlapping.
-    const innerHue = (window.currentHue + 40) % 360;
-    ctx.strokeStyle = `hsl(${innerHue}, 80%, 65%)`; 
+    // Uses the exact same pitch-tracked color as the outer ring—no shifting!
+    ctx.strokeStyle = noteColor; 
     ctx.stroke();
 
     // ==========================================
@@ -1812,12 +1810,13 @@
     // ==========================================
     ctx.beginPath();
     ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-    ctx.fillStyle = `hsl(${innerHue}, 80%, 70%)`; 
+    ctx.fillStyle = noteColor; 
     ctx.shadowBlur = 10;
-    ctx.shadowColor = `hsl(${innerHue}, 80%, 70%)`;
+    ctx.shadowColor = noteColor;
     ctx.fill();
     ctx.shadowBlur = 0; // Reset shadow for the next frame
 } // End of renderVisualizer
+
 
 
 
