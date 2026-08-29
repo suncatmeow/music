@@ -1746,6 +1746,43 @@
             const maxFluctuation = maxAllowedRadius - dynamicBaseRadius;
             const fluctuationAmount = maxFluctuation * (0.3 + 0.7 * bassScale); 
 
+
+    // ==========================================
+    // LAYER 0: CYMATIC RESONANCE GEOMETRY
+    // ==========================================
+    ctx.beginPath();
+    
+    // We have 12 musical notes in an octave. We map these to 12 harmonic 'k' values.
+    // Integers create closed patterns. Fractions create complex overlapping resonance.
+    const harmonicModes = [2, 3, 4, 5, 6, 8, 2.5, 3.5, 2.66, 2.33, 2.25, 2.75];
+    
+    // Extract the active 0-11 pitch class from the current hue
+    const pitchIndex = Math.round(window.targetHue / 30) % 12; 
+    const k = harmonicModes[pitchIndex];
+    
+    // Scale the cymatic pattern to sit nicely behind the main scopes
+    const cymaticRadius = maxAllowedRadius * 0.90; 
+    const amplitude = cymaticRadius + (bassScale * cymaticRadius * 0.1);
+    
+    // Spin it extremely slowly so the geometry is easy to admire
+    const rotation = time * 0.05;
+    
+    // We loop to Math.PI * 12 to ensure the complex fractional curves fully connect
+    for (let theta = 0; theta <= Math.PI * 12; theta += 0.05) {
+        const r = Math.cos(k * theta) * amplitude;
+        
+        const x = cx + Math.cos(theta + rotation) * r;
+        const y = cy + Math.sin(theta + rotation) * r;
+        
+        if (theta === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    
+    ctx.lineWidth = 1.5;
+    
+    // Draw it as a faint, glowing watermark that shifts colors with the pitch
+    ctx.strokeStyle = `hsla(${window.currentHue}, 80%, 60%, 0.15)`;
+    ctx.stroke();
             // ==========================================
             // LAYER 1: THE COLOR-SHIFTING OSCILLOSCOPE
             // ==========================================
