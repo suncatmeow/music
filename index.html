@@ -1673,7 +1673,7 @@
         // Add these globals just above renderVisualizer to allow smooth color fading
         if (typeof window.currentHue === 'undefined') window.currentHue = 0;
         if (typeof window.targetHue === 'undefined') window.targetHue = 0;
-
+            
         function renderVisualizer() {
             requestAnimationFrame(renderVisualizer);
             
@@ -1698,7 +1698,6 @@
             let maxVal = -1;
             let maxIndex = -1;
             
-            // Scan frequencies, skipping bins 0-3 (sub-bass rumble) to find the melodic root
             for (let i = 4; i < bufferLength / 2; i++) {
                 if (dataArray[i] > maxVal) {
                     maxVal = dataArray[i];
@@ -1706,60 +1705,43 @@
                 }
             }
 
-            // Only change target color if there's a strong, prominent note
             if (maxVal > 120) {
                 let sampleRate = audioCtx.sampleRate || 44100;
                 let freq = maxIndex * sampleRate / analyser.fftSize;
 
                 if (freq > 20) {
-                    // Convert frequency to MIDI Note (MIDI 69 = A4 = 440Hz)
                     let note = Math.round(12 * Math.log2(freq / 440) + 69);
-                    let pitchClass = note % 12; // 0 = C, 1 = C#, 2 = D, etc.
-
-                    // Map the 12 notes to the 360-degree color wheel (30 degrees per note)
+                    let pitchClass = note % 12; 
                     window.targetHue = pitchClass * 30;
                 }
             }
 
-            // Smoothly interpolate current color towards the target color so it doesn't flash violently
             let diff = window.targetHue - window.currentHue;
-            diff = ((diff + 540) % 360) - 180; // Find the shortest path around the color wheel
-            window.currentHue += diff * 0.05;  // Smoothing speed
+            diff = ((diff + 540) % 360) - 180; 
+            window.currentHue += diff * 0.05;  
             window.currentHue = (window.currentHue + 360) % 360;
 
-            // Output colors tracking the exact melody notes!
             const noteColor = `hsl(${window.currentHue}, 80%, 60%)`;
-            const noteColorGlow = `hsla(${window.currentHue}, 80%, 60%, 0.9)`;
 
-            // Calculate Bass for pulsing effects
             let bass = 0;
             for(let i = 2; i < 10; i++) bass += dataArray[i];
-            const bassScale = (bass / 8) / 255; // Normalized 0.0 to 1.0
+            const bassScale = (bass / 8) / 255; 
 
-            // ==========================================
-            // 2. DYNAMIC BOUNDS CALCULATION (NO CUTOFFS)
-            // ==========================================
-            // Ensure the visuals never exceed the shortest side of the canvas
-            const maxAllowedRadius = Math.min(cx, cy) - 10; // 10px safety padding
-            
+            const maxAllowedRadius = Math.min(cx, cy) - 10; 
             const dynamicBaseRadius = maxAllowedRadius * 0.45; 
             const maxFluctuation = maxAllowedRadius - dynamicBaseRadius;
             const fluctuationAmount = maxFluctuation * (0.3 + 0.7 * bassScale); 
 
-
-   
-
             // ==========================================
-            // LAYER 1: THE COLOR-SHIFTING OSCILLOSCOPE
+            // LAYER 1: THE OUTER OSCILLOSCOPE (Base Layer)
             // ==========================================
             ctx.beginPath();
             const numPoints = window.waveArray.length; 
             
-            for (let i = 0; i < numPoints; i += 4) { // Step by 4 for a slightly cooler retro jagged look
+            for (let i = 0; i < numPoints; i += 4) { 
                 const wave = (window.waveArray[i] / 128.0) - 1.0; 
                 const angle = (i / numPoints) * Math.PI * 2 + (time * 0.2); 
                 
-                // Radius safely bound to maxFluctuation
                 const r = dynamicBaseRadius + (wave * fluctuationAmount); 
                 
                 const x = cx + Math.cos(angle) * r;
@@ -1768,117 +1750,94 @@
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             }
-            
             ctx.closePath();
             ctx.lineWidth = 2;
-            ctx.strokeStyle = noteColor; // Dynamic pitch color
+            ctx.strokeStyle = noteColor; 
             ctx.stroke();
+
             // ==========================================
-    // LAYER 2: THE INNER COLLIDING OSCILLOSCOPE (Exact Color Match)
-    // ==========================================
-    ctx.beginPath();
-    
-    // Set the base radius smaller than the outer ring (0.25 vs 0.45)
-    const innerBaseRadius = maxAllowedRadius * 0.25; 
-    
-    // Give it an aggressive fluctuation multiplier so it stretches out and overlaps the main ring
-    const innerFluctuation = maxAllowedRadius * 0.35 * (0.4 + 0.6 * bassScale);
-    
-    for (let i = 0; i < numPoints; i += 4) {
-        // Read the wave array BACKWARDS so it tracks the opposite side of the immediate sound wave
-        const waveIndex = numPoints - 1 - i; 
-        const wave = (window.waveArray[waveIndex] / 128.0) - 1.0; 
-        
-        // Spin it in the opposite direction (time * -0.3) for maximum intersection chaos
-        const angle = (i / numPoints) * Math.PI * 2 + (time * -0.3); 
-        
-        const r = innerBaseRadius + (wave * innerFluctuation); 
-        
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
-        
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    }
-    
-    ctx.closePath();
-    ctx.lineWidth = 2;
-    
-    // Uses the exact same pitch-tracked color as the outer ring—no shifting!
-    ctx.strokeStyle = noteColor; 
-    ctx.stroke();
-    // ==========================================
-    // LAYER 0: THE PAREIDOLIA WEB (The "Campfire")
-    // ==========================================
-    // This draws raw connections between frequencies in the audio data,
-    // creating shifting, ghostly figures and constellations that
-    // rely entirely on the chaotic energy of the music itself.
-
-    const webPoints = [];
-    const numWebPoints = 72; // Enough points to create complex, dancing figures
-
-    // 1. Plot the current state of the music as physical coordinates
-    for (let i = 0; i < numWebPoints; i++) {
-        // Read across the raw waveform data
-        const dataIdx = Math.floor((i / numWebPoints) * window.waveArray.length);
-        const rawWave = (window.waveArray[dataIdx] / 128.0) - 1.0; 
-        
-        // Read across the EQ data to determine how far out the point sits
-        const eqIdx = i % (bufferLength / 2);
-        const eqValue = (dataArray[eqIdx] || 0) / 255.0;
-
-        // Spread the points in a circle, spinning them slowly
-        const angle = (i / numWebPoints) * Math.PI * 2 + (time * 0.1);
-        
-        // The points wander inward and outward organically based on volume and frequency
-        const r = (maxAllowedRadius * 0.1) + (eqValue * maxAllowedRadius * 0.7) + (rawWave * 40);
-
-        webPoints.push({
-            x: cx + Math.cos(angle) * r,
-            y: cy + Math.sin(angle) * r
-        });
-    }
-
-    // 2. Connect the dots when the frequencies physically align
-    ctx.beginPath();
-    
-    // If points get closer than this threshold, they link up
-    const connectionThreshold = maxAllowedRadius * 0.45; 
-
-    for (let i = 0; i < numWebPoints; i++) {
-        for (let j = i + 1; j < numWebPoints; j++) {
-            const dx = webPoints[i].x - webPoints[j].x;
-            const dy = webPoints[i].y - webPoints[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < connectionThreshold) {
-                // The closer the frequencies collide, the brighter the connection
-                const opacity = 1.0 - (dist / connectionThreshold);
+            // LAYER 2: THE INNER OSCILLOSCOPE
+            // ==========================================
+            ctx.beginPath();
+            const innerBaseRadius = maxAllowedRadius * 0.25; 
+            const innerFluctuation = maxAllowedRadius * 0.35 * (0.4 + 0.6 * bassScale);
+            
+            for (let i = 0; i < numPoints; i += 4) {
+                const waveIndex = numPoints - 1 - i; 
+                const wave = (window.waveArray[waveIndex] / 128.0) - 1.0; 
+                const angle = (i / numPoints) * Math.PI * 2 + (time * -0.3); 
                 
-                // Shift the hue slightly across the web for a mystical, fiery depth
-                const webHue = (window.currentHue + (i * 2)) % 360;
+                const r = innerBaseRadius + (wave * innerFluctuation); 
                 
-                ctx.strokeStyle = `hsla(${webHue}, 80%, 60%, ${opacity * 0.6})`;
-                ctx.moveTo(webPoints[i].x, webPoints[i].y);
-                ctx.lineTo(webPoints[j].x, webPoints[j].y);
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
             }
-        }
-    }
-    
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    // ==========================================
-    // 3. THE GLOWING NUCLEUS
-    // ==========================================
-    ctx.beginPath();
-    ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-    ctx.fillStyle = noteColor; 
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = noteColor;
-    ctx.fill();
-    ctx.shadowBlur = 0; // Reset shadow for the next frame
-} // End of renderVisualizer
+            ctx.closePath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = noteColor; 
+            ctx.stroke();
 
+            // ==========================================
+            // LAYER 3: THE PAREIDOLIA WEB (Drawn Over Scopes)
+            // ==========================================
+            const webPoints = [];
+            const numWebPoints = 72; 
+
+            for (let i = 0; i < numWebPoints; i++) {
+                const dataIdx = Math.floor((i / numWebPoints) * window.waveArray.length);
+                const rawWave = (window.waveArray[dataIdx] / 128.0) - 1.0; 
+                
+                const eqIdx = i % (bufferLength / 2);
+                const eqValue = (dataArray[eqIdx] || 0) / 255.0;
+
+                const angle = (i / numWebPoints) * Math.PI * 2 + (time * 0.1);
+                const r = (maxAllowedRadius * 0.1) + (eqValue * maxAllowedRadius * 0.7) + (rawWave * 40);
+
+                webPoints.push({
+                    x: cx + Math.cos(angle) * r,
+                    y: cy + Math.sin(angle) * r
+                });
+            }
+
+            const connectionThreshold = maxAllowedRadius * 0.45; 
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < numWebPoints; i++) {
+                for (let j = i + 1; j < numWebPoints; j++) {
+                    const dx = webPoints[i].x - webPoints[j].x;
+                    const dy = webPoints[i].y - webPoints[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < connectionThreshold) {
+                        const opacity = 1.0 - (dist / connectionThreshold);
+                        
+                        // FIX: Begin path and stroke INSIDE the loop so every connecting line 
+                        // gets its own specific opacity and uses the exact unified hue
+                        ctx.beginPath();
+                        ctx.strokeStyle = `hsla(${window.currentHue}, 80%, 60%, ${opacity * 0.6})`;
+                        ctx.moveTo(webPoints[i].x, webPoints[i].y);
+                        ctx.lineTo(webPoints[j].x, webPoints[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // ==========================================
+            // LAYER 4: THE GLOWING NUCLEUS (Drawn On Top of Everything)
+            // ==========================================
+            ctx.beginPath();
+            ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
+            ctx.fillStyle = noteColor; 
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = noteColor;
+            ctx.fill();
+            ctx.shadowBlur = 0; 
+        } 
+
+        
 
 
 
