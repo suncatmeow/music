@@ -1845,20 +1845,15 @@
                 ctx.shadowBlur = 0; 
                 
             } else if (visualizerMode === 2) {
-                // --- MODE 2: GENERATIVE SHEET MUSIC (Cleaned up & Throttled) ---
+                // --- MODE 2: GENERATIVE SHEET MUSIC (Individual Pitch Colors) ---
                 
-                // SAFETY NET: Guarantee the array exists
                 if (!window.sheetNotes) window.sheetNotes = [];
-                
-                // The 5-line background staff drawing code has been completely removed!
 
-                // 2. Scan for Frequencies and Spawn Notes
-                let spawnedThisFrame = 0; // NEW: A hard cap to prevent the "rainbow barcode" flood
+                let spawnedThisFrame = 0; 
 
                 for (let i = 4; i < bufferLength / 2; i++) {
                     let amp = dataArray[i];
                     
-                    // INCREASED THRESHOLD: Raised to 160 so it only picks up strong, distinct notes
                     if (amp > 160 && dataArray[i] > dataArray[i - 1] && dataArray[i] > dataArray[i + 1]) {
                         
                         let freq = i * (audioCtx.sampleRate / analyser.fftSize);
@@ -1867,14 +1862,18 @@
                         if (midiNote > 36 && midiNote < 84) {
                             let y = canvas.clientHeight - ((midiNote - 36) / (84 - 36) * canvas.clientHeight);
 
-                            // STRICT THROTTLE: Dropped the random chance drastically AND capped at 2 notes per frame
                             if (Math.random() > 0.90 && spawnedThisFrame < 2) {
+                                
+                                // NEW: Calculate the exact color wheel hue for THIS specific pitch
+                                let pitchClass = Math.round(midiNote) % 12; // Get the note from 0 to 11
+                                let specificHue = pitchClass * 30; // Map it to the 360-degree wheel
+
                                 window.sheetNotes.push({
                                     x: canvas.clientWidth + 20, 
                                     y: y,
                                     amp: amp,
-                                    hue: window.currentHue, 
-                                    speed: 3 + (Math.random() * 2), // Sped them up slightly to clear the screen faster
+                                    hue: specificHue, // Use the specific pitch color instead of global hue
+                                    speed: 3 + (Math.random() * 2), 
                                     freqIndex: i, 
                                     life: 1.0,
                                     dead: false 
@@ -1885,7 +1884,6 @@
                     }
                 }
 
-                // 3. Update and Draw the Flying Notes
                 for (let i = window.sheetNotes.length - 1; i >= 0; i--) {
                     let note = window.sheetNotes[i];
                     
@@ -1893,13 +1891,12 @@
                     
                     let currentAmp = dataArray[note.freqIndex];
                     
-                    // INCREASED DEATH THRESHOLD: Cleans up fading notes faster
                     if (currentAmp < 100) {
                         note.dead = true; 
                     }
                     
                     if (note.dead) {
-                        note.life -= 0.05; // Slightly faster fade-out
+                        note.life -= 0.05; 
                     }
 
                     if (note.x < -20 || note.life <= 0) {
@@ -1910,16 +1907,13 @@
                     let opacity = (note.amp / 255) * note.life;
                     ctx.fillStyle = `hsla(${note.hue}, 80%, 60%, ${opacity})`;
 
-                    // Draw clean floating note heads (glowing ellipses without stems)
                     ctx.beginPath();
                     ctx.ellipse(note.x, note.y, 8, 5, 0, 0, Math.PI * 2);
                     
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = `hsla(${note.hue}, 80%, 60%, ${opacity})`;
                     ctx.fill();
-                    ctx.shadowBlur = 0; // Reset shadow
-
-                    // The note stems have been completely removed!
+                    ctx.shadowBlur = 0; 
                 }
             }
         }
