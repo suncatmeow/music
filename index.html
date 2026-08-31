@@ -1789,13 +1789,7 @@
                         }
                     }
                 }
-                ctx.beginPath();
-                ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-                ctx.fillStyle = noteColor; 
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = noteColor;
-                ctx.fill();
-                ctx.shadowBlur = 0; 
+                
 
             } else if (visualizerMode === 0) {
                 // --- MODE 1: 2 OSCILLATORS + NUCLEUS ---
@@ -1851,56 +1845,92 @@
                 ctx.shadowBlur = 0; 
                 
             } else if (visualizerMode === 2) {
-                // --- MODE 2: LONGITUDINAL AIR PRESSURE ---
+                // --- MODE 2: GENERATIVE SHEET MUSIC (Sidescroller) ---
                 
-                let currentPressure = 0;
-                for (let i = 0; i < bufferLength; i++) {
-                    currentPressure += Math.abs(window.waveArray[i] - 128); 
-                }
-                currentPressure = currentPressure / bufferLength; 
+                // 1. Draw the Glowing Musical Staff
+                const lineSpacing = canvas.clientHeight / 14;
+                const staffTop = (canvas.clientHeight / 2) - (lineSpacing * 2);
                 
-                window.waveHistory.unshift(currentPressure);
-                
-                const maxRings = 60; 
-                if (window.waveHistory.length > maxRings) {
-                    window.waveHistory.pop(); 
-                }
-
-                // 4. Draw the expanding rings (representing dense air molecules)
-                for (let i = window.waveHistory.length - 1; i >= 0; i--) {
-                    let pressure = window.waveHistory[i];
-                    let outwardShift = (time * 60) % 1; 
-                    let radius = (i + outwardShift) * (maxAllowedRadius / maxRings) * 1.5;
-                    
-                    if (radius > cx) continue; 
-                    
-                    let intensity = pressure / 30; 
-                    // Lower opacity for a more vapor/air-like feel
-                    let opacity = Math.min(intensity, 1.0) * (1 - (i / maxRings)); 
-                    
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-                    
-                    // SCHLIEREN UPGRADE: 
-                    // Make the bands much thicker, but softer and glowing to simulate air density
-                    ctx.lineWidth = 5 + (intensity * 25); 
-                    ctx.shadowBlur = 15; // Adds the "heat haze" refraction blur
-                    ctx.shadowColor = noteColor;
-                    
-                    ctx.strokeStyle = `hsla(${window.currentHue}, 80%, 60%, ${opacity * 0.4})`;
-                    ctx.stroke();
-                    
-                    // Reset shadow blur so it doesn't break other drawings
-                    ctx.shadowBlur = 0; 
-                }
-
                 ctx.beginPath();
-                ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-                ctx.fillStyle = noteColor; 
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = noteColor;
-                ctx.fill();
-                ctx.shadowBlur = 0; 
+                for (let i = 0; i < 5; i++) {
+                    let y = staffTop + (i * lineSpacing);
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.clientWidth, y);
+                }
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; 
+                ctx.stroke();
+
+                // 2. Scan for Frequencies and Spawn Notes
+                for (let i = 4; i < bufferLength / 2; i++) {
+                    let amp = dataArray[i];
+                    
+                    // Spawn condition: Loud enough AND it's a local peak
+                    if (amp > 150 && dataArray[i] > dataArray[i - 1] && dataArray[i] > dataArray[i + 1]) {
+                        
+                        let freq = i * (audioCtx.sampleRate / analyser.fftSize);
+                        let midiNote = 12 * Math.log2(freq / 440) + 69;
+                        
+                        if (midiNote > 36 && midiNote < 84) {
+                            let y = canvas.clientHeight - ((midiNote - 36) / (84 - 36) * canvas.clientHeight);
+
+                            if (Math.random() > 0.4) {
+                                window.sheetNotes.push({
+                                    x: canvas.clientWidth + 20, 
+                                    y: y,
+                                    amp: amp,
+                                    hue: window.currentHue, 
+                                    speed: 2 + (Math.random() * 1.5),
+                                    freqIndex: i, 
+                                    life: 1.0,
+                                    dead: false // NEW: Tracks if the sound was cut off
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // 3. Update and Draw the Flying Notes
+                for (let i = window.sheetNotes.length - 1; i >= 0; i--) {
+                    let note = window.sheetNotes[i];
+                    
+                    note.x -= note.speed; 
+                    
+                    // Look at the current audio data for this specific note's frequency
+                    let currentAmp = dataArray[note.freqIndex];
+                    
+                    // NEW: If the volume ever drops below the threshold, kill the note permanently
+                    if (currentAmp < 110) {
+                        note.dead = true; 
+                    }
+                    
+                    // Once a note is dead, it fades out and NEVER comes back
+                    if (note.dead) {
+                        note.life -= 0.15; // Fade out quickly
+                    }
+
+                    // Delete if it falls off the edge OR if it fully fades out
+                    if (note.x < -20 || note.life <= 0) {
+                        window.sheetNotes.splice(i, 1);
+                        continue; 
+                    }
+                    
+                    let opacity = (note.amp / 255) * note.life;
+                    ctx.fillStyle = `hsla(${note.hue}, 80%, 60%, ${opacity})`;
+                    ctx.strokeStyle = `hsla(${note.hue}, 80%, 60%, ${opacity})`;
+
+                    // Draw note head
+                    ctx.beginPath();
+                    ctx.ellipse(note.x, note.y, 6, 4, -0.2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw note stem
+                    ctx.beginPath();
+                    ctx.lineWidth = 1.5;
+                    ctx.moveTo(note.x + 5, note.y);
+                    ctx.lineTo(note.x + 5, note.y - 18);
+                    ctx.stroke();
+                }
             }
         }
 
