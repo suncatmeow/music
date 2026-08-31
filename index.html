@@ -1845,7 +1845,7 @@
                 ctx.shadowBlur = 0; 
                 
             } else if (visualizerMode === 2) {
-                // --- MODE 2: GENERATIVE SHEET MUSIC (Sidescroller) ---
+                // --- MODE 2: GENERATIVE SHEET MUSIC (Live Resonance - NO BPM) ---
                 
                 // 1. Draw the Glowing Musical Staff
                 const lineSpacing = canvas.clientHeight / 14;
@@ -1865,8 +1865,8 @@
                 for (let i = 4; i < bufferLength / 2; i++) {
                     let amp = dataArray[i];
                     
-                    // Spawn condition: Loud enough AND it's a local peak
-                    if (amp > 150 && dataArray[i] > dataArray[i - 1] && dataArray[i] > dataArray[i + 1]) {
+                    // LOWERED THRESHOLD: 120 instead of 150 to catch more notes
+                    if (amp > 120 && dataArray[i] > dataArray[i - 1] && dataArray[i] > dataArray[i + 1]) {
                         
                         let freq = i * (audioCtx.sampleRate / analyser.fftSize);
                         let midiNote = 12 * Math.log2(freq / 440) + 69;
@@ -1880,10 +1880,10 @@
                                     y: y,
                                     amp: amp,
                                     hue: window.currentHue, 
-                                    speed: 2 + (Math.random() * 1.5),
+                                    speed: 2 + (Math.random() * 1.5), // Fixed random speed (No BPM needed)
                                     freqIndex: i, 
                                     life: 1.0,
-                                    dead: false // NEW: Tracks if the sound was cut off
+                                    dead: false 
                                 });
                             }
                         }
@@ -1896,20 +1896,17 @@
                     
                     note.x -= note.speed; 
                     
-                    // Look at the current audio data for this specific note's frequency
                     let currentAmp = dataArray[note.freqIndex];
                     
-                    // NEW: If the volume ever drops below the threshold, kill the note permanently
-                    if (currentAmp < 110) {
+                    // LOWERED DEATH THRESHOLD: 70 instead of 110 to stop instant death
+                    if (currentAmp < 70) {
                         note.dead = true; 
                     }
                     
-                    // Once a note is dead, it fades out and NEVER comes back
                     if (note.dead) {
-                        note.life -= 0.15; // Fade out quickly
+                        note.life -= 0.04; // SLOWED FADE OUT so they vanish gracefully
                     }
 
-                    // Delete if it falls off the edge OR if it fully fades out
                     if (note.x < -20 || note.life <= 0) {
                         window.sheetNotes.splice(i, 1);
                         continue; 
