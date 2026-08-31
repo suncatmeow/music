@@ -1847,6 +1847,9 @@
             } else if (visualizerMode === 2) {
                 // --- MODE 2: GENERATIVE SHEET MUSIC (Live Resonance - NO BPM) ---
                 
+                // SAFETY NET: Guarantee the array exists before doing anything else!
+                if (!window.sheetNotes) window.sheetNotes = [];
+                
                 // 1. Draw the Glowing Musical Staff
                 const lineSpacing = canvas.clientHeight / 14;
                 const staffTop = (canvas.clientHeight / 2) - (lineSpacing * 2);
@@ -1865,7 +1868,6 @@
                 for (let i = 4; i < bufferLength / 2; i++) {
                     let amp = dataArray[i];
                     
-                    // LOWERED THRESHOLD: 120 instead of 150 to catch more notes
                     if (amp > 120 && dataArray[i] > dataArray[i - 1] && dataArray[i] > dataArray[i + 1]) {
                         
                         let freq = i * (audioCtx.sampleRate / analyser.fftSize);
@@ -1875,12 +1877,13 @@
                             let y = canvas.clientHeight - ((midiNote - 36) / (84 - 36) * canvas.clientHeight);
 
                             if (Math.random() > 0.4) {
+                                // This is where it was crashing! It will work perfectly now.
                                 window.sheetNotes.push({
                                     x: canvas.clientWidth + 20, 
                                     y: y,
                                     amp: amp,
                                     hue: window.currentHue, 
-                                    speed: 2 + (Math.random() * 1.5), // Fixed random speed (No BPM needed)
+                                    speed: 2 + (Math.random() * 1.5), 
                                     freqIndex: i, 
                                     life: 1.0,
                                     dead: false 
@@ -1898,13 +1901,12 @@
                     
                     let currentAmp = dataArray[note.freqIndex];
                     
-                    // LOWERED DEATH THRESHOLD: 70 instead of 110 to stop instant death
                     if (currentAmp < 70) {
                         note.dead = true; 
                     }
                     
                     if (note.dead) {
-                        note.life -= 0.04; // SLOWED FADE OUT so they vanish gracefully
+                        note.life -= 0.04; 
                     }
 
                     if (note.x < -20 || note.life <= 0) {
