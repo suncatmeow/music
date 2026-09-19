@@ -1773,15 +1773,52 @@
                 soundView.history.shift();
             }
         }
+        function safeMod(n, m) {
+            return ((n % m) + m) % m;
+        }
+
+        function getFreqColor(hz, saturation = 100, lightness = 50, alpha = 1) {
+            if (hz <= 0) return `hsla(0, 0%, ${lightness}%, ${alpha})`;
+            // C0 is ~16.35 Hz. log2() tells us exactly how many octaves up we are.
+            // The fractional part (modulo 1) tells us the exact note/pitch within that octave.
+            const pitchClass = safeMod(Math.log2(hz / 16.35), 1.0);
+            
+            // Map that pitch directly to the 360-degree color wheel
+            const hue = pitchClass * 360; 
+            return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+        }
+
+        function getDominantFrequency() {
+            if (!soundView.fftL || !audioCtx) return 440;
+            let maxVal = -Infinity;
+            let maxBin = 0;
+            // Skip index 0 (DC offset) to find actual pitch
+            for (let i = 1; i < soundView.fftL.length; i++) {
+                const power = soundView.fftL[i] + soundView.fftR[i];
+                if (power > maxVal) {
+                    maxVal = power;
+                    maxBin = i;
+                }
+            }
+            // Convert the array bin back to a Hz frequency
+            return maxBin * (audioCtx.sampleRate / soundView.left.fftSize);
+        }
+
 
         function drawStereoScope(w, h) {
             const left = soundView.waveL;
             const right = soundView.waveR;
-            const scale = Math.min(w * 0.42, h * 0.37);
+            const scale = Math.min(w * 0.45, h * 0.45);
             const cx = w / 2;
-            const cy = h * 0.53;
+            const cy = h / 2;
 
-            ctx.strokeStyle = 'rgba(180,210,240,0.12)';
+            // Grab the real-time pitch-color
+            const domHz = getDominantFrequency();
+            const strokeColor = getFreqColor(domHz, 100, 70, 1.0);
+            const glowColor = getFreqColor(domHz, 100, 50, 0.8);
+
+            // Subtle background crosshair
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(cx - scale, cy);
@@ -1790,10 +1827,8 @@
             ctx.lineTo(cx, cy + scale);
             ctx.stroke();
 
-            // Side signal horizontally, mid signal vertically.
-            // Mono appears vertical; stereo differences create width.
+            // The Laser Line
             ctx.beginPath();
-
             for (let i = 0; i < left.length; i++) {
                 const side = (left[i] - right[i]) * 0.5;
                 const mid = (left[i] + right[i]) * 0.5;
@@ -1804,25 +1839,29 @@
                 else ctx.lineTo(x, y);
             }
 
-            ctx.strokeStyle = 'rgba(110,235,255,0.65)';
-            ctx.lineWidth = 0.8;
+            // Additive blending for a neon light effect
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = glowColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1.5;
             ctx.stroke();
-
-            ctx.fillStyle = '#9cb4c5';
-            ctx.fillText('Width = stereo difference · Height = shared signal', 12, h - 12);
+            
+            // Reset state
+            ctx.shadowBlur = 0;
+            ctx.globalCompositeOperation = 'source-over';
         }
 
         function drawSoundSculpture(w, h) {
             const left = soundView.waveL;
             const right = soundView.waveR;
+            const domHz = getDominantFrequency();
 
-            // Fixed physical time delays, consistent across sample rates.
             const delay = Math.max(1, Math.round(audioCtx.sampleRate * 0.0007));
             const count = left.length - delay * 2;
             const step = Math.max(1, Math.floor(count / 650));
-            const scale = Math.min(w * 0.26, h * 0.29);
+            const scale = Math.min(w * 0.35, h * 0.35);
 
-            // Camera rotation only; it doesn't generate the shape.
             const angle = audioPlayer.currentTime * 0.16;
             const ca = Math.cos(angle);
             const sa = Math.sin(angle);
@@ -1833,7 +1872,6 @@
             const points = [];
 
             for (let i = 0; i < count; i += step) {
-                // A time-delay embedding of the shared stereo signal.
                 const x = (left[i] + right[i]) * 0.5;
                 const y = (left[i + delay] + right[i + delay]) * 0.5;
                 const z = (left[i + delay * 2] + right[i + delay * 2]) * 0.5;
@@ -1847,15 +1885,13 @@
 
                 points.push({
                     x: w / 2 + rx * scale * perspective,
-                    y: h * 0.53 - ry * scale * perspective,
+                    y: h / 2 - ry * scale * perspective,
                     depth,
                     perspective
                 });
             }
 
-            // Paint distant segments first.
             const segments = [];
-
             for (let i = 1; i < points.length; i++) {
                 segments.push({
                     a: points[i - 1],
@@ -1866,45 +1902,53 @@
 
             segments.sort((a, b) => b.depth - a.depth);
 
+            ctx.globalCompositeOperation = 'lighter';
+
             for (const { a, b, depth } of segments) {
                 const near = svClamp(0.5 - depth * 0.25);
-
-                ctx.strokeStyle =
-                    `hsla(${195 + near * 65},90%,${40 + near * 35}%,${0.2 + near * 0.55})`;
-                ctx.lineWidth = 0.6 + near * 1.2;
+                
+                // Color dynamically shifts lightness and opacity based on 3D depth!
+                const color = getFreqColor(domHz, 100, 30 + near * 40, 0.1 + near * 0.8);
+                
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 0.6 + near * 1.5;
 
                 ctx.beginPath();
                 ctx.moveTo(a.x, a.y);
                 ctx.lineTo(b.x, b.y);
                 ctx.stroke();
 
-                ctx.fillStyle = ctx.strokeStyle;
+                ctx.fillStyle = color;
+                ctx.shadowBlur = near * 10; // Closer dots glow more
+                ctx.shadowColor = color;
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, 0.7 * b.perspective, 0, Math.PI * 2);
                 ctx.fill();
             }
-
-            ctx.fillStyle = '#9cb4c5';
-            ctx.fillText('3D waveform delays · Camera rotates · No imposed sphere', 12, h - 12);
+            
+            ctx.shadowBlur = 0;
+            ctx.globalCompositeOperation = 'source-over';
         }
 
         function drawSpectralTerrain(w, h, now) {
-            // Oblique 3D projection: frequency X, level Y, history Z.
             function project(band, level, age) {
                 const x = band / (SV_BANDS - 1);
                 const z = svClamp(age / SV_SECONDS);
-
                 return {
-                    x: w * (0.07 + x * 0.72 + z * 0.14),
-                    y: h * (0.83 - z * 0.27 - level * 0.42)
+                    x: w * (0.05 + x * 0.8 + z * 0.1),
+                    y: h * (0.9 - z * 0.3 - level * 0.5)
                 };
             }
 
-            // Floor grid makes the depth and frequency direction readable.
-            ctx.strokeStyle = 'rgba(135,175,205,0.13)';
+            const lowHz = 40;
+            const highHz = Math.min(16000, audioCtx.sampleRate / 2);
+
+            ctx.globalCompositeOperation = 'lighter';
+
+            // Floor Grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-
             for (let i = 0; i <= 8; i++) {
                 const band = i * (SV_BANDS - 1) / 8;
                 const a = project(band, 0, 0);
@@ -1912,63 +1956,41 @@
                 ctx.moveTo(a.x, a.y);
                 ctx.lineTo(b.x, b.y);
             }
-
             for (let second = 0; second <= SV_SECONDS; second++) {
                 const a = project(0, 0, second);
                 const b = project(SV_BANDS - 1, 0, second);
                 ctx.moveTo(a.x, a.y);
                 ctx.lineTo(b.x, b.y);
             }
-
             ctx.stroke();
 
-            // Oldest rows are at the back.
+            // Draw the terrain (oldest rows in back)
             for (const row of soundView.history) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
 
                 const freshness = 1 - age / SV_SECONDS;
 
-                ctx.beginPath();
-
-                for (let band = 0; band < SV_BANDS; band++) {
-                    const p = project(band, row.levels[band], age);
-                    if (band === 0) ctx.moveTo(p.x, p.y);
-                    else ctx.lineTo(p.x, p.y);
-                }
-
-                ctx.strokeStyle =
-                    `hsla(${205 - freshness * 35},90%,${40 + freshness * 30}%,${0.18 + freshness * 0.72})`;
-                ctx.lineWidth = 0.7 + freshness * 0.7;
-                ctx.stroke();
-            }
-
-            // Connect frequency columns to reveal sustained ridges.
-            ctx.strokeStyle = 'rgba(110,210,250,0.18)';
-            ctx.lineWidth = 0.65;
-            ctx.beginPath();
-
-            for (let band = 0; band < SV_BANDS; band += 4) {
-                let started = false;
-
-                for (const row of soundView.history) {
-                    const age = now - row.time;
-                    if (age < 0 || age > SV_SECONDS) continue;
-
-                    const p = project(band, row.levels[band], age);
-                    if (!started) {
-                        ctx.moveTo(p.x, p.y);
-                        started = true;
-                    } else {
-                        ctx.lineTo(p.x, p.y);
-                    }
+                // Draw each frequency band colored by its EXACT pitch
+                for (let band = 1; band < SV_BANDS; band++) {
+                    const p1 = project(band - 1, row.levels[band - 1], age);
+                    const p2 = project(band, row.levels[band], age);
+                    
+                    // Reconstruct exact Hz for this specific band
+                    const bandHz = lowHz * Math.pow(highHz / lowHz, band / SV_BANDS);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    
+                    // Paint it with the true octave-matched color!
+                    ctx.strokeStyle = getFreqColor(bandHz, 90, 20 + freshness * 50, 0.1 + freshness * 0.9);
+                    ctx.lineWidth = 1 + freshness * 1.5;
+                    ctx.stroke();
                 }
             }
 
-            ctx.stroke();
-
-            ctx.fillStyle = '#9cb4c5';
-            ctx.fillText('40 Hz → 16 kHz* · Height: FFT level · Depth: last 3 seconds', 12, h - 12);
+            ctx.globalCompositeOperation = 'source-over';
         }
 
         function renderVisualizer(stamp = performance.now()) {
@@ -2001,7 +2023,6 @@
             soundView.playhead = audioPlayer.currentTime;
 
             if (playing) {
-                // Clear gaps instead of inventing samples while hidden or stalled.
                 if (now - soundView.lastCapture > 0.3) {
                     soundView.history = [];
                 }
@@ -2015,44 +2036,17 @@
                 soundView.lastCapture = now;
             }
 
+            // Fill background
             ctx.clearRect(0, 0, w, h);
             ctx.fillStyle = '#020205';
             ctx.fillRect(0, 0, w, h);
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(0, 30, w, Math.max(0, h - 55));
-            ctx.clip();
-
-            // Keep the last capture still while paused.
-            const displayTime = Number.isFinite(soundView.lastCapture)
-                ? soundView.lastCapture
-                : now;
+            // Notice we removed the text and clip bounds so it takes the full screen beautifully
+            const displayTime = Number.isFinite(soundView.lastCapture) ? soundView.lastCapture : now;
 
             if (visualizerMode === 0) drawStereoScope(w, h);
             else if (visualizerMode === 1) drawSoundSculpture(w, h);
             else drawSpectralTerrain(w, h, displayTime);
-
-            ctx.restore();
-
-            const names = [
-                'STEREO SCOPE',
-                '3D SOUND SCULPTURE',
-                'SPECTRAL TERRAIN'
-            ];
-
-            const captions = [
-                'Horizontal: stereo difference · Vertical: shared signal',
-                'Waveform at three time offsets · Rotating camera',
-                'Frequency → · Height: FFT level · Depth: 3 seconds'
-            ];
-
-            ctx.font = '11px system-ui';
-            ctx.fillStyle = '#d8edf5';
-            ctx.fillText(names[visualizerMode] + ' · tap to change', 12, 20);
-
-            ctx.fillStyle = '#8da8ba';
-            ctx.fillText(captions[visualizerMode], 12, h - 10);
         }
 
         // Keep this simple so it doesn't clash with the intro animations
