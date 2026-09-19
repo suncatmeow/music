@@ -865,7 +865,6 @@
                 { title: "Come On Home", src: "Come On Home.mp3", duration: "1:14", rating: 2, album: "Suncat V",genre:"Blues", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat V." },
                 { title: "For Now and Forever", src: "For Now and Forever.mp3", duration: "3:39", rating: 1, album: "Suncat V",genre:"Rock, Avant Garde", lyrics: "Lyrics coming soon...", extraInfo: "The longest track on Suncat V." },
                 { title: "Baby, It's Alright", src: "Baby, It's Alright.mp3", duration: "1:19", rating: 3, album: "Suncat V",genre:"Rock, Pop", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat V." },
-                { title: "Tell Me Again", src: "Tell Me Again.mp3", duration: "2:09", rating: 1, album: "Suncat V",genre:"Rock, Avant Garde", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat V." },
             //Suncat VI
                 { title: "Ah", src: "Ah.mp3", duration: "1:26", rating: 1, album: "Suncat VI",genre:"Rock, Avant Garde", lyrics: "Lyrics coming soon...", extraInfo: "The opening to Suncat VI." },
                 { title: "Call Me Mister", src: "Call Me Mister.mp3", duration: "2:13", rating: 5, album: "Suncat VI",genre:"Rock, Avant Garde", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat VI." },
@@ -874,7 +873,6 @@
                 { title: "Christmas (Remix)", src: "Christmas (Remix).mp3", duration: "1:51", rating: 2, album: "Suncat VI",genre:"Pop", lyrics: "Lyrics coming soon...", extraInfo: "Holiday Special." },
                 { title: "Left on Read by a Ghost", src: "Left on Read by a Ghost.mp3", duration: "3:17", rating: 4, album: "Suncat VI",genre:"Rock, Avant Garde", lyrics: "Lyrics coming soon...", extraInfo: "A slow-burn story track from Suncat VI." },
                 { title: "Leftover Lightning", src: "Leftover Lightning.mp3", duration: "2:52", rating: 3, album: "Suncat VI",genre:"Rock, Pop", lyrics: "Lyrics coming soon...", extraInfo: "High-voltage energy from Suncat VI." },
-                { title: "Time", src: "Time.mp3", duration: "1:56", rating: 1, album: "Suncat VI",genre:"Avant Garde", lyrics: "Lyrics coming soon...", extraInfo: "From Suncat VI." },
             // Runestones Soundtrack
                 { title: "A Foreign Land", src: "A Foreign Land.mp3", duration: "3:00", rating: 0, album: "Runestones Soundtrack",genre:"Synthwave", lyrics: "[Instrumental]", extraInfo: "Game Music from the game Runestones Online by Suncat. You can play it free @ suncatmeow.github.io/RunestonesOnline" },
                 { title: "A Worthy Foe", src: "A Worthy Foe.mp3", duration: "2:58", rating: 0, album: "Runestones Soundtrack",genre:"Synthwave", lyrics: "[Instrumental]", extraInfo: "Game Music from the game Runestones Online by Suncat. You can play it free @ suncatmeow.github.io/RunestonesOnline" },
@@ -915,8 +913,7 @@
             const trackTitleDisplay = document.getElementById('track-title');
             const canvas = document.getElementById('visualizer');
             const ctx = canvas.getContext('2d');
-            let visualizerMode = 0; // 0: Graph+Sphere, 1: 2x Oscillators, 2: Air Pressure
-                if (!window.waveHistory) window.waveHistory = []; // Needed for Mode 2
+            let visualizerMode = 0; // 0: Stereo scope, 1: 3D sculpture, 2: Spectral terrain
                 
                 canvas.style.cursor = 'pointer';
                 canvas.addEventListener('click', () => {
@@ -936,9 +933,10 @@
             let audioCtx, analyser, source, dataArray, bufferLength;
             let isEngineRunning = false;
             let isDraggingProgressBar = false;
-            let preloadedTrackIndex = -1;
+           
             let displayOrder = []; 
             let playQueue = [];    
+            let queueOrder = [];
             let currentQueuePos = 0; 
             let currentTrackIndex = -1; 
             let isShuffle = false;
@@ -948,7 +946,9 @@
             let offlineTracks = new Set();
             let currentSearchQuery = '';
             const searchInput = document.getElementById('search-bar');
-            let isBackgroundMode = localStorage.getItem('suncat_bg_mode') === 'true';
+            // Default to native audio unless the user explicitly enabled visuals.
+            let isBackgroundMode =
+                localStorage.getItem('suncat_bg_mode') !== 'false';
             const btnBgMode = document.getElementById('btn-bg-mode');
             let activeFilters = {
                 genre: [],
@@ -1009,23 +1009,22 @@
                 window.addEventListener('resize', resizeCanvas);
                 drawIdleState(); 
                 document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
-                        audioCtx.resume();
+                    if (!document.hidden && !audioPlayer.paused) {
+                        resumeAudioContext();
                     }
                 });
                 scanCacheForOfflineTracks();
-            // --- Set up Background Mode Toggle ---
-                if (isBackgroundMode) {
-                    btnBgMode.classList.add('active');
-                    btnBgMode.innerText = 'Visuals: ON';
-                }
+                btnBgMode.classList.toggle('active', isBackgroundMode);
+                btnBgMode.textContent = isBackgroundMode
+                    ? 'Background audio: ON'
+                    : 'Visualizer: ON';
+
+                btnBgMode.title =
+                    'Switch playback modes. Reloads the page; press Play afterward.';
 
                 btnBgMode.addEventListener('click', () => {
-                    isBackgroundMode = !isBackgroundMode;
-                    localStorage.setItem('suncat_bg_mode', isBackgroundMode);
-                    
-                    // Changing this requires a page reload to detach/attach the Web Audio API
-                    window.location.reload(); 
+                    localStorage.setItem('suncat_bg_mode', String(!isBackgroundMode));
+                    window.location.reload();
                 });
             // --- DEEP LINKING SETUP ---
                 const urlParams = new URLSearchParams(window.location.search);
@@ -1071,9 +1070,7 @@
                 progressBar.value = percent;
                 timeCurrent.innerText = formatTime(audioPlayer.currentTime);
                 timeTotal.innerText = formatTime(audioPlayer.duration);
-                if (audioPlayer.duration - audioPlayer.currentTime < 15) {
-                    preloadNextTrack();
-                }
+               
             }
         }
 
@@ -1083,21 +1080,59 @@
             }
             isDraggingProgressBar = false;
         }
+        function resumeAudioContext() {
+            if (
+                audioCtx &&
+                (audioCtx.state === 'suspended' ||
+                audioCtx.state === 'interrupted')
+            ) {
+                audioCtx.resume().catch(error => {
+                    console.warn('Audio context could not resume:', error);
+                });
+            }
+        }
 
+        async function startPlayback() {
+            const requestedSrc = audioPlayer.src;
+
+            // Call both from the original button/lock-screen action.
+            resumeAudioContext();
+
+            try {
+                await audioPlayer.play();
+            } catch (error) {
+                // Changing tracks quickly can cancel an earlier play request.
+                if (
+                    error.name === 'AbortError' ||
+                    requestedSrc !== audioPlayer.src
+                ) return;
+
+                console.error('Playback failed:', error);
+                btnMainPlay.innerText = '▶';
+
+                trackTitleDisplay.innerText =
+                    error.name === 'NotAllowedError'
+                        ? 'Tap Play to start or resume'
+                        : 'Playback failed — check connection or download';
+            }
+        }
         function handleMainPlayClick() {
-            // If nothing has been loaded yet, play the first track in the current view
             if (currentTrackIndex === -1) {
-                if (playQueue.length > 0) {
-                    currentQueuePos = 0;
-                    loadAndPlayTrack(playQueue[0]);
-                }
+                if (displayOrder.length === 0) return;
+
+                const firstIndex = isShuffle
+                    ? displayOrder[Math.floor(Math.random() * displayOrder.length)]
+                    : displayOrder[0];
+
+                setPlaybackQueue(firstIndex);
+                loadAndPlayTrack(firstIndex);
+                return;
+            }
+
+            if (audioPlayer.paused) {
+                startPlayback();
             } else {
-                // Otherwise, toggle play/pause
-                if (audioPlayer.paused) {
-                    audioPlayer.play();
-                } else {
-                    audioPlayer.pause();
-                }
+                audioPlayer.pause();
             }
         }
 
@@ -1162,8 +1197,8 @@
             }
             // ==========================================
 
-            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
-            
+            document.querySelectorAll('.sort-btn[id^="sort-"]')
+                .forEach(btn => btn.classList.remove('active'));
             // Safely apply active class to the top buttons
             const activeBtn = document.getElementById(`sort-${mode}`);
             if(activeBtn) activeBtn.classList.add('active');
@@ -1175,76 +1210,59 @@
             }
 
             // Sync the queue to the visual order
-            if (!isShuffle) {
-                playQueue = [...displayOrder];
-                currentQueuePos = playQueue.indexOf(currentTrackIndex);
-                if(currentQueuePos === -1) currentQueuePos = 0;
-            } else {
-                buildShuffleQueue();
-            }
+           
         }
 
         // --- PLAYBACK ENGINE LOGIC --- //
+        function setPlaybackQueue(masterIndex) {
+            // Take a snapshot of the view when a song is selected.
+            queueOrder = [...displayOrder];
+
+            // Allows direct song links even if that song isn't in the view.
+            if (!queueOrder.includes(masterIndex)) {
+                queueOrder.unshift(masterIndex);
+            }
+
+            if (isShuffle) {
+                buildShuffleQueue(masterIndex);
+            } else {
+                playQueue = [...queueOrder];
+                currentQueuePos = playQueue.indexOf(masterIndex);
+            }
+        }
+
+        function buildShuffleQueue(anchorIndex = currentTrackIndex) {
+            const remaining = queueOrder.filter(index => index !== anchorIndex);
+
+            for (let i = remaining.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+            }
+
+            playQueue = queueOrder.includes(anchorIndex)
+                ? [anchorIndex, ...remaining]
+                : remaining;
+
+            currentQueuePos = 0;
+        }
+
         function toggleShuffle() {
             isShuffle = !isShuffle;
             btnShuffle.classList.toggle('active', isShuffle);
 
+            // Before playback begins, only change the preference.
+            if (currentTrackIndex === -1) return;
+
             if (isShuffle) {
-                // 1. Generate the random order
                 buildShuffleQueue();
-                
-                // 2. Reset queue position to the start
-                currentQueuePos = 0;
-
-                // 3. Autoplay the first random track in the new queue
-                if (playQueue.length > 0) {
-                    loadAndPlayTrack(playQueue[currentQueuePos]);
-                }
             } else {
-                // If turning shuffle OFF, we just sync back to the normal list
-                playQueue = [...displayOrder];
-                currentQueuePos = playQueue.indexOf(currentTrackIndex); 
-                if(currentQueuePos === -1) currentQueuePos = 0;
+                playQueue = [...queueOrder];
+                currentQueuePos = playQueue.indexOf(currentTrackIndex);
             }
+
+            // Don't reload or restart the playing song.
         }
-
-        function buildShuffleQueue() {
-            // Take the currently visible tracks
-            let availableTracks = [...displayOrder];
-            
-            // Remove the currently playing track so we can stick it at the front
-            let remainingTracks = availableTracks.filter(i => i !== currentTrackIndex);
-            
-            // Fisher-Yates Shuffle
-            for (let i = remainingTracks.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [remainingTracks[i], remainingTracks[j]] = [remainingTracks[j], remainingTracks[i]];
-            }
-            
-            // Rebuild queue
-            if (currentTrackIndex !== -1 && availableTracks.includes(currentTrackIndex)) {
-                playQueue = [currentTrackIndex, ...remainingTracks];
-            } else {
-                playQueue = remainingTracks;
-            }
-            currentQueuePos = 0; 
-        }
-        function preloadNextTrack() {
-            if (playQueue.length === 0) return;
-            
-            let nextPos = currentQueuePos + 1;
-            if (nextPos >= playQueue.length) nextPos = 0; // Loop back to start
-            let nextMasterIndex = playQueue[nextPos];
-
-            // Prevent spamming the fetch request
-            if (preloadedTrackIndex === nextMasterIndex) return;
-            preloadedTrackIndex = nextMasterIndex;
-
-            const nextTrackUrl = playlistData[nextMasterIndex].src;
-
-            // Silently fetch it to warm up the cache
-            fetch(nextTrackUrl, { mode: 'no-cors' }).catch(() => {});
-        }
+        
         function playNextTrack() {
             if (playQueue.length === 0) return; 
             currentQueuePos++;
@@ -1350,9 +1368,9 @@
                             
                 trackEl.addEventListener('click', () => {
                     if (currentTrackIndex === masterIndex) {
-                        handleMainPlayClick(); // Toggle pause/play if clicking same track
+                        handleMainPlayClick();
                     } else {
-                        currentQueuePos = playQueue.indexOf(masterIndex);
+                        setPlaybackQueue(masterIndex);
                         loadAndPlayTrack(masterIndex);
                     }
                 });
@@ -1481,15 +1499,21 @@
         }
 
         function loadAndPlayTrack(masterIndex) {
-            if (masterIndex === undefined || masterIndex === -1) return;
+            if (!Number.isInteger(masterIndex) || !playlistData[masterIndex]) return;
 
+            if (!playQueue.includes(masterIndex)) {
+                setPlaybackQueue(masterIndex);
+            }
+
+            currentQueuePos = playQueue.indexOf(masterIndex);
             currentTrackIndex = masterIndex;
+            
             const track = playlistData[masterIndex];
             // --- UPDATE URL FOR SHARING ---
             const cleanTrackName = track.title.toLowerCase().replace(/[^a-z0-9]/g, '');
             const newUrl = `${window.location.pathname}?track=${cleanTrackName}`;
             // Update the address bar silently
-            window.history.pushState({path: newUrl}, '', newUrl);
+            window.history.replaceState({path: newUrl}, '', newUrl);
             // Update the document title for SEO and browser tabs
             document.title = `${track.title} | Suncat`;
             // renderPlaylist();
@@ -1509,12 +1533,11 @@
             }, 300);
 
             audioPlayer.src = track.src;
-            audioPlayer.play().then(() => {
-                // Force the Web Audio API context to wake up if Android suspended it between tracks
-                if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            }).catch(e => console.log("Waiting for user interaction...", e));
+            if (!isEngineRunning && !isBackgroundMode) {
+                setupAudioEngine();
+            }
+
+            startPlayback();
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: track.title,
@@ -1526,15 +1549,13 @@
                     ]
                 });
                 // Added the play/pause handlers here just in case iOS/Safari needs them later!
-                navigator.mediaSession.setActionHandler('play', () => audioPlayer.play());
+                navigator.mediaSession.setActionHandler('play', startPlayback);
                 navigator.mediaSession.setActionHandler('pause', () => audioPlayer.pause());
                 navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
                 navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
             }
 
-            if (!isEngineRunning && !isBackgroundMode) {
-                setupAudioEngine();
-            }
+            
         }
 
         // --- MODAL LOGIC --- //
@@ -1561,7 +1582,7 @@
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
             
-            audioPlayer.crossOrigin = "anonymous";
+           
             source = audioCtx.createMediaElementSource(audioPlayer);
 
             // ----------------------------------------------------
@@ -1628,12 +1649,9 @@
             
             // Split the final polished signal: one to the speakers, one to the visualizer
             makeupGain.connect(audioCtx.destination);
-            makeupGain.connect(analyser); 
 
-            analyser.fftSize = 4096; 
-            bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-            
+            initVisualAnalysis(makeupGain);
+
             isEngineRunning = true;
             renderVisualizer();
         }
@@ -1641,298 +1659,411 @@
         function resizeCanvas() {
             const container = document.getElementById('visualizer-container');
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = container.clientWidth * dpr;
-            canvas.height = container.clientHeight * dpr;
-            ctx.scale(dpr, dpr);
+
+            canvas.width = Math.round(container.clientWidth * dpr);
+            canvas.height = Math.round(container.clientHeight * dpr);
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            if (!isEngineRunning) drawIdleState();
         }
 
-        function drawIdleState() {
-            if (isEngineRunning) return;
-            requestAnimationFrame(drawIdleState);
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const cx = canvas.clientWidth / 2;
-            const cy = canvas.clientHeight / 2;
-            const time = Date.now() * 0.001;
+        
 
+        const soundView = {
+            left: null,
+            right: null,
+            waveL: null,
+            waveR: null,
+            fftL: null,
+            fftR: null,
+            bands: [],
+            history: [],
+            lastFrame: -Infinity,
+            lastCapture: -Infinity,
+            source: '',
+            playhead: 0
+        };
+
+        const SV_BANDS = 64;
+        const SV_SECONDS = 3;
+        const SV_FPS = 24;
+
+        function initVisualAnalysis(output) {
+            // Explicit stereo upmix also gives mono files matching L/R channels.
+            const stereoTap = audioCtx.createGain();
+            stereoTap.channelCount = 2;
+            stereoTap.channelCountMode = 'explicit';
+            stereoTap.channelInterpretation = 'speakers';
+
+            const splitter = audioCtx.createChannelSplitter(2);
+            output.connect(stereoTap);
+            stereoTap.connect(splitter);
+
+            soundView.left = audioCtx.createAnalyser();
+            soundView.right = audioCtx.createAnalyser();
+
+            [soundView.left, soundView.right].forEach(node => {
+                node.fftSize = 4096;
+                node.smoothingTimeConstant = 0;
+            });
+
+            splitter.connect(soundView.left, 0);
+            splitter.connect(soundView.right, 1);
+
+            const size = soundView.left.fftSize;
+            const bins = soundView.left.frequencyBinCount;
+
+            soundView.waveL = new Float32Array(size);
+            soundView.waveR = new Float32Array(size);
+            soundView.fftL = new Float32Array(bins);
+            soundView.fftR = new Float32Array(bins);
+
+            const binHz = audioCtx.sampleRate / size;
+            const lowHz = 40;
+            const highHz = Math.min(16000, audioCtx.sampleRate / 2);
+
+            soundView.bands = Array.from({ length: SV_BANDS }, (_, i) => {
+                const low = lowHz * Math.pow(highHz / lowHz, i / SV_BANDS);
+                const high = lowHz * Math.pow(highHz / lowHz, (i + 1) / SV_BANDS);
+
+                const start = Math.min(bins - 1, Math.max(1, Math.floor(low / binHz)));
+                const end = Math.min(bins, Math.max(start + 1, Math.ceil(high / binHz)));
+
+                return { start, end };
+            });
+
+            soundView.history = [];
+            soundView.lastCapture = -Infinity;
+        }
+
+        function svClamp(value, low = 0, high = 1) {
+            return Math.max(low, Math.min(high, value));
+        }
+
+        function captureSpectrum(time) {
+            const levels = new Float32Array(SV_BANDS);
+
+            for (let band = 0; band < SV_BANDS; band++) {
+                const { start, end } = soundView.bands[band];
+                let power = 0;
+
+                for (let bin = start; bin < end; bin++) {
+                    // Combine channel powers, avoiding mono phase cancellation.
+                    power += (
+                        Math.pow(10, soundView.fftL[bin] / 10) +
+                        Math.pow(10, soundView.fftR[bin] / 10)
+                    ) * 0.5;
+                }
+
+                const meanPower = power / (end - start);
+                const db = 10 * Math.log10(Math.max(meanPower, 1e-12));
+
+                // Fixed display scale: -90 dB at the floor, 0 dB at the top.
+                levels[band] = svClamp((db + 90) / 90);
+            }
+
+            soundView.history.push({ time, levels });
+            soundView.history = soundView.history.filter(row =>
+                time - row.time <= SV_SECONDS
+            );
+
+            // Hard memory bound as well as the time bound.
+            while (soundView.history.length > SV_FPS * SV_SECONDS + 2) {
+                soundView.history.shift();
+            }
+        }
+
+        function drawStereoScope(w, h) {
+            const left = soundView.waveL;
+            const right = soundView.waveR;
+            const scale = Math.min(w * 0.42, h * 0.37);
+            const cx = w / 2;
+            const cy = h * 0.53;
+
+            ctx.strokeStyle = 'rgba(180,210,240,0.12)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.arc(cx, cy, 50 + Math.sin(time) * 5, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255, 170, 0, 0.2)';
-            ctx.lineWidth = 2;
+            ctx.moveTo(cx - scale, cy);
+            ctx.lineTo(cx + scale, cy);
+            ctx.moveTo(cx, cy - scale);
+            ctx.lineTo(cx, cy + scale);
             ctx.stroke();
+
+            // Side signal horizontally, mid signal vertically.
+            // Mono appears vertical; stereo differences create width.
+            ctx.beginPath();
+
+            for (let i = 0; i < left.length; i++) {
+                const side = (left[i] - right[i]) * 0.5;
+                const mid = (left[i] + right[i]) * 0.5;
+                const x = cx + side * scale;
+                const y = cy - mid * scale;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+
+            ctx.strokeStyle = 'rgba(110,235,255,0.65)';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+
+            ctx.fillStyle = '#9cb4c5';
+            ctx.fillText('Width = stereo difference · Height = shared signal', 12, h - 12);
         }
 
-        // --- UPGRADED PARTICLE SYSTEM ---
-        let particles = [];
-        function createParticles(cx, cy, intensity) {
-            for (let i = 0; i < intensity; i++) {
-                particles.push({
-                    x: cx, y: cy,
-                    xv: (Math.random() - 0.5) * intensity * 0.5,
-                    yv: (Math.random() - 0.5) * intensity * 0.5,
-                    life: 1.0,
-                    size: Math.random() * 3 + 1
+        function drawSoundSculpture(w, h) {
+            const left = soundView.waveL;
+            const right = soundView.waveR;
+
+            // Fixed physical time delays, consistent across sample rates.
+            const delay = Math.max(1, Math.round(audioCtx.sampleRate * 0.0007));
+            const count = left.length - delay * 2;
+            const step = Math.max(1, Math.floor(count / 650));
+            const scale = Math.min(w * 0.26, h * 0.29);
+
+            // Camera rotation only; it doesn't generate the shape.
+            const angle = audioPlayer.currentTime * 0.16;
+            const ca = Math.cos(angle);
+            const sa = Math.sin(angle);
+            const tilt = 0.45;
+            const ct = Math.cos(tilt);
+            const st = Math.sin(tilt);
+
+            const points = [];
+
+            for (let i = 0; i < count; i += step) {
+                // A time-delay embedding of the shared stereo signal.
+                const x = (left[i] + right[i]) * 0.5;
+                const y = (left[i + delay] + right[i + delay]) * 0.5;
+                const z = (left[i + delay * 2] + right[i + delay * 2]) * 0.5;
+
+                const rx = x * ca + z * sa;
+                const rz = -x * sa + z * ca;
+                const ry = y * ct - rz * st;
+                const depth = y * st + rz * ct;
+
+                const perspective = 3.8 / Math.max(1.2, 3.8 + depth);
+
+                points.push({
+                    x: w / 2 + rx * scale * perspective,
+                    y: h * 0.53 - ry * scale * perspective,
+                    depth,
+                    perspective
                 });
             }
+
+            // Paint distant segments first.
+            const segments = [];
+
+            for (let i = 1; i < points.length; i++) {
+                segments.push({
+                    a: points[i - 1],
+                    b: points[i],
+                    depth: (points[i - 1].depth + points[i].depth) * 0.5
+                });
+            }
+
+            segments.sort((a, b) => b.depth - a.depth);
+
+            for (const { a, b, depth } of segments) {
+                const near = svClamp(0.5 - depth * 0.25);
+
+                ctx.strokeStyle =
+                    `hsla(${195 + near * 65},90%,${40 + near * 35}%,${0.2 + near * 0.55})`;
+                ctx.lineWidth = 0.6 + near * 1.2;
+
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 0.7 * b.perspective, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#9cb4c5';
+            ctx.fillText('3D waveform delays · Camera rotates · No imposed sphere', 12, h - 12);
         }
 
-        // Add these globals just above renderVisualizer to allow smooth color fading
-        if (typeof window.currentHue === 'undefined') window.currentHue = 0;
-        if (typeof window.targetHue === 'undefined') window.targetHue = 0;
+        function drawSpectralTerrain(w, h, now) {
+            // Oblique 3D projection: frequency X, level Y, history Z.
+            function project(band, level, age) {
+                const x = band / (SV_BANDS - 1);
+                const z = svClamp(age / SV_SECONDS);
 
-        function renderVisualizer() {
+                return {
+                    x: w * (0.07 + x * 0.72 + z * 0.14),
+                    y: h * (0.83 - z * 0.27 - level * 0.42)
+                };
+            }
+
+            // Floor grid makes the depth and frequency direction readable.
+            ctx.strokeStyle = 'rgba(135,175,205,0.13)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+
+            for (let i = 0; i <= 8; i++) {
+                const band = i * (SV_BANDS - 1) / 8;
+                const a = project(band, 0, 0);
+                const b = project(band, 0, SV_SECONDS);
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+            }
+
+            for (let second = 0; second <= SV_SECONDS; second++) {
+                const a = project(0, 0, second);
+                const b = project(SV_BANDS - 1, 0, second);
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+            }
+
+            ctx.stroke();
+
+            // Oldest rows are at the back.
+            for (const row of soundView.history) {
+                const age = now - row.time;
+                if (age < 0 || age > SV_SECONDS) continue;
+
+                const freshness = 1 - age / SV_SECONDS;
+
+                ctx.beginPath();
+
+                for (let band = 0; band < SV_BANDS; band++) {
+                    const p = project(band, row.levels[band], age);
+                    if (band === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+
+                ctx.strokeStyle =
+                    `hsla(${205 - freshness * 35},90%,${40 + freshness * 30}%,${0.18 + freshness * 0.72})`;
+                ctx.lineWidth = 0.7 + freshness * 0.7;
+                ctx.stroke();
+            }
+
+            // Connect frequency columns to reveal sustained ridges.
+            ctx.strokeStyle = 'rgba(110,210,250,0.18)';
+            ctx.lineWidth = 0.65;
+            ctx.beginPath();
+
+            for (let band = 0; band < SV_BANDS; band += 4) {
+                let started = false;
+
+                for (const row of soundView.history) {
+                    const age = now - row.time;
+                    if (age < 0 || age > SV_SECONDS) continue;
+
+                    const p = project(band, row.levels[band], age);
+                    if (!started) {
+                        ctx.moveTo(p.x, p.y);
+                        started = true;
+                    } else {
+                        ctx.lineTo(p.x, p.y);
+                    }
+                }
+            }
+
+            ctx.stroke();
+
+            ctx.fillStyle = '#9cb4c5';
+            ctx.fillText('40 Hz → 16 kHz* · Height: FFT level · Depth: last 3 seconds', 12, h - 12);
+        }
+
+        function renderVisualizer(stamp = performance.now()) {
             requestAnimationFrame(renderVisualizer);
-            
-            // Save battery if the user switches browser tabs
-            if (document.hidden) return; 
 
-            analyser.getByteFrequencyData(dataArray);
-            if (!window.waveArray) window.waveArray = new Uint8Array(bufferLength);
-            analyser.getByteTimeDomainData(window.waveArray);
+            if (document.hidden || !soundView.left) return;
+            if (stamp - soundView.lastFrame < 1000 / SV_FPS) return;
 
-            const cx = canvas.clientWidth / 2;
-            const cy = canvas.clientHeight / 2;
-            const time = Date.now() * 0.001; 
+            soundView.lastFrame = stamp;
 
-            // Motion Trail Background
-            ctx.fillStyle = 'rgba(2, 2, 5, 0.25)'; 
-            ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            if (!w || !h) return;
 
-            // ==========================================
-            // 1. PITCH TO COLOR MAPPING
-            // ==========================================
-            let maxVal = -1;
-            let maxIndex = -1;
-            
-            for (let i = 4; i < bufferLength / 2; i++) {
-                if (dataArray[i] > maxVal) {
-                    maxVal = dataArray[i];
-                    maxIndex = i;
-                }
+            const now = audioCtx.currentTime;
+            const playing = !audioPlayer.paused &&
+                !audioPlayer.ended &&
+                audioPlayer.readyState >= 3 &&
+                audioCtx.state === 'running';
+
+            const changedTrack = soundView.source !== audioPlayer.currentSrc;
+            const jumped = Math.abs(audioPlayer.currentTime - soundView.playhead) > 0.5;
+
+            if (changedTrack || jumped) {
+                soundView.history = [];
+                soundView.lastCapture = -Infinity;
             }
 
-            if (maxVal > 120) {
-                let sampleRate = audioCtx.sampleRate || 44100;
-                let freq = maxIndex * sampleRate / analyser.fftSize;
+            soundView.source = audioPlayer.currentSrc;
+            soundView.playhead = audioPlayer.currentTime;
 
-                if (freq > 20) {
-                    let note = Math.round(12 * Math.log2(freq / 440) + 69);
-                    let pitchClass = note % 12; 
-                    window.targetHue = pitchClass * 30;
+            if (playing) {
+                // Clear gaps instead of inventing samples while hidden or stalled.
+                if (now - soundView.lastCapture > 0.3) {
+                    soundView.history = [];
                 }
+
+                soundView.left.getFloatTimeDomainData(soundView.waveL);
+                soundView.right.getFloatTimeDomainData(soundView.waveR);
+                soundView.left.getFloatFrequencyData(soundView.fftL);
+                soundView.right.getFloatFrequencyData(soundView.fftR);
+
+                captureSpectrum(now);
+                soundView.lastCapture = now;
             }
 
-            let diff = window.targetHue - window.currentHue;
-            diff = ((diff + 540) % 360) - 180; 
-            window.currentHue += diff * 0.05;  
-            window.currentHue = (window.currentHue + 360) % 360;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#020205';
+            ctx.fillRect(0, 0, w, h);
 
-            const noteColor = `hsl(${window.currentHue}, 80%, 60%)`;
-            const noteColorGlow = `hsla(${window.currentHue}, 80%, 60%, 0.9)`;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, 30, w, Math.max(0, h - 55));
+            ctx.clip();
 
-            let bass = 0;
-            for(let i = 2; i < 10; i++) bass += dataArray[i];
-            const bassScale = (bass / 8) / 255; 
+            // Keep the last capture still while paused.
+            const displayTime = Number.isFinite(soundView.lastCapture)
+                ? soundView.lastCapture
+                : now;
 
-            const maxAllowedRadius = Math.min(cx, cy) - 10; 
-            const dynamicBaseRadius = maxAllowedRadius * 0.45; 
-            const maxFluctuation = maxAllowedRadius - dynamicBaseRadius;
-            const fluctuationAmount = maxFluctuation * (0.3 + 0.7 * bassScale); 
+            if (visualizerMode === 0) drawStereoScope(w, h);
+            else if (visualizerMode === 1) drawSoundSculpture(w, h);
+            else drawSpectralTerrain(w, h, displayTime);
 
-            // ==========================================
-            // 2. VISUALIZER MODES
-            // ==========================================
-            
-            if (visualizerMode === 1) {
-                // --- MODE 0: PURE PAREIDOLIA WEB ---
-                // The sphere is removed, and the web now fills the center.
+            ctx.restore();
 
-                const webPoints = [];
-                const numWebPoints = 80; // Slightly increased for a richer center
+            const names = [
+                'STEREO SCOPE',
+                '3D SOUND SCULPTURE',
+                'SPECTRAL TERRAIN'
+            ];
 
-                for (let i = 0; i < numWebPoints; i++) {
-                    const dataIdx = Math.floor((i / numWebPoints) * window.waveArray.length);
-                    const rawWave = (window.waveArray[dataIdx] / 128.0) - 1.0; 
-                    
-                    const eqIdx = i % (bufferLength / 2);
-                    const eqValue = (dataArray[eqIdx] || 0) / 255.0;
+            const captions = [
+                'Horizontal: stereo difference · Vertical: shared signal',
+                'Waveform at three time offsets · Rotating camera',
+                'Frequency → · Height: FFT level · Depth: 3 seconds'
+            ];
 
-                    const angle = (i / numWebPoints) * Math.PI * 2 + (time * 0.1);
-                    
-                    // By removing the fixed base radius offset, points can now collapse 
-                    // all the way into the center (r = 0), completely filling the donut hole.
-                    // We let the EQ push them out, and the raw wave add the jaggedness.
-                    const r = (eqValue * maxAllowedRadius * 0.9) + (rawWave * maxAllowedRadius * 0.15);
+            ctx.font = '11px system-ui';
+            ctx.fillStyle = '#d8edf5';
+            ctx.fillText(names[visualizerMode] + ' · tap to change', 12, 20);
 
-                    webPoints.push({
-                        x: cx + Math.cos(angle) * r,
-                        y: cy + Math.sin(angle) * r
-                    });
-                }
-
-                const connectionThreshold = maxAllowedRadius * 0.55; // Slightly longer reach to cross the center nicely
-                ctx.lineWidth = 1;
-
-                for (let i = 0; i < numWebPoints; i++) {
-                    for (let j = i + 1; j < numWebPoints; j++) {
-                        const dx = webPoints[i].x - webPoints[j].x;
-                        const dy = webPoints[i].y - webPoints[j].y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (dist < connectionThreshold) {
-                            const opacity = 1.0 - (dist / connectionThreshold);
-                            ctx.beginPath();
-                            ctx.strokeStyle = `hsla(${window.currentHue}, 80%, 60%, ${opacity * 0.6})`;
-                            ctx.moveTo(webPoints[i].x, webPoints[i].y);
-                            ctx.lineTo(webPoints[j].x, webPoints[j].y);
-                            ctx.stroke();
-                        }
-                    }
-                }
-                
-
-            } else if (visualizerMode === 0) {
-                // --- MODE 1: 2 OSCILLATORS + NUCLEUS ---
-                const numPoints = window.waveArray.length; 
-
-                // OSCILLATOR 1: Outer Wave
-                ctx.beginPath();
-                for (let i = 0; i < numPoints; i += 4) { 
-                    const wave = (window.waveArray[i] / 128.0) - 1.0; 
-                    const angle = (i / numPoints) * Math.PI * 2 + (time * 0.2); 
-                    const r = dynamicBaseRadius + (wave * fluctuationAmount); 
-                    
-                    const x = cx + Math.cos(angle) * r;
-                    const y = cy + Math.sin(angle) * r;
-                    
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = noteColor; 
-                ctx.stroke();
-
-                // OSCILLATOR 2: Inner Wave
-                ctx.beginPath();
-                const innerBaseRadius = maxAllowedRadius * 0.25; 
-                const innerFluctuation = maxAllowedRadius * 0.35 * (0.4 + 0.6 * bassScale);
-                
-                for (let i = 0; i < numPoints; i += 4) {
-                    const waveIndex = numPoints - 1 - i; 
-                    const wave = (window.waveArray[waveIndex] / 128.0) - 1.0; 
-                    const angle = (i / numPoints) * Math.PI * 2 + (time * -0.3); 
-                    const r = innerBaseRadius + (wave * innerFluctuation); 
-                    
-                    const x = cx + Math.cos(angle) * r;
-                    const y = cy + Math.sin(angle) * r;
-                    
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = noteColorGlow; 
-                ctx.stroke();
-
-                // NUCLEUS: The pulsing center dot
-                ctx.beginPath();
-                ctx.arc(cx, cy, 3 + (bassScale * 5), 0, Math.PI * 2);
-                ctx.fillStyle = noteColor; 
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = noteColor;
-                ctx.fill();
-                ctx.shadowBlur = 0; 
-                
-            } else if (visualizerMode === 2) {
-                // --- MODE 2: GENERATIVE SHEET MUSIC (Microtonal Colors & Octave Lightness) ---
-                
-                if (!window.sheetNotes) window.sheetNotes = [];
-
-                let spawnedThisFrame = 0; 
-
-                for (let i = 4; i < bufferLength / 2; i++) {
-                    let amp = dataArray[i];
-                    
-                    if (amp > 160 && dataArray[i] > dataArray[i - 1] && dataArray[i] > dataArray[i + 1]) {
-                        
-                        let freq = i * (audioCtx.sampleRate / analyser.fftSize);
-                        let midiNote = 12 * Math.log2(freq / 440) + 69;
-                        
-                        if (midiNote > 36 && midiNote < 84) {
-                            let y = canvas.clientHeight - ((midiNote - 36) / (84 - 36) * canvas.clientHeight);
-
-                            if (Math.random() > 0.90 && spawnedThisFrame < 2) {
-                                
-                                // 1. MICROTONAL HUE: No rounding! Off-key frequencies will naturally shift hues.
-                                let exactPitchClass = midiNote % 12; 
-                                let specificHue = exactPitchClass * 30; 
-
-                                // 2. OCTAVE LIGHTNESS: Bass notes are deep (40%), treble notes are bright (75%)
-                                let specificLightness = 40 + ((midiNote - 36) / 48) * 35;
-
-                                window.sheetNotes.push({
-                                    x: canvas.clientWidth + 20, 
-                                    y: y,
-                                    amp: amp,
-                                    hue: specificHue, 
-                                    light: specificLightness, // Store the lightness
-                                    speed: 3 + (Math.random() * 2), 
-                                    freqIndex: i, 
-                                    life: 1.0,
-                                    dead: false 
-                                });
-                                spawnedThisFrame++;
-                            }
-                        }
-                    }
-                }
-
-                for (let i = window.sheetNotes.length - 1; i >= 0; i--) {
-                    let note = window.sheetNotes[i];
-                    
-                    note.x -= note.speed; 
-                    
-                    let currentAmp = dataArray[note.freqIndex];
-                    
-                    if (currentAmp < 100) {
-                        note.dead = true; 
-                    }
-                    
-                    if (note.dead) {
-                        note.life -= 0.05; 
-                    }
-
-                    if (note.x < -20 || note.life <= 0) {
-                        window.sheetNotes.splice(i, 1);
-                        continue; 
-                    }
-                    
-                    let opacity = (note.amp / 255) * note.life;
-                    
-                    // Compile the exact color using the dynamic hue AND dynamic lightness
-                    let noteColorStr = `hsla(${note.hue}, 80%, ${note.light}%, ${opacity})`;
-                    
-                    ctx.fillStyle = noteColorStr;
-
-                    ctx.beginPath();
-                    ctx.ellipse(note.x, note.y, 8, 5, 0, 0, Math.PI * 2);
-                    
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = noteColorStr;
-                    ctx.fill();
-                    ctx.shadowBlur = 0; 
-                }
-            }
+            ctx.fillStyle = '#8da8ba';
+            ctx.fillText(captions[visualizerMode], 12, h - 10);
         }
 
         // Keep this simple so it doesn't clash with the intro animations
         function drawIdleState() {
             if (isEngineRunning) return;
-            requestAnimationFrame(drawIdleState);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
             const cx = canvas.clientWidth / 2;
             const cy = canvas.clientHeight / 2;
+
             ctx.beginPath();
             ctx.arc(cx, cy, 70, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(255, 170, 0, 0.1)';
@@ -2063,29 +2194,47 @@
             });
             
             // Listen for progress messages from sw.js
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data.action === 'DOWNLOAD_PROGRESS') {
-                    const { current, total, track } = event.data;
-                    const percent = Math.round((current / total) * 100);
-                    
-                    // Update the UI
-                    visualBar.value = percent;
-                    percentText.innerText = `${percent}%`;
-                    
-                    // Clean up the track name for the display
-                    const cleanName = decodeURIComponent(track).replace('.mp3', '');
-                    progressText.innerText = `Saving: ${cleanName}`;
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.addEventListener('message', async (event) => {
+                    if (event.data.action === 'DOWNLOAD_PROGRESS') {
+                        const { current, total, track } = event.data;
+                        const percent = Math.round((current / total) * 100);
+                        
+                        // Update the UI
+                        visualBar.value = percent;
+                        percentText.innerText = `${percent}%`;
+                        
+                        // Clean up the track name for the display
+                        const cleanName = decodeURIComponent(track).replace('.mp3', '');
+                        progressText.innerText = `Saving: ${cleanName}`;
 
-                    if (current >= total) {
-                        progressText.innerText = "Deployment Complete. 100% Offline Ready.";
-                        downloadBtn.innerText = "✅ Archive Available Offline";
-                        downloadBtn.classList.remove('active');
-                        // Change the key here too
-                        localStorage.setItem('suncat_archive_103', 'true'); 
-                        scanCacheForOfflineTracks();
+                        if (current >= total) {
+                            await scanCacheForOfflineTracks();
+
+                            const complete = playlistData.every(track =>
+                                offlineTracks.has(track.src)
+                            );
+
+                            progressText.innerText = complete
+                                ? 'All tracks available offline.'
+                                : 'Some tracks were not saved. Tap Retry.';
+
+                            downloadBtn.innerText = complete
+                                ? '✅ Archive Available Offline'
+                                : '↻ Retry Missing Downloads';
+
+                            downloadBtn.disabled = complete;
+                            downloadBtn.classList.toggle('active', !complete);
+
+                            if (complete) {
+                                localStorage.setItem('suncat_archive_103', 'true');
+                            } else {
+                                localStorage.removeItem('suncat_archive_103');
+                            }
+                        }
                     }
-                }
-            });
+                });
+            }
         
     </script>
 </body>
