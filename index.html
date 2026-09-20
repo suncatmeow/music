@@ -2311,6 +2311,7 @@
             ctx.globalAlpha = 1.0;
             ctx.globalCompositeOperation = 'source-over';
         }
+      
         // ----------------------------------------------------
         // MODE 7: THE SPECTRAL LOTUS (Reference: 172.jpg)
         // ----------------------------------------------------
@@ -2326,7 +2327,7 @@
                 };
             }
 
-            // 2. Define our 4 distinct interlocking layers (Matching the mandala structure)
+            // 2. Define our 4 distinct interlocking layers
             const layerDefs = [
                 { name: 'Sub/Bass',   startBand: 0,  endBand: 16, numPetals: 8,  baseLen: 0.15, popLen: 0.2 },
                 { name: 'Low-Mid',    startBand: 16, endBand: 32, numPetals: 8,  baseLen: 0.25, popLen: 0.3 },
@@ -2342,10 +2343,10 @@
                 const def = layerDefs[i];
                 let totalEnergy = 0;
                 
-                let peak1Val = -1, peak1Bin = 0;
-                let peak2Val = -1, peak2Bin = 0;
+                // CRITICAL FIX: Set to -Infinity to properly catch negative dB FFT values!
+                let peak1Val = -Infinity, peak1Bin = 0;
+                let peak2Val = -Infinity, peak2Bin = 0;
                 
-                // Get exact array indices for the raw FFT data
                 const startBin = soundView.bands[def.startBand].start;
                 const endBin = soundView.bands[def.endBand - 1].end;
                 
@@ -2367,12 +2368,13 @@
                 totalEnergy /= (def.endBand - def.startBand);
                 
                 // Convert the raw array bins into actual Hz frequencies
-                const hz1 = peak1Bin * (audioCtx.sampleRate / soundView.left.fftSize);
-                const hz2 = peak2Bin * (audioCtx.sampleRate / soundView.left.fftSize);
+                // If it's pure silence (bin 0), we default to a baseline frequency so it doesn't turn gray
+                const hz1 = peak1Bin > 0 ? peak1Bin * (audioCtx.sampleRate / soundView.left.fftSize) : 440;
+                const hz2 = peak2Bin > 0 ? peak2Bin * (audioCtx.sampleRate / soundView.left.fftSize) : 660;
                 
                 layersData.push({
                     energy: totalEnergy,
-                    // Get the true octave-mapped colors for the 2 dominant notes!
+                    // Bright, vibrant rainbow mapping
                     color1: getFreqColor(hz1, 100, 50, 0.95),
                     color2: getFreqColor(hz2, 100, 60, 0.95)
                 });
@@ -2386,13 +2388,12 @@
             const phys = soundView.lotusPhysics;
             // The center layer snaps to the rhythm quickly
             phys.layers[0] += (phys.targetRot - phys.layers[0]) * 0.25; 
-            // The next layer drags heavily behind the center (wind resistance)
+            // Outer layers drag behind the center (wind resistance) creating the twisting effect
             phys.layers[1] += (phys.layers[0] - phys.layers[1]) * 0.15; 
-            // Outer layers drag even further, twisting the flower during volume spikes!
             phys.layers[2] += (phys.layers[1] - phys.layers[2]) * 0.08; 
             phys.layers[3] += (phys.layers[2] - phys.layers[3]) * 0.04; 
 
-            // 5. Drawing the Mandala (From outside in, so the small stars overlap the big ones)
+            // 5. Drawing the Mandala (From outside in, so the small petals overlap the big ones)
             ctx.globalCompositeOperation = 'source-over';
 
             for (let i = 3; i >= 0; i--) {
@@ -2400,7 +2401,7 @@
                 const def = layerDefs[i];
                 
                 const petalLen = maxRadius * def.baseLen + (data.energy * maxRadius * def.popLen);
-                const petalWidth = petalLen * 0.32; // Keeps the lotus shape proportional
+                const petalWidth = petalLen * 0.32; 
                 const currentRot = phys.layers[i];
                 
                 for (let p = 0; p < def.numPetals; p++) {
@@ -2413,9 +2414,7 @@
                     ctx.rotate(angle + interlockOffset);
                     
                     // The Shimmering Note-Gradient
-                    // We oscillate the gradient stops over time based on the exact petal index
                     const shimmerOffset = Math.sin(now * 4 + p + i) * 0.25;
-                    
                     const grad = ctx.createLinearGradient(0, 0, 0, petalLen);
                     grad.addColorStop(0, data.color1);
                     // The middle color shifts back and forth, creating a boiling/shimmering look
@@ -2441,9 +2440,9 @@
                     ctx.fillStyle = grad;
                     ctx.fill();
                     
-                    // The crisp outer boundary line matching the reference logo
-                    ctx.strokeStyle = `rgba(255,255,255, ${0.15 + data.energy * 0.6})`;
-                    ctx.lineWidth = 1.5 + data.energy * 3;
+                    // Crisp, slightly glowing outline matching the reference label
+                    ctx.strokeStyle = `rgba(255,255,255, ${0.2 + data.energy * 0.5})`;
+                    ctx.lineWidth = 1.5 + data.energy * 2;
                     ctx.stroke();
                     
                     ctx.restore();
@@ -2615,8 +2614,8 @@
             else if (visualizerMode === 3) drawSolarSystem(w, h, displayTime);
             else if (visualizerMode === 4) drawAmorphousEntity(w, h, displayTime); 
             else if (visualizerMode === 5) drawGravitationalSystem(w, h, displayTime);
-            else if (visualizerMode === 6) drawCymaticResonance(w, h, displayTime);
-            else drawSpectralLotus(w, h, displayTime);// Mode 7
+            else if (visualizerMode === 6) drawSpectralLotus(w, h, displayTime);
+            else drawCymaticResonance(w, h, displayTime);// Mode 7
             ctx.restore();
         }
 
