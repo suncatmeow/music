@@ -2312,79 +2312,142 @@
             ctx.globalCompositeOperation = 'source-over';
         }
         // ----------------------------------------------------
-        // 6. THE SPECTRAL LOTUS (Note & Octave Mapped)
+        // MODE 7: THE SPECTRAL LOTUS (Reference: 172.jpg)
         // ----------------------------------------------------
         function drawSpectralLotus(w, h, now) {
-            // Grab the absolute newest frame of audio data
             const latest = soundView.history[soundView.history.length - 1];
             if (!latest) return;
-            const levels = latest.levels;
 
-            const maxR = Math.min(w, h) * 0.45;
-            const lowHz = 40;
-            const highHz = Math.min(16000, audioCtx.sampleRate / 2);
+            // 1. Initialize the "Feather in the Wind" Physics State
+            if (!soundView.lotusPhysics) {
+                soundView.lotusPhysics = {
+                    targetRot: 0,
+                    layers: [0, 0, 0, 0] // Rotations for [Bass, LowMid, High, SuperHigh]
+                };
+            }
 
-            // Slowly rotate the entire lotus clockwise
-            ctx.rotate(now * 0.1);
+            // 2. Define our 4 distinct interlocking layers (Matching the mandala structure)
+            const layerDefs = [
+                { name: 'Sub/Bass',   startBand: 0,  endBand: 16, numPetals: 8,  baseLen: 0.15, popLen: 0.2 },
+                { name: 'Low-Mid',    startBand: 16, endBand: 32, numPetals: 8,  baseLen: 0.25, popLen: 0.3 },
+                { name: 'High',       startBand: 32, endBand: 48, numPetals: 16, baseLen: 0.35, popLen: 0.4 },
+                { name: 'Super-High', startBand: 48, endBand: 64, numPetals: 16, baseLen: 0.45, popLen: 0.5 }
+            ];
 
-            // 1. Draw a glowing core that pulses with the deepest sub-bass
-            let bassEnergy = 0;
-            for (let i = 0; i < 8; i++) bassEnergy += levels[i];
-            bassEnergy /= 8;
-            
-            ctx.beginPath();
-            ctx.arc(0, 0, maxR * 0.04 + bassEnergy * maxR * 0.06, 0, Math.PI * 2);
-            ctx.fillStyle = getFreqColor(lowHz, 100, 50, 0.5 + bassEnergy * 0.5);
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.fill();
-            ctx.shadowBlur = 0; 
+            const maxRadius = Math.min(w, h) * 0.45;
+            const layersData = [];
 
-            // 2. Draw petals from Outside (Treble) to Inside (Bass)
-            // Looping backwards ensures the inner layers draw ON TOP of the outer layers
-            for (let band = SV_BANDS - 1; band >= 0; band--) {
-                const level = levels[band];
-                const bandHz = lowHz * Math.pow(highHz / lowHz, band / SV_BANDS);
+            // 3. Data Extraction: Find the exact notes and energy for each layer
+            for (let i = 0; i < 4; i++) {
+                const def = layerDefs[i];
+                let totalEnergy = 0;
+                
+                let peak1Val = -1, peak1Bin = 0;
+                let peak2Val = -1, peak2Bin = 0;
+                
+                // Get exact array indices for the raw FFT data
+                const startBin = soundView.bands[def.startBand].start;
+                const endBin = soundView.bands[def.endBand - 1].end;
+                
+                // Scan the raw audio to find the TWO dominant notes playing in this range
+                for (let b = startBin; b < endBin; b++) {
+                    const power = soundView.fftL[b] + soundView.fftR[b];
+                    if (power > peak1Val) {
+                        peak2Val = peak1Val; peak2Bin = peak1Bin;
+                        peak1Val = power; peak1Bin = b;
+                    } else if (power > peak2Val) {
+                        peak2Val = power; peak2Bin = b;
+                    }
+                }
+                
+                // Calculate average volume energy for this layer to push the petals outward
+                for (let b = def.startBand; b < def.endBand; b++) {
+                    totalEnergy += latest.levels[b];
+                }
+                totalEnergy /= (def.endBand - def.startBand);
+                
+                // Convert the raw array bins into actual Hz frequencies
+                const hz1 = peak1Bin * (audioCtx.sampleRate / soundView.left.fftSize);
+                const hz2 = peak2Bin * (audioCtx.sampleRate / soundView.left.fftSize);
+                
+                layersData.push({
+                    energy: totalEnergy,
+                    // Get the true octave-mapped colors for the 2 dominant notes!
+                    color1: getFreqColor(hz1, 100, 50, 0.95),
+                    color2: getFreqColor(hz2, 100, 60, 0.95)
+                });
+            }
 
-                // ANGLE = Musical Note (Pitch Class)
-                const pitchClass = safeMod(Math.log2(bandHz / 16.35), 1.0);
-                const angle = pitchClass * Math.PI * 2;
+            // 4. Rhythm & Wind Physics (The Sway)
+            // The rhythm (Bass + Mid energy) aggressively pushes the target rotation forward
+            const rhythmPush = (layersData[0].energy + layersData[1].energy) * 0.08;
+            soundView.lotusPhysics.targetRot += rhythmPush + 0.005; 
 
-                // RADIUS = Frequency Range (Octave Layers)
-                const radiusFactor = band / (SV_BANDS - 1);
-                const innerRadius = maxR * 0.08 + (radiusFactor * maxR * 0.55);
+            const phys = soundView.lotusPhysics;
+            // The center layer snaps to the rhythm quickly
+            phys.layers[0] += (phys.targetRot - phys.layers[0]) * 0.25; 
+            // The next layer drags heavily behind the center (wind resistance)
+            phys.layers[1] += (phys.layers[0] - phys.layers[1]) * 0.15; 
+            // Outer layers drag even further, twisting the flower during volume spikes!
+            phys.layers[2] += (phys.layers[1] - phys.layers[2]) * 0.08; 
+            phys.layers[3] += (phys.layers[2] - phys.layers[3]) * 0.04; 
 
-                // PETAL SIZE = Dynamic Volume
-                const petalLength = maxR * 0.1 + (level * maxR * 0.35);
-                const petalWidth = maxR * 0.04 + (level * maxR * 0.09);
+            // 5. Drawing the Mandala (From outside in, so the small stars overlap the big ones)
+            ctx.globalCompositeOperation = 'source-over';
 
-                // COLOR = True Pitch Rainbow
-                const colorFill = getFreqColor(bandHz, 100, 35 + level * 25, 0.4 + level * 0.6);
-                const colorStroke = getFreqColor(bandHz, 100, 60 + level * 20, 0.8 + level * 0.2);
-
-                ctx.save();
-                ctx.rotate(angle);
-
-                // Draw the geometric lotus petal
-                ctx.beginPath();
-                ctx.moveTo(0, innerRadius);
-                // Right curve
-                ctx.quadraticCurveTo(petalWidth, innerRadius + petalLength * 0.35, 0, innerRadius + petalLength);
-                // Left curve
-                ctx.quadraticCurveTo(-petalWidth, innerRadius + petalLength * 0.35, 0, innerRadius);
-
-                // Solid inner fill (Gives it the opaque layered look of the image)
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.fillStyle = colorFill;
-                ctx.fill();
-
-                // Bright neon wireframe outline
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.strokeStyle = colorStroke;
-                ctx.lineWidth = 1 + level * 2;
-                ctx.stroke();
-
-                ctx.restore();
+            for (let i = 3; i >= 0; i--) {
+                const data = layersData[i];
+                const def = layerDefs[i];
+                
+                const petalLen = maxRadius * def.baseLen + (data.energy * maxRadius * def.popLen);
+                const petalWidth = petalLen * 0.32; // Keeps the lotus shape proportional
+                const currentRot = phys.layers[i];
+                
+                for (let p = 0; p < def.numPetals; p++) {
+                    const angle = currentRot + (p / def.numPetals) * Math.PI * 2;
+                    
+                    // Offset every other layer by half a petal width to make them interlock
+                    const interlockOffset = (i % 2 === 0) ? 0 : (Math.PI / def.numPetals);
+                    
+                    ctx.save();
+                    ctx.rotate(angle + interlockOffset);
+                    
+                    // The Shimmering Note-Gradient
+                    // We oscillate the gradient stops over time based on the exact petal index
+                    const shimmerOffset = Math.sin(now * 4 + p + i) * 0.25;
+                    
+                    const grad = ctx.createLinearGradient(0, 0, 0, petalLen);
+                    grad.addColorStop(0, data.color1);
+                    // The middle color shifts back and forth, creating a boiling/shimmering look
+                    grad.addColorStop(Math.max(0.1, Math.min(0.9, 0.5 + shimmerOffset)), data.color2); 
+                    grad.addColorStop(1, data.color1); 
+                    
+                    // Draw the sharp, geometric lotus petal shape
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0); 
+                    // Right edge curve
+                    ctx.bezierCurveTo(
+                        petalWidth, petalLen * 0.3, 
+                        petalWidth * 0.6, petalLen * 0.8, 
+                        0, petalLen
+                    );
+                    // Left edge curve
+                    ctx.bezierCurveTo(
+                        -petalWidth * 0.6, petalLen * 0.8, 
+                        -petalWidth, petalLen * 0.3, 
+                        0, 0
+                    );
+                                      
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    
+                    // The crisp outer boundary line matching the reference logo
+                    ctx.strokeStyle = `rgba(255,255,255, ${0.15 + data.energy * 0.6})`;
+                    ctx.lineWidth = 1.5 + data.energy * 3;
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                }
             }
         }
 
