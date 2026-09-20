@@ -913,11 +913,11 @@
             const trackTitleDisplay = document.getElementById('track-title');
             const canvas = document.getElementById('visualizer');
             const ctx = canvas.getContext('2d');
-            let visualizerMode = 0; // 0: Stereo scope, 1: 3D sculpture, 2: Spectral terrain
+            let visualizerMode = 1; // 0: Stereo scope, 1: 3D sculpture, 2: Spectral terrain
                 
                 canvas.style.cursor = 'pointer';
                 canvas.addEventListener('click', () => {
-                    visualizerMode = (visualizerMode + 1) % 3; // Cycles 0 -> 1 -> 2 -> 0
+                    visualizerMode = (visualizerMode + 1) % 5; // Cycles 0 -> 1 -> 2 -> 0
                 });
         // Custom Player Controls
             const btnMainPlay = document.getElementById('btn-main-play');
@@ -946,9 +946,8 @@
             let offlineTracks = new Set();
             let currentSearchQuery = '';
             const searchInput = document.getElementById('search-bar');
-            // Default to native audio unless the user explicitly enabled visuals.
-            let isBackgroundMode =
-                localStorage.getItem('suncat_bg_mode') !== 'false';
+            // Default to false (Visuals ON) unless the user explicitly saved 'true' (Background Mode)
+            let isBackgroundMode = localStorage.getItem('suncat_bg_mode') === 'true';
             const btnBgMode = document.getElementById('btn-bg-mode');
             let activeFilters = {
                 genre: [],
@@ -1016,8 +1015,8 @@
                 scanCacheForOfflineTracks();
                 btnBgMode.classList.toggle('active', isBackgroundMode);
                 btnBgMode.textContent = isBackgroundMode
-                    ? 'Background audio: ON'
-                    : 'Visualizer: ON';
+                    ? 'Switch to Visualizer Mode'
+                    : 'Switch to Background Mode';
 
                 btnBgMode.title =
                     'Switch playback modes. Reloads the page; press Play afterward.';
@@ -1095,13 +1094,20 @@
         async function startPlayback() {
             const requestedSrc = audioPlayer.src;
 
-            // Call both from the original button/lock-screen action.
+            // 1. Wake up audio context
             resumeAudioContext();
+
+            // 2. BOOT VISUALIZER ENGINE ON PLAY (if visualizer mode is active)
+            if (!isBackgroundMode) {
+                if (!isEngineRunning) {
+                    setupAudioEngine();
+                }
+                resizeCanvas();
+            }
 
             try {
                 await audioPlayer.play();
             } catch (error) {
-                // Changing tracks quickly can cancel an earlier play request.
                 if (
                     error.name === 'AbortError' ||
                     requestedSrc !== audioPlayer.src
@@ -1805,72 +1811,48 @@
         }
 
 
+       
         function drawStereoScope(w, h) {
             const left = soundView.waveL;
             const right = soundView.waveR;
-            const scale = Math.min(w * 0.45, h * 0.45);
-            const cx = w / 2;
-            const cy = h / 2;
+            const scale = Math.min(w, h) * 0.45;
 
-            // Grab the real-time pitch-color
             const domHz = getDominantFrequency();
             const strokeColor = getFreqColor(domHz, 100, 70, 1.0);
             const glowColor = getFreqColor(domHz, 100, 50, 0.8);
 
-            // Subtle static background crosshair
             ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(cx - scale, cy);
-            ctx.lineTo(cx + scale, cy);
-            ctx.moveTo(cx, cy - scale);
-            ctx.lineTo(cx, cy + scale);
+            ctx.moveTo(-scale, 0); ctx.lineTo(scale, 0);
+            ctx.moveTo(0, -scale); ctx.lineTo(0, scale);
             ctx.stroke();
 
-            // Setup the rotation angle (0.6 for the same fast rotation as the 3D sculpture)
             const angle = audioPlayer.currentTime * 0.6;
             const ca = Math.cos(angle);
             const sa = Math.sin(angle);
 
-            // The Laser Line
             ctx.beginPath();
             for (let i = 0; i < left.length; i++) {
-                // 1. Calculate standard Mid/Side signals
                 const side = (left[i] - right[i]) * 0.5;
                 const mid = (left[i] + right[i]) * 0.5;
-                
-                // 2. Scale them relative to the center
                 const rawX = side * scale;
                 const rawY = -mid * scale; 
 
-                // 3. Apply 2D Rotation Matrix
                 const rotX = rawX * ca - rawY * sa;
                 const rotY = rawX * sa + rawY * ca;
 
-                // 4. Translate to center of canvas
-                const x = cx + rotX;
-                const y = cy + rotY;
-
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (i === 0) ctx.moveTo(rotX, rotY);
+                else ctx.lineTo(rotX, rotY);
             }
 
-            // Additive blending for a neon light effect
             ctx.globalCompositeOperation = 'lighter';
-            
-            // Note: Since this is just one continuous line (not hundreds of dots), 
-            // the shadowBlur here shouldn't lag your browser like it did on the 3D one.
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = glowColor;
             ctx.strokeStyle = strokeColor;
             ctx.lineWidth = 1.5;
             ctx.stroke();
-            
-            // Reset state
-            ctx.shadowBlur = 0;
             ctx.globalCompositeOperation = 'source-over';
         }
-
+        
         function drawSoundSculpture(w, h) {
             const left = soundView.waveL;
             const right = soundView.waveR;
@@ -1878,12 +1860,9 @@
 
             const delay = Math.max(1, Math.round(audioCtx.sampleRate * 0.0007));
             const count = left.length - delay * 2;
-            
-            // Slightly reduced line count (400 instead of 650) for buttery smooth performance
             const step = Math.max(1, Math.floor(count / 400)); 
-            const scale = Math.min(w * 0.35, h * 0.35);
+            const scale = Math.min(w, h) * 0.35;
 
-            // Faster rotation (changed 0.16 to 0.6)
             const angle = audioPlayer.currentTime * 0.6; 
             const ca = Math.cos(angle);
             const sa = Math.sin(angle);
@@ -1892,7 +1871,6 @@
             const st = Math.sin(tilt);
 
             const points = [];
-
             for (let i = 0; i < count; i += step) {
                 const x = (left[i] + right[i]) * 0.5;
                 const y = (left[i + delay] + right[i + delay]) * 0.5;
@@ -1906,8 +1884,8 @@
                 const perspective = 3.8 / Math.max(1.2, 3.8 + depth);
 
                 points.push({
-                    x: w / 2 + rx * scale * perspective,
-                    y: h / 2 - ry * scale * perspective,
+                    x: rx * scale * perspective,
+                    y: -ry * scale * perspective,
                     depth,
                     perspective
                 });
@@ -1916,8 +1894,7 @@
             const segments = [];
             for (let i = 1; i < points.length; i++) {
                 segments.push({
-                    a: points[i - 1],
-                    b: points[i],
+                    a: points[i - 1], b: points[i],
                     depth: (points[i - 1].depth + points[i].depth) * 0.5
                 });
             }
@@ -1925,58 +1902,39 @@
             segments.sort((a, b) => b.depth - a.depth);
 
             ctx.globalCompositeOperation = 'lighter';
-
             for (const { a, b, depth } of segments) {
                 const near = svClamp(0.5 - depth * 0.25);
-                
                 const color = getFreqColor(domHz, 100, 30 + near * 40, 0.1 + near * 0.8);
                 
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 0.6 + near * 1.5;
-
                 ctx.beginPath();
                 ctx.moveTo(a.x, a.y);
                 ctx.lineTo(b.x, b.y);
                 ctx.stroke();
 
                 ctx.fillStyle = color;
-                
-                // shadowBlur and shadowColor have been removed here to kill the lag
-                
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, 0.7 * b.perspective, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        function drawSpectralTerrain(w, h, now) {
+        function drawSpectralGlobe(w, h, now) {
             function projectGlobe(bandIndex, level, age) {
-                const cx = w / 2;
-                const cy = h / 2;
                 const progress = age / SV_SECONDS; 
-                
-                // Latitude: Maps time from top to bottom.
-                // We use 2.6 radians instead of full PI (3.14) to leave a small "hole" 
-                // at the poles. This prevents the newest sounds from pinching into a single dot!
                 const lat = (0.5 - progress) * 2.6; 
-
-                // Longitude: Wraps the 64 frequency bands in a 360-degree circle (Math.PI * 2)
-                // We also add (now * 0.4) to make the whole globe continuously spin!
                 const lon = (bandIndex / SV_BANDS) * Math.PI * 2 + (now * 0.4);
 
-                // Radius: Base size + audio amplitude spikes
                 const baseR = Math.min(w, h) * 0.22;
                 const maxLevelR = Math.min(w, h) * 0.18;
                 const r = baseR + level * maxLevelR;
 
-                // Convert Spherical to 3D Cartesian coordinates
                 const x = r * Math.cos(lat) * Math.cos(lon);
                 const y = r * Math.sin(lat);
                 const z = r * Math.cos(lat) * Math.sin(lon);
 
-                // Tilt the globe forward so we can look down at the "North Pole"
                 const tilt = 0.4;
                 const ct = Math.cos(tilt);
                 const st = Math.sin(tilt);
@@ -1984,64 +1942,49 @@
                 const yRot = y * ct - z * st;
                 const zRot = y * st + z * ct;
 
-                // Apply 3D perspective depth
                 const depth = w * 1.2; 
                 const scale = depth / (depth + zRot);
 
                 return {
-                    x: cx + x * scale,
-                    y: cy - yRot * scale
+                    x: x * scale,
+                    y: -yRot * scale
                 };
             }
 
             const lowHz = 40;
             const highHz = Math.min(16000, audioCtx.sampleRate / 2);
 
-            // Additive blending for a wireframe hologram look
             ctx.globalCompositeOperation = 'lighter';
 
-            // 1. Draw the lines of Longitude (The vertical frequency mesh)
+            // Longitude
             for (let band = 0; band < SV_BANDS; band++) {
                 const bandHz = lowHz * Math.pow(highHz / lowHz, band / SV_BANDS);
-                
                 ctx.beginPath();
                 let started = false;
-                
                 for (let i = 0; i < soundView.history.length; i++) {
                     const row = soundView.history[i];
                     const age = now - row.time;
                     if (age < 0 || age > SV_SECONDS) continue;
                     
                     const p = projectGlobe(band, row.levels[band], age);
-                    
-                    if (!started) {
-                        ctx.moveTo(p.x, p.y);
-                        started = true;
-                    } else {
-                        ctx.lineTo(p.x, p.y);
-                    }
+                    if (!started) { ctx.moveTo(p.x, p.y); started = true; } 
+                    else { ctx.lineTo(p.x, p.y); }
                 }
-                
                 ctx.strokeStyle = getFreqColor(bandHz, 100, 50, 0.15); 
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
 
-            // 2. Draw the lines of Latitude (The horizontal time rings)
+            // Latitude
             for (const row of soundView.history) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
-
                 const freshness = 1 - age / SV_SECONDS; 
 
-                // We loop to SV_BANDS (inclusive) to bridge the gap and close the circle
                 for (let band = 1; band <= SV_BANDS; band++) {
                     const b1 = band - 1;
-                    const b2 = band % SV_BANDS; // Wraps the last point back to index 0
-                    
+                    const b2 = band % SV_BANDS; 
                     const p1 = projectGlobe(b1, row.levels[b1], age);
-                    // Pass 'band' to the projector so it completes the math at 360 degrees, 
-                    // but fetch the amplitude data using 'b2' (index 0)
                     const p2 = projectGlobe(band, row.levels[b2], age); 
                     
                     const bandHz = lowHz * Math.pow(highHz / lowHz, b1 / SV_BANDS);
@@ -2055,10 +1998,176 @@
                     ctx.stroke();
                 }
             }
-
             ctx.globalCompositeOperation = 'source-over';
         }
 
+        
+
+        // ----------------------------------------------------
+        // NEW: THE AMORPHOUS ENTITY (Mode 5)
+        // ----------------------------------------------------
+        function drawAmorphousEntity(w, h, now) {
+            // 1. Extract hidden emergent metrics from the audio
+            let bassEnergy = 0;
+            let trebleEnergy = 0;
+            let stereoVariance = 0;
+
+            const halfBands = Math.floor(SV_BANDS / 2);
+            if (soundView.history.length > 0) {
+                const latest = soundView.history[soundView.history.length - 1].levels;
+                for (let i = 0; i < halfBands; i++) bassEnergy += latest[i];
+                for (let i = halfBands; i < SV_BANDS; i++) trebleEnergy += latest[i];
+                bassEnergy /= halfBands;
+                trebleEnergy /= halfBands;
+            }
+
+            for (let i = 0; i < soundView.waveL.length; i += 10) {
+                stereoVariance += Math.abs(soundView.waveL[i] - soundView.waveR[i]);
+            }
+            stereoVariance /= (soundView.waveL.length / 10);
+
+            // 2. Accumulate these metrics to drive continuous smooth evolution
+            if (!soundView.evolution) {
+                soundView.evolution = 0;
+                soundView.twist = 0;
+            }
+            // Volume drives time forward
+            soundView.evolution += (bassEnergy + trebleEnergy) * 0.05 + 0.005; 
+            // Stereo width drives the twisting chaos (smoothly lerped so it doesn't snap)
+            soundView.twist += (stereoVariance * 5 - soundView.twist) * 0.05; 
+
+            // 3. Shape Morphing Weights based on the music
+            // Sine waves driven by the song's energy determine the target shape
+            const wSphere = (Math.sin(soundView.evolution * 0.3) + 1) * 0.5 * bassEnergy * 2;
+            const wRibbon = (Math.cos(soundView.evolution * 0.4) + 1) * 0.5 * trebleEnergy * 2;
+            const wTornado = soundView.twist * 2;
+            
+            // Normalize weights so they always sum to 1.0
+            const totalWeight = Math.max(0.01, wSphere + wRibbon + wTornado);
+            const mS = wSphere / totalWeight;
+            const mR = wRibbon / totalWeight;
+            const mT = wTornado / totalWeight;
+
+            // 4. The 3D Projector
+            function projectEntity(bandIndex, level, age) {
+                const u = bandIndex / (SV_BANDS - 1); // 0.0 to 1.0 (Frequency)
+                const v = age / SV_SECONDS;           // 0.0 to 1.0 (Time history)
+
+                // High-frequency rippling (The "Paper bag in the wind" effect)
+                // We use the raw waveform array directly as physical displacement!
+                const windIndex = Math.floor(u * soundView.waveL.length) % soundView.waveL.length;
+                const wind = soundView.waveL[windIndex] * 0.15;
+
+                // --- SHAPE 1: THE SPHERE ---
+                const sLat = (v - 0.5) * Math.PI;
+                const sLon = u * Math.PI * 2 + soundView.evolution;
+                const sRad = 1 + level * 0.5 + wind;
+                const sx = sRad * Math.cos(sLat) * Math.cos(sLon);
+                const sy = sRad * Math.sin(sLat);
+                const sz = sRad * Math.cos(sLat) * Math.sin(sLon);
+
+                // --- SHAPE 2: THE RIBBON (Flat, unfolding) ---
+                const rx = (u - 0.5) * 4;
+                const ry = Math.sin(v * Math.PI * 4 + soundView.evolution) * 0.5 + level + wind;
+                const rz = (v - 0.5) * 4;
+
+                // --- SHAPE 3: THE TORNADO (Twisting upwards) ---
+                const tRad = (v + 0.1) * 2 * (1 + level) + wind;
+                // The twist multiplier creates the spiral
+                const tLon = u * Math.PI * 2 + v * soundView.twist * 20 + soundView.evolution * 2; 
+                const tx = tRad * Math.cos(tLon);
+                const ty = (v - 0.5) * 4;
+                const tz = tRad * Math.sin(tLon);
+
+                // Blend the XYZ coordinates based on the music's chosen weights
+                let x = sx * mS + rx * mR + tx * mT;
+                let y = sy * mS + ry * mR + ty * mT;
+                let z = sz * mS + rz * mR + tz * mT;
+
+                // Base size and 3D Rotation
+                const scale = Math.min(w, h) * 0.18;
+                x *= scale; y *= scale; z *= scale;
+
+                const tilt = 0.5;
+                const ct = Math.cos(tilt), st = Math.sin(tilt);
+                const rotY = y * ct - z * st;
+                const rotZ = y * st + z * ct;
+
+                const perspective = (w * 1.5) / (w * 1.5 + rotZ);
+
+                return {
+                    x: w / 2 + x * perspective,
+                    y: h / 2 - rotY * perspective
+                };
+            }
+
+            const lowHz = 40;
+            const highHz = Math.min(16000, audioCtx.sampleRate / 2);
+
+            ctx.globalCompositeOperation = 'lighter';
+
+            // Draw the morphing mesh
+            for (const row of soundView.history) {
+                const age = now - row.time;
+                if (age < 0 || age > SV_SECONDS) continue;
+                const freshness = 1 - age / SV_SECONDS; 
+
+                for (let band = 1; band <= SV_BANDS; band++) {
+                    const b1 = band - 1;
+                    const b2 = band % SV_BANDS; 
+                    
+                    const p1 = projectEntity(b1, row.levels[b1], age);
+                    const p2 = projectEntity(band, row.levels[b2], age); 
+                    
+                    const bandHz = lowHz * Math.pow(highHz / lowHz, b1 / SV_BANDS);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    
+                    ctx.strokeStyle = getFreqColor(bandHz, 100, 30 + freshness * 40, 0.1 + freshness * 0.8);
+                    ctx.lineWidth = 1 + freshness * 2;
+                    ctx.stroke();
+                }
+            }
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // ----------------------------------------------------
+        // THE SOLAR SYSTEM
+        // ----------------------------------------------------
+        function drawSolarSystem(w, h, now) {
+            const r1 = Math.min(w, h) * 0.28;
+            const r2 = Math.min(w, h) * 0.42;
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(0, 0, r1, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, r2, 0, Math.PI * 2); ctx.stroke();
+
+            ctx.save();
+            ctx.scale(0.8, 0.8);
+            drawSpectralGlobe(w, h, now);
+            ctx.restore();
+
+            const orbit1 = now * 0.8;
+            ctx.save();
+            ctx.translate(Math.cos(orbit1) * r1, Math.sin(orbit1) * r1);
+            ctx.scale(0.25, 0.25); 
+            drawStereoScope(w, h);
+            ctx.restore();
+
+            const orbit2 = (now * 0.4) + Math.PI; 
+            ctx.save();
+            ctx.translate(Math.cos(orbit2) * r2, Math.sin(orbit2) * r2);
+            ctx.scale(0.35, 0.35); 
+            drawSoundSculpture(w, h);
+            ctx.restore();
+        }
+
+        // ----------------------------------------------------
+        // RENDER LOOP
+        // ----------------------------------------------------
         function renderVisualizer(stamp = performance.now()) {
             requestAnimationFrame(renderVisualizer);
 
@@ -2107,12 +2216,19 @@
             ctx.fillStyle = '#020205';
             ctx.fillRect(0, 0, w, h);
 
-            // Notice we removed the text and clip bounds so it takes the full screen beautifully
             const displayTime = Number.isFinite(soundView.lastCapture) ? soundView.lastCapture : now;
 
+            ctx.save();
+            ctx.translate(w / 2, h / 2);
+
+            // NOW 5 MODES!
             if (visualizerMode === 0) drawStereoScope(w, h);
             else if (visualizerMode === 1) drawSoundSculpture(w, h);
-            else drawSpectralTerrain(w, h, displayTime);
+            else if (visualizerMode === 2) drawSpectralGlobe(w, h, displayTime);
+            else if (visualizerMode === 3) drawSolarSystem(w, h, displayTime);
+            else drawAmorphousEntity(w, h, displayTime);
+
+            ctx.restore();
         }
 
         // Keep this simple so it doesn't clash with the intro animations
