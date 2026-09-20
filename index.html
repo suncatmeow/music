@@ -917,7 +917,7 @@
                 
                 canvas.style.cursor = 'pointer';
                 canvas.addEventListener('click', () => {
-                    visualizerMode = (visualizerMode + 1) % 9; // Cycles 0 -> 1 -> 2 -> 0
+                    visualizerMode = (visualizerMode + 1) % 8; // Cycles 0 -> 1 -> 2 -> 0
                 });
         // Custom Player Controls
             const btnMainPlay = document.getElementById('btn-main-play');
@@ -2176,9 +2176,7 @@
             drawSoundSculpture(w, h);
             ctx.restore();
         }
-        // ----------------------------------------------------
-        // MODE 3: THE GRAVITATIONAL SYSTEM (Emergent Solar System)
-        // ----------------------------------------------------
+       
         // ----------------------------------------------------
         // MODE 5: THE GRAVITATIONAL SYSTEM (6th Mode)
         // ----------------------------------------------------
@@ -2314,219 +2312,84 @@
             ctx.globalCompositeOperation = 'source-over';
         }
         // ----------------------------------------------------
-        // MODE 6: THE NEUROLOGICAL NETWORK (7th Mode)
+        // 6. THE SPECTRAL LOTUS (Note & Octave Mapped)
         // ----------------------------------------------------
-        function drawNeurologicalNetwork(w, h, now) {
-            // [1] Analyze Audio by Hemisphere (Left vs Right Brain)
-            let lB = 0, lM = 0, lT = 0; // Left: Bass, Mids, Treble
-            let rB = 0, rM = 0, rT = 0; // Right: Bass, Mids, Treble
+        function drawSpectralLotus(w, h, now) {
+            // Grab the absolute newest frame of audio data
+            const latest = soundView.history[soundView.history.length - 1];
+            if (!latest) return;
+            const levels = latest.levels;
+
+            const maxR = Math.min(w, h) * 0.45;
+            const lowHz = 40;
+            const highHz = Math.min(16000, audioCtx.sampleRate / 2);
+
+            // Slowly rotate the entire lotus clockwise
+            ctx.rotate(now * 0.1);
+
+            // 1. Draw a glowing core that pulses with the deepest sub-bass
+            let bassEnergy = 0;
+            for (let i = 0; i < 8; i++) bassEnergy += levels[i];
+            bassEnergy /= 8;
             
-            const bins = soundView.fftL.length;
-            const binHz = audioCtx.sampleRate / soundView.left.fftSize;
-
-            // Map raw FFT data into 6 distinct neurological zones
-            for (let i = 1; i < bins; i++) {
-                const hz = i * binHz;
-                // Normalize the power levels
-                const pL = Math.max(0, (soundView.fftL[i] + 90) / 90); 
-                const pR = Math.max(0, (soundView.fftR[i] + 90) / 90);
-                
-                if (hz < 250) { lB += pL; rB += pR; }
-                else if (hz < 2000) { lM += pL; rM += pR; }
-                else if (hz < 10000) { lT += pL; rT += pR; }
-            }
-            
-            // Average them out (padding divisors to prevent exploding values)
-            lB /= 10; lM /= 40; lT /= 100;
-            rB /= 10; rM /= 40; rT /= 100;
-
-            // [2] Brain Rotation Matrix
-            const tY = now * 0.4; // Slowly spin the brain to see all lobes
-            const cy = Math.cos(tY), sy = Math.sin(tY);
-            const tilt = 0.3;     // Look slightly down from the top
-            const ct = Math.cos(tilt), st = Math.sin(tilt);
-
-            // [3] The Neural Projector
-            function projectBrainNode(u, v) {
-                const lon = u * Math.PI * 2;
-                const lat = (v - 0.5) * Math.PI;
-
-                // Create base sphere
-                const cx = Math.cos(lat) * Math.cos(lon);
-                const cy_node = Math.sin(lat);
-                const cz = Math.cos(lat) * Math.sin(lon);
-
-                // Morph into an Ellipsoid Brain Shape
-                let bx = cx * 0.85; // Slightly narrow side-to-side
-                let by = cy_node * 0.75; // Slightly flattened top-to-bottom
-                let bz = cz * 1.15; // Elongated front-to-back
-
-                // Identify Region
-                const isRightHemisphere = Math.cos(lon) > 0;
-                const frontW = Math.max(0, bz);   // Prefrontal Cortex (Front)
-                const backW = Math.max(0, -bz);   // Cerebellum (Back)
-                const topW = Math.max(0, by);     // Motor/Auditory Cortex (Top/Sides)
-
-                // Fetch audio strictly for this hemisphere
-                const bass = isRightHemisphere ? rB : lB;
-                const mid  = isRightHemisphere ? rM : lM;
-                const high = isRightHemisphere ? rT : lT;
-
-                // BIOLOGICAL MAPPING:
-                // Front thinks fast (Treble). Sides process speech/melody (Mids). Back handles rhythm (Bass).
-                const activation = (frontW * high * 2.0) + (topW * mid * 1.8) + (backW * bass * 1.5);
-
-                // Add Gyri & Sulci (The Brain Wrinkles)
-                // Wrinkles throb outward physically when a region activates!
-                const wrinkle = Math.sin(lat * 12) * Math.cos(lon * 24);
-                const radius = 1 + (wrinkle * 0.04) + (activation * 0.15);
-
-                bx *= radius; by *= radius; bz *= radius;
-
-                // The Longitudinal Fissure (Split down the middle)
-                // We keep the bottom connected (Corpus Callosum) but split the top
-                const split = Math.max(0, (by + 0.3)) * 0.15; 
-                bx += isRightHemisphere ? split : -split;
-
-                // Apply 3D Camera Spin
-                const rotX = bx * cy + bz * sy;
-                const rotZ = -bx * sy + bz * cy;
-                const finalY = by * ct - rotZ * st;
-                const finalZ = by * st + rotZ * ct;
-
-                const scale = Math.min(w, h) * 0.28;
-                const perspective = 3.5 / Math.max(1.0, 3.5 + finalZ);
-
-                // Color Mapping
-                // Bass (Back) = Red, Mids (Top) = Green/Blue, Highs (Front) = Violet
-                const hue = (frontW * 280) + (topW * 160) + (backW * 0);
-                const lightness = 20 + Math.min(60, activation * 100);
-                const alpha = 0.15 + Math.min(0.85, activation * 1.5);
-                
-                return { 
-                    x: rotX * scale * perspective, 
-                    y: -finalY * scale * perspective, 
-                    color: `hsla(${hue}, 90%, ${lightness}%, ${alpha})`,
-                    width: 0.5 + activation * 2.5
-                };
-            }
-
-            ctx.globalCompositeOperation = 'lighter';
-            
-            // Render the wireframe piece-by-piece so different lobes can be different colors
-            const stepsU = 42; // Longitude slices
-            const stepsV = 22; // Latitude slices
-
-            // Draw Front-to-Back Arcs
-            for (let i = 0; i <= stepsU; i++) {
-                const u = i / stepsU;
-                // Skip drawing lines exactly inside the deep middle fissure crack
-                if (Math.abs(u - 0.25) < 0.03 || Math.abs(u - 0.75) < 0.03) continue; 
-
-                let pPrev = projectBrainNode(u, 0);
-                for (let j = 1; j <= stepsV; j++) {
-                    const pCurr = projectBrainNode(u, j / stepsV);
-                    ctx.beginPath();
-                    ctx.moveTo(pPrev.x, pPrev.y);
-                    ctx.lineTo(pCurr.x, pCurr.y);
-                    ctx.strokeStyle = pCurr.color;
-                    ctx.lineWidth = pCurr.width;
-                    ctx.stroke();
-                    pPrev = pCurr;
-                }
-            }
-
-            // Draw Side-to-Side Rings
-            for (let j = 0; j <= stepsV; j++) {
-                const v = j / stepsV;
-                let pPrev = projectBrainNode(0, v);
-                for (let i = 1; i <= stepsU; i++) {
-                    const u = i / stepsU;
-                    // Break the ring at the fissure crack
-                    if (Math.abs(u - 0.25) < 0.03 || Math.abs(u - 0.75) < 0.03) {
-                        pPrev = projectBrainNode(u, v);
-                        continue;
-                    }
-                    const pCurr = projectBrainNode(u, v);
-                    ctx.beginPath();
-                    ctx.moveTo(pPrev.x, pPrev.y);
-                    ctx.lineTo(pCurr.x, pCurr.y);
-                    ctx.strokeStyle = pCurr.color;
-                    ctx.lineWidth = pCurr.width;
-                    ctx.stroke();
-                    pPrev = pCurr;
-                }
-            }
-            ctx.globalCompositeOperation = 'source-over';
-        }
-        // ----------------------------------------------------
-        // MODE 7: THE PHASE ATTRACTOR (Upgraded Stereoscope)
-        // ----------------------------------------------------
-        function drawPhaseAttractor(w, h, now) {
-            const left = soundView.waveL;
-            const right = soundView.waveR;
-            
-            // Extract a dynamic twisting force from the stereo width
-            let stereoVariance = 0;
-            for (let i = 0; i < left.length; i += 10) {
-                stereoVariance += Math.abs(left[i] - right[i]);
-            }
-            stereoVariance /= (left.length / 10);
-            
-            if (!soundView.chaosPhase) soundView.chaosPhase = 0;
-            soundView.chaosPhase += stereoVariance * 0.1 + 0.01;
-
-            const scale = Math.min(w, h) * 0.45;
-            const angle = now * 0.5;
-            const ca = Math.cos(angle), sa = Math.sin(angle);
-            const tilt = 0.6;
-            const ct = Math.cos(tilt), st = Math.sin(tilt);
-
-            const grad = getChordGradient(ctx, w, h, 65);
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.2;
-
             ctx.beginPath();
-            for (let i = 0; i < left.length; i++) {
-                // Map L/R audio to a 3D Lissajous knot
-                const u = i / left.length;
-                
-                const side = (left[i] - right[i]) * 0.5;
-                const mid = (left[i] + right[i]) * 0.5;
-                
-                // Z-axis pushes forward/back based on the phase relationship
-                const rawX = side;
-                const rawY = -mid;
-                const rawZ = Math.sin(u * Math.PI * 4 + soundView.chaosPhase) * (left[i] * right[i]) * 5;
+            ctx.arc(0, 0, maxR * 0.04 + bassEnergy * maxR * 0.06, 0, Math.PI * 2);
+            ctx.fillStyle = getFreqColor(lowHz, 100, 50, 0.5 + bassEnergy * 0.5);
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.fill();
+            ctx.shadowBlur = 0; 
 
-                // 3D Rotation
-                const rotX = rawX * ca - rawZ * sa;
-                const rotZ1 = rawX * sa + rawZ * ca;
+            // 2. Draw petals from Outside (Treble) to Inside (Bass)
+            // Looping backwards ensures the inner layers draw ON TOP of the outer layers
+            for (let band = SV_BANDS - 1; band >= 0; band--) {
+                const level = levels[band];
+                const bandHz = lowHz * Math.pow(highHz / lowHz, band / SV_BANDS);
 
-                const finalY = rawY * ct - rotZ1 * st;
-                const finalZ = rawY * st + rotZ1 * ct;
+                // ANGLE = Musical Note (Pitch Class)
+                const pitchClass = safeMod(Math.log2(bandHz / 16.35), 1.0);
+                const angle = pitchClass * Math.PI * 2;
 
-                const perspective = 3.5 / Math.max(1.0, 3.5 + finalZ);
-                const x = rotX * scale * perspective;
-                const y = finalY * scale * perspective;
+                // RADIUS = Frequency Range (Octave Layers)
+                const radiusFactor = band / (SV_BANDS - 1);
+                const innerRadius = maxR * 0.08 + (radiusFactor * maxR * 0.55);
 
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                // PETAL SIZE = Dynamic Volume
+                const petalLength = maxR * 0.1 + (level * maxR * 0.35);
+                const petalWidth = maxR * 0.04 + (level * maxR * 0.09);
+
+                // COLOR = True Pitch Rainbow
+                const colorFill = getFreqColor(bandHz, 100, 35 + level * 25, 0.4 + level * 0.6);
+                const colorStroke = getFreqColor(bandHz, 100, 60 + level * 20, 0.8 + level * 0.2);
+
+                ctx.save();
+                ctx.rotate(angle);
+
+                // Draw the geometric lotus petal
+                ctx.beginPath();
+                ctx.moveTo(0, innerRadius);
+                // Right curve
+                ctx.quadraticCurveTo(petalWidth, innerRadius + petalLength * 0.35, 0, innerRadius + petalLength);
+                // Left curve
+                ctx.quadraticCurveTo(-petalWidth, innerRadius + petalLength * 0.35, 0, innerRadius);
+
+                // Solid inner fill (Gives it the opaque layered look of the image)
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = colorFill;
+                ctx.fill();
+
+                // Bright neon wireframe outline
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.strokeStyle = colorStroke;
+                ctx.lineWidth = 1 + level * 2;
+                ctx.stroke();
+
+                ctx.restore();
             }
-            ctx.stroke();
-
-            // Draw a ghosted echo layer for that "Quantum String" look
-            ctx.lineWidth = 6;
-            ctx.globalAlpha = 0.2;
-            ctx.stroke();
-
-            ctx.globalAlpha = 1.0;
-            ctx.globalCompositeOperation = 'source-over';
         }
 
         // ----------------------------------------------------
-        // MODE 8: CYMATIC RESONANCE FIELD (The Scientist's Masterpiece)
+        // MODE 7: CYMATIC RESONANCE FIELD (The Scientist's Masterpiece)
         // ----------------------------------------------------
         function drawCymaticResonance(w, h, now) {
             // [1] Extract exact frequency energy to drive standing waves
@@ -2689,9 +2552,8 @@
             else if (visualizerMode === 3) drawSolarSystem(w, h, displayTime);
             else if (visualizerMode === 4) drawAmorphousEntity(w, h, displayTime); 
             else if (visualizerMode === 5) drawGravitationalSystem(w, h, displayTime);
-            else if (visualizerMode === 6) drawNeurologicalNetwork(w, h, displayTime); 
-            else if (visualizerMode === 7) drawPhaseAttractor(w, h, displayTime); // Mode 7
-            else drawCymaticResonance(w, h, displayTime); // Mode 8 (The Masterpiece)
+            else if (visualizerMode === 6) drawCymaticResonance(w, h, displayTime);
+            else drawSpectralLotus(w, h, displayTime);// Mode 7
             ctx.restore();
         }
 
