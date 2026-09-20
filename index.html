@@ -1921,14 +1921,18 @@
             ctx.globalCompositeOperation = 'source-over';
         }
 
+        // ----------------------------------------------------
+        // MODE 1: THE SPECTRAL GLOBE
+        // ----------------------------------------------------
         function drawSpectralGlobe(w, h, now) {
             function projectGlobe(bandIndex, level, age) {
                 const progress = age / SV_SECONDS; 
                 const lat = (0.5 - progress) * 2.6; 
                 const lon = (bandIndex / SV_BANDS) * Math.PI * 2 + (now * 0.4);
 
-                const baseR = Math.min(w, h) * 0.22;
-                const maxLevelR = Math.min(w, h) * 0.18;
+                // Scaled up slightly for standalone mode
+                const baseR = Math.min(w, h) * 0.26;
+                const maxLevelR = Math.min(w, h) * 0.22;
                 const r = baseR + level * maxLevelR;
 
                 const x = r * Math.cos(lat) * Math.cos(lon);
@@ -1945,6 +1949,7 @@
                 const depth = w * 1.2; 
                 const scale = depth / (depth + zRot);
 
+                // Perfectly centered (no w/2 or h/2)
                 return {
                     x: x * scale,
                     y: -yRot * scale
@@ -1956,7 +1961,7 @@
 
             ctx.globalCompositeOperation = 'lighter';
 
-            // Longitude
+            // Longitude (Vertical rings)
             for (let band = 0; band < SV_BANDS; band++) {
                 const bandHz = lowHz * Math.pow(highHz / lowHz, band / SV_BANDS);
                 ctx.beginPath();
@@ -1975,7 +1980,7 @@
                 ctx.stroke();
             }
 
-            // Latitude
+            // Latitude (Horizontal wrapping rings)
             for (const row of soundView.history) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
@@ -2004,10 +2009,9 @@
         
 
         // ----------------------------------------------------
-        // NEW: THE AMORPHOUS ENTITY (Mode 5)
+        // MODE 2: THE AMORPHOUS ENTITY
         // ----------------------------------------------------
         function drawAmorphousEntity(w, h, now) {
-            // 1. Extract hidden emergent metrics from the audio
             let bassEnergy = 0;
             let trebleEnergy = 0;
             let stereoVariance = 0;
@@ -2026,39 +2030,29 @@
             }
             stereoVariance /= (soundView.waveL.length / 10);
 
-            // 2. Accumulate these metrics to drive continuous smooth evolution
             if (!soundView.evolution) {
                 soundView.evolution = 0;
                 soundView.twist = 0;
             }
-            // Volume drives time forward
             soundView.evolution += (bassEnergy + trebleEnergy) * 0.05 + 0.005; 
-            // Stereo width drives the twisting chaos (smoothly lerped so it doesn't snap)
             soundView.twist += (stereoVariance * 5 - soundView.twist) * 0.05; 
 
-            // 3. Shape Morphing Weights based on the music
-            // Sine waves driven by the song's energy determine the target shape
             const wSphere = (Math.sin(soundView.evolution * 0.3) + 1) * 0.5 * bassEnergy * 2;
             const wRibbon = (Math.cos(soundView.evolution * 0.4) + 1) * 0.5 * trebleEnergy * 2;
             const wTornado = soundView.twist * 2;
             
-            // Normalize weights so they always sum to 1.0
             const totalWeight = Math.max(0.01, wSphere + wRibbon + wTornado);
             const mS = wSphere / totalWeight;
             const mR = wRibbon / totalWeight;
             const mT = wTornado / totalWeight;
 
-            // 4. The 3D Projector
             function projectEntity(bandIndex, level, age) {
-                const u = bandIndex / (SV_BANDS - 1); // 0.0 to 1.0 (Frequency)
-                const v = age / SV_SECONDS;           // 0.0 to 1.0 (Time history)
+                const u = bandIndex / (SV_BANDS - 1); 
+                const v = age / SV_SECONDS;           
 
-                // High-frequency rippling (The "Paper bag in the wind" effect)
-                // We use the raw waveform array directly as physical displacement!
                 const windIndex = Math.floor(u * soundView.waveL.length) % soundView.waveL.length;
                 const wind = soundView.waveL[windIndex] * 0.15;
 
-                // --- SHAPE 1: THE SPHERE ---
                 const sLat = (v - 0.5) * Math.PI;
                 const sLon = u * Math.PI * 2 + soundView.evolution;
                 const sRad = 1 + level * 0.5 + wind;
@@ -2066,26 +2060,22 @@
                 const sy = sRad * Math.sin(sLat);
                 const sz = sRad * Math.cos(sLat) * Math.sin(sLon);
 
-                // --- SHAPE 2: THE RIBBON (Flat, unfolding) ---
                 const rx = (u - 0.5) * 4;
                 const ry = Math.sin(v * Math.PI * 4 + soundView.evolution) * 0.5 + level + wind;
                 const rz = (v - 0.5) * 4;
 
-                // --- SHAPE 3: THE TORNADO (Twisting upwards) ---
                 const tRad = (v + 0.1) * 2 * (1 + level) + wind;
-                // The twist multiplier creates the spiral
                 const tLon = u * Math.PI * 2 + v * soundView.twist * 20 + soundView.evolution * 2; 
                 const tx = tRad * Math.cos(tLon);
                 const ty = (v - 0.5) * 4;
                 const tz = tRad * Math.sin(tLon);
 
-                // Blend the XYZ coordinates based on the music's chosen weights
                 let x = sx * mS + rx * mR + tx * mT;
                 let y = sy * mS + ry * mR + ty * mT;
                 let z = sz * mS + rz * mR + tz * mT;
 
-                // Base size and 3D Rotation
-                const scale = Math.min(w, h) * 0.18;
+                // Scaled up to 0.28 to fill the screen better
+                const scale = Math.min(w, h) * 0.28; 
                 x *= scale; y *= scale; z *= scale;
 
                 const tilt = 0.5;
@@ -2095,9 +2085,10 @@
 
                 const perspective = (w * 1.5) / (w * 1.5 + rotZ);
 
+                // PERFECTLY CENTERED: Removed the w/2 and h/2!
                 return {
-                    x: w / 2 + x * perspective,
-                    y: h / 2 - rotY * perspective
+                    x: x * perspective,
+                    y: -rotY * perspective
                 };
             }
 
@@ -2106,7 +2097,6 @@
 
             ctx.globalCompositeOperation = 'lighter';
 
-            // Draw the morphing mesh
             for (const row of soundView.history) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
