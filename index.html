@@ -4,24 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Suncat | Digital Audio Archive</title>
-<meta name="description" content="The Suncat listening room. Explore original albums, the Runestones soundtrack, and eight living sound visualizers. Save your favorites and listen offline.">
+<meta name="description" content="The Suncat listening room. Explore original albums, the Runestones soundtrack, and eleven audio visualizers. Save your favorites and listen offline.">
 <meta name="author" content="Suncat">
 <meta name="theme-color" content="#10100f">
 <link rel="canonical" href="https://suncatmeow.github.io/music/">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="assets/suncat.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json?v=2.3">
+<link rel="icon" href="icon-192.png?v=cat-2" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png?v=cat-2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta property="og:title" content="Suncat | Digital Audio Archive">
 <meta property="og:description" content="Original songs. Other worlds. A listening room by Suncat.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://suncatmeow.github.io/music/">
-<meta property="og:image" content="https://suncatmeow.github.io/music/assets/suncat-og-image.jpg">
+<meta property="og:image" content="https://suncatmeow.github.io/music/assets/suncat-og-image.jpg?v=cat-2">
+<meta property="og:image:alt" content="Suncat’s orange striped cat reaching toward a butterfly, on a blue circular background.">
+<meta name="twitter:image:alt" content="Suncat’s orange striped cat and butterfly logo.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Suncat | Digital Audio Archive">
 <meta name="twitter:description" content="Original songs. Other worlds. A listening room by Suncat.">
-<meta name="twitter:image" content="https://suncatmeow.github.io/music/assets/suncat-og-image.jpg">
+<meta name="twitter:image" content="https://suncatmeow.github.io/music/assets/suncat-og-image.jpg?v=cat-2">
 <!-- Existing analytics property. Playback never depends on analytics. -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-EEWSYNV43M"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-EEWSYNV43M');</script>
@@ -29,10 +31,10 @@
 <style>
 :root{color-scheme:dark;--bg:#10100f;--panel:#181817;--line:#33332e;--ink:#f4f0e5;--muted:#aaa99c;--gold:#efbd69;--green:#97cbae;--accent-glow:#efbd69;--text-muted:#aaa99c;--text-main:#f4f0e5}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5}button,input,select{font:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:default;opacity:.45}button,a,input,select,summary{touch-action:manipulation}button{color:inherit}a{color:var(--gold);text-underline-offset:4px}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:4px}button{border:0;background:none}svg{width:20px;height:20px;flex:none;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}[hidden]{display:none!important}.skip{position:fixed;top:-60px;left:16px;z-index:100;background:var(--gold);color:var(--bg);padding:10px}.skip:focus{top:10px}
-.wrap{max-width:1320px;margin:auto;padding:0 44px}.masthead{min-height:100px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:20px}.brand{display:flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none}.brand-mark{width:40px;height:40px}.brand-name{font-size:23px;letter-spacing:-1px;font-weight:650}.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:650}.mast-actions{display:flex;gap:16px;align-items:center}.connection{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}.connection:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}.connection.offline:before{background:var(--gold)}.pill{border:1px solid var(--line);border-radius:99px;padding:9px 15px;min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px}.pill:hover,.icon-btn:hover{background:#ffffff0c;color:var(--gold)}.icon-btn{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:50%;flex:none}.icon-btn.active{color:var(--gold)}.hero{padding:38px 0 30px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(36px,4.2vw,57px);font-weight:400;letter-spacing:-2px;line-height:1.08;margin:8px 0 12px}.hero h1 em{color:var(--gold);font-weight:400}.hero p{color:var(--muted);margin:0;font-size:13px}.hero-meta{text-align:right;white-space:nowrap;color:var(--muted);font-size:12px;padding-bottom:3px}.hero-meta strong{color:var(--ink);font-weight:450}.content{display:grid;grid-template-columns:minmax(310px,420px) minmax(0,1fr);gap:36px;align-items:start}.player-column{position:sticky;top:24px}.player{border:1px solid var(--line);background:var(--panel);border-radius:18px;overflow:hidden}.player-top{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 5px}.player-top .eyebrow{font-size:9px}.signal{display:flex;align-items:center;gap:7px}.signal-dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}.visual-stage{position:relative;background:#020205;margin:12px;border-radius:10px;overflow:hidden;aspect-ratio:1.3}.visual-stage:fullscreen{width:100vw;height:100vh;margin:0;border-radius:0;aspect-ratio:auto}#visualizer{position:absolute;width:100%;height:100%;inset:0}.visual-actions{position:absolute;bottom:8px;left:10px;right:10px;display:flex;gap:8px;align-items:center;justify-content:space-between;z-index:2}.visual-label{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:#c3bdaa;background:#020205c9;padding:7px 9px;border-radius:5px;max-width:calc(100% - 40px)}.visual-actions .icon-btn{min-width:36px;min-height:36px;background:#020205aa}.idle-art{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-bottom:30px;background:radial-gradient(ellipse at center,#edb46b13,transparent 66%)}.orbit-art{position:relative;width:178px;height:178px;border:1px solid #eabe7025;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 24px #efbd6905,0 0 0 48px #efbd6903}.orbit-art:before{content:'';position:absolute;inset:16px;border:1px solid #efbd6940;border-radius:50%}.orbit-art:after{content:'';position:absolute;width:8px;height:8px;background:var(--gold);border-radius:50%;top:11px;right:25px;box-shadow:0 0 18px #efbd6955}.orbit-art img{width:100px;height:100px}.idle-art small{color:#b2a68d;font-family:Georgia,serif;font-style:italic;letter-spacing:1px;font-size:13px;margin-top:32px}.track-display{padding:16px 24px 0;min-height:100px}.track-display h2{font-size:25px;line-height:1.2;letter-spacing:-.7px;margin:0 0 7px;overflow-wrap:anywhere}.track-display p{color:var(--muted);margin:0;font-size:12px}.track-title-row{display:flex;align-items:start;justify-content:space-between;gap:8px}.transport{padding:0 24px 22px}.seek{width:100%;margin:10px 0 0;height:22px;accent-color:var(--gold);cursor:pointer}.times{font-size:10px;letter-spacing:.5px;color:var(--muted);display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}.controls{display:flex;align-items:center;justify-content:space-between;margin:16px 0}.main-play{width:58px;height:58px;background:var(--gold);color:#242018;border-radius:50%;display:grid;place-items:center;box-shadow:0 3px 18px #0002}.main-play:hover{background:#f6cf89}.main-play svg{width:25px;height:25px}.sub-controls{display:flex;align-items:center;justify-content:space-between;color:var(--muted);gap:8px}.volume-group{display:flex;align-items:center;width:48%;gap:5px}.volume-group input{width:100%;min-width:0;accent-color:var(--gold);height:22px}.sub-controls .pill{font-size:11px;padding:7px 12px;min-height:38px}.sub-controls svg{width:17px}.player-status{font-size:12px;color:var(--gold);margin:0 24px;min-height:0}.player-status:not(:empty){margin-bottom:12px}.settings{border-top:1px solid var(--line)}.settings summary{cursor:pointer;padding:14px 22px;font-size:11px;color:var(--muted);list-style:none;display:flex;justify-content:space-between;align-items:center}.settings summary::-webkit-details-marker{display:none}.settings summary:after{content:'+';font-size:18px}.settings[open] summary:after{content:'−'}.settings-body{padding:0 22px 20px}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:8px 0;font-size:12px}.setting-row select{max-width:62%;padding:8px;border:1px solid var(--line);border-radius:6px;background:#22221e;color:var(--ink)}.fine{font-size:11px;color:var(--muted);line-height:1.6}.about-small{padding:20px 4px;color:var(--muted);font-size:12px;line-height:1.8}.about-small p{margin:0 0 10px}.about-small a{color:var(--ink)}.archive{min-width:0}.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow:auto}.tab{font-size:13px;color:var(--muted);padding:12px 0;white-space:nowrap;border-bottom:2px solid transparent;min-height:48px}.tab.active{color:var(--ink);border-color:var(--gold)}.tab-count{font-size:10px;margin-left:5px;color:var(--muted)}.search-row{display:flex;align-items:center;gap:10px}.search-wrap{position:relative;flex:1;min-width:0}.search-wrap>span{position:absolute;left:14px;top:14px;width:18px;color:var(--muted)}.search-wrap>span svg{width:18px;height:18px}.search-wrap input{padding:12px 42px;background:#1b1b18;border:1px solid var(--line);border-radius:9px;min-height:46px;width:100%;color:var(--ink);font-size:12px}.search-wrap button{position:absolute;right:2px;top:1px}.filter-toggle{border:1px solid var(--line);border-radius:9px;min-height:46px;font-size:12px;padding:0 14px;display:flex;gap:8px;align-items:center}.filter-toggle.active{color:var(--gold);border-color:#efbd6977}.filter-panel{margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}fieldset{border:0;padding:0;margin:0 0 14px}legend{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0;margin:0 0 8px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 10px;border-radius:7px;font-size:11px;cursor:pointer;min-height:36px}.chip input{accent-color:var(--gold);margin:0}.filter-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}.filter-bottom select{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:7px;color:var(--ink);font-size:12px}.text-btn{color:var(--gold);font-size:12px;padding:10px 0}.list-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}.list-caption button{font-size:11px;letter-spacing:0;text-transform:none;color:var(--gold);display:flex;align-items:center;gap:6px}.list-caption button svg{width:14px;height:14px}.track-list{list-style:none;padding:0;margin:0;max-height:665px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#45453d transparent}.track-row{display:flex;align-items:center;gap:8px;min-height:75px;border-bottom:1px solid #ffffff09;padding:7px 0;border-radius:7px}.track-row.playing{background:#efbd690b}.track-button{display:flex;align-items:center;gap:12px;min-width:0;flex:1;text-align:left;padding:6px 8px 6px 0;border-radius:6px}.track-button:hover .track-name{color:var(--gold)}.track-number{font-size:11px;font-variant-numeric:tabular-nums;color:#b6b2a0;min-width:24px;text-align:center}.track-row.playing .track-number{color:var(--gold)}.track-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.track-name{font-size:13px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.track-subtitle{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.track-art{width:38px;height:42px;border-radius:4px;flex:none;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 64% 33%,var(--cover),transparent 65%),#20201e;border:1px solid #ffffff12;color:#fff9;font-family:Georgia,serif;font-size:13px}.track-art:before{content:attr(data-mark);width:27px;height:27px;border:1px solid #ffffff44;border-radius:50%;display:grid;place-items:center}.row-duration{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}.track-row>.icon-btn{min-width:38px;min-height:44px}.track-row>.icon-btn svg{width:17px}.offline-dot{width:5px;height:5px;display:inline-block;background:var(--green);border-radius:50%;margin-right:5px;vertical-align:middle}.album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 14px}.album-card{text-align:left;padding:0;min-width:0;border-radius:8px}.album-cover{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 65% 15%,var(--cover),transparent 70%),#22221e;border:1px solid #ffffff1a;border-radius:8px;position:relative;overflow:hidden}.album-cover:before{content:'';position:absolute;width:70%;height:70%;border:1px solid #fff3;border-radius:50%;box-shadow:0 0 0 17px #ffffff05,0 0 0 34px #ffffff04}.album-cover:after{content:'';position:absolute;left:-20%;right:-20%;height:1px;background:#ffffff24;transform:rotate(-30deg)}.album-cover b{font-family:Georgia,serif;font-size:38px;font-weight:400;color:#fff9;z-index:1}.album-cover small{position:absolute;left:12px;bottom:10px;color:#fffd;font-size:8px;letter-spacing:2px}.album-card:hover .album-cover{border-color:var(--gold)}.album-card h3{margin:9px 0 3px;font-size:12px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.album-card p{margin:0;color:var(--muted);font-size:10px}.empty{padding:44px 20px;border:1px dashed var(--line);text-align:center;border-radius:12px;color:var(--muted)}.empty h3{font-family:Georgia,serif;color:var(--ink);font-size:23px;font-weight:400;margin:0 0 8px}.empty p{font-size:12px;margin:0 0 16px}.offline-box{border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:22px;background:#191916}.offline-heading{display:flex;gap:14px;align-items:center;margin-bottom:14px}.offline-heading>span>svg{color:var(--gold);width:25px;height:25px}.offline-heading h2{font-size:14px;margin:0 0 3px;font-weight:500}.offline-heading p{font-size:11px;color:var(--muted);margin:0}.offline-buttons{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.offline-buttons button{font-size:11px}.primary{background:var(--gold);color:#242018;padding:11px 16px;border-radius:7px;font-size:12px;font-weight:600;min-height:42px}.primary:hover{background:#f5ce8b}progress{accent-color:var(--gold);width:100%;height:6px}.download-line{font-size:11px;color:var(--muted);margin-top:12px}.footer{border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;margin-top:50px;padding:24px 0 32px;color:var(--muted);font-size:10px}.footer button{font-size:10px;padding:0;color:var(--muted)}.footer a{color:var(--muted)}.footer-links{display:flex;gap:18px;flex-wrap:wrap}.modal{position:fixed;inset:0;display:grid;place-items:center;background:#000b;z-index:50;padding:20px}.dialog{width:100%;max-width:500px;max-height:85vh;overflow:auto;background:#1b1b18;border:1px solid #49483e;border-radius:16px;padding:24px;box-shadow:0 30px 100px #000b}.dialog-top{display:flex;align-items:start;justify-content:space-between;gap:15px;margin-bottom:16px}.dialog-top h2{font-family:Georgia,serif;font-weight:400;font-size:27px;line-height:1.2;margin:8px 0}.dialog-top p{font-size:12px;color:var(--muted);margin:0}.dialog h3{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin:24px 0 10px}.dialog p{font-size:13px;color:var(--muted);line-height:1.7}.dialog-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.dialog-actions .pill{font-size:12px}.lyrics{white-space:pre-wrap}.share-link{width:100%;padding:12px;background:#10100f;color:var(--muted);border:1px solid var(--line);border-radius:7px;font-size:11px}.queue-list{list-style:none;padding:0;margin:12px 0;max-height:50vh;overflow:auto}.queue-list button{width:100%;padding:12px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:12px}.queue-list button.active{color:var(--gold)}.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#e5d7bb;color:#292317;border:1px solid #ffe5b3;padding:12px 18px;z-index:70;border-radius:8px;font-size:12px;max-width:min(90vw,430px);box-shadow:0 5px 30px #0005}.mini-player{display:none}.mini-copy{min-width:0;flex:1;text-align:left;display:flex;flex-direction:column;gap:2px}.mini-copy strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.mini-copy small{font-size:10px;color:var(--muted)}
+.wrap{max-width:1320px;margin:auto;padding:0 44px}.masthead{min-height:100px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:20px}.brand{display:flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none}.brand-logo{width:48px;height:48px;flex:none;overflow:hidden;border-radius:50%;background:#000}.brand-mark{width:100%;height:100%;object-fit:cover;object-position:47% 50%;transform:scale(1.17)}.brand-name{font-size:23px;letter-spacing:-1px;font-weight:650}.eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:650}.mast-actions{display:flex;gap:16px;align-items:center}.connection{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}.connection:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}.connection.offline:before{background:var(--gold)}.pill{border:1px solid var(--line);border-radius:99px;padding:9px 15px;min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px}.pill:hover,.icon-btn:hover{background:#ffffff0c;color:var(--gold)}.icon-btn{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:50%;flex:none}.icon-btn.active{color:var(--gold)}.hero{padding:38px 0 30px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px}.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(36px,4.2vw,57px);font-weight:400;letter-spacing:-2px;line-height:1.08;margin:8px 0 12px}.hero h1 em{color:var(--gold);font-weight:400}.hero p{color:var(--muted);margin:0;font-size:13px}.hero-meta{text-align:right;white-space:nowrap;color:var(--muted);font-size:12px;padding-bottom:3px}.hero-meta strong{color:var(--ink);font-weight:450}.content{display:grid;grid-template-columns:minmax(310px,420px) minmax(0,1fr);gap:36px;align-items:start}.player-column{position:sticky;top:24px}.player{border:1px solid var(--line);background:var(--panel);border-radius:18px;overflow:hidden}.player-top{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 5px}.player-top .eyebrow{font-size:9px}.signal{display:flex;align-items:center;gap:7px}.signal-dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}.visual-stage{position:relative;background:#020205;margin:12px;border-radius:10px;overflow:hidden;aspect-ratio:1.3}.visual-stage:fullscreen{width:100vw;height:100vh;margin:0;border-radius:0;aspect-ratio:auto}#visualizer{position:absolute;width:100%;height:100%;inset:0}.visual-actions{position:absolute;bottom:8px;left:10px;right:10px;display:flex;gap:8px;align-items:center;justify-content:space-between;z-index:2}.visual-label{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:#c3bdaa;background:#020205c9;padding:7px 9px;border-radius:5px;max-width:calc(100% - 40px)}.visual-actions .icon-btn{min-width:36px;min-height:36px;background:#020205aa}.idle-art{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-bottom:30px;background:radial-gradient(ellipse at center,#edb46b13,transparent 66%)}.orbit-art{position:relative;width:178px;height:178px;border:1px solid #eabe7025;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 24px #efbd6905,0 0 0 48px #efbd6903}.orbit-art:before{content:'';position:absolute;inset:16px;border:1px solid #efbd6940;border-radius:50%}.orbit-art:after{content:'';position:absolute;width:8px;height:8px;background:var(--gold);border-radius:50%;top:11px;right:25px;box-shadow:0 0 18px #efbd6955}.idle-logo{width:112px;height:112px;overflow:hidden;border-radius:50%;background:#000}.orbit-art img{width:100%;height:100%;object-fit:cover;object-position:47% 50%;transform:scale(1.17)}.idle-art small{color:#b2a68d;font-family:Georgia,serif;font-style:italic;letter-spacing:1px;font-size:13px;margin-top:32px}.track-display{padding:16px 24px 0;min-height:100px}.track-display h2{font-size:25px;line-height:1.2;letter-spacing:-.7px;margin:0 0 7px;overflow-wrap:anywhere}.track-display p{color:var(--muted);margin:0;font-size:12px}.track-title-row{display:flex;align-items:start;justify-content:space-between;gap:8px}.transport{padding:0 24px 22px}.seek{width:100%;margin:10px 0 0;height:22px;accent-color:var(--gold);cursor:pointer}.times{font-size:10px;letter-spacing:.5px;color:var(--muted);display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}.controls{display:flex;align-items:center;justify-content:space-between;margin:16px 0}.main-play{width:58px;height:58px;background:var(--gold);color:#242018;border-radius:50%;display:grid;place-items:center;box-shadow:0 3px 18px #0002}.main-play:hover{background:#f6cf89}.main-play svg{width:25px;height:25px}.sub-controls{display:flex;align-items:center;justify-content:space-between;color:var(--muted);gap:8px}.volume-group{display:flex;align-items:center;width:48%;gap:5px}.volume-group input{width:100%;min-width:0;accent-color:var(--gold);height:22px}.sub-controls .pill{font-size:11px;padding:7px 12px;min-height:38px}.sub-controls svg{width:17px}.player-status{font-size:12px;color:var(--gold);margin:0 24px;min-height:0}.player-status:not(:empty){margin-bottom:12px}.settings{border-top:1px solid var(--line)}.settings summary{cursor:pointer;padding:14px 22px;font-size:11px;color:var(--muted);list-style:none;display:flex;justify-content:space-between;align-items:center}.settings summary::-webkit-details-marker{display:none}.settings summary:after{content:'+';font-size:18px}.settings[open] summary:after{content:'−'}.settings-body{padding:0 22px 20px}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:8px 0;font-size:12px}.setting-row select{max-width:62%;padding:8px;border:1px solid var(--line);border-radius:6px;background:#22221e;color:var(--ink)}.fine{font-size:11px;color:var(--muted);line-height:1.6}.about-small{padding:20px 4px;color:var(--muted);font-size:12px;line-height:1.8}.about-small p{margin:0 0 10px}.about-small a{color:var(--ink)}.archive{min-width:0}.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow:auto}.tab{font-size:13px;color:var(--muted);padding:12px 0;white-space:nowrap;border-bottom:2px solid transparent;min-height:48px}.tab.active{color:var(--ink);border-color:var(--gold)}.tab-count{font-size:10px;margin-left:5px;color:var(--muted)}.search-row{display:flex;align-items:center;gap:10px}.search-wrap{position:relative;flex:1;min-width:0}.search-wrap>span{position:absolute;left:14px;top:14px;width:18px;color:var(--muted)}.search-wrap>span svg{width:18px;height:18px}.search-wrap input{padding:12px 42px;background:#1b1b18;border:1px solid var(--line);border-radius:9px;min-height:46px;width:100%;color:var(--ink);font-size:12px}.search-wrap button{position:absolute;right:2px;top:1px}.filter-toggle{border:1px solid var(--line);border-radius:9px;min-height:46px;font-size:12px;padding:0 14px;display:flex;gap:8px;align-items:center}.filter-toggle.active{color:var(--gold);border-color:#efbd6977}.filter-panel{margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}fieldset{border:0;padding:0;margin:0 0 14px}legend{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0;margin:0 0 8px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 10px;border-radius:7px;font-size:11px;cursor:pointer;min-height:36px}.chip input{accent-color:var(--gold);margin:0}.filter-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}.filter-bottom select{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:7px;color:var(--ink);font-size:12px}.text-btn{color:var(--gold);font-size:12px;padding:10px 0}.list-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}.list-caption button{font-size:11px;letter-spacing:0;text-transform:none;color:var(--gold);display:flex;align-items:center;gap:6px}.list-caption button svg{width:14px;height:14px}.track-list{list-style:none;padding:0;margin:0;max-height:665px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#45453d transparent}.track-row{display:flex;align-items:center;gap:8px;min-height:75px;border-bottom:1px solid #ffffff09;padding:7px 0;border-radius:7px}.track-row.playing{background:#efbd690b}.track-button{display:flex;align-items:center;gap:12px;min-width:0;flex:1;text-align:left;padding:6px 8px 6px 0;border-radius:6px}.track-button:hover .track-name{color:var(--gold)}.track-number{font-size:11px;font-variant-numeric:tabular-nums;color:#b6b2a0;min-width:24px;text-align:center}.track-row.playing .track-number{color:var(--gold)}.track-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.track-name{font-size:13px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.track-subtitle{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.track-art{width:38px;height:42px;border-radius:4px;flex:none;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 64% 33%,var(--cover),transparent 65%),#20201e;border:1px solid #ffffff12;color:#fff9;font-family:Georgia,serif;font-size:13px}.track-art:before{content:attr(data-mark);width:27px;height:27px;border:1px solid #ffffff44;border-radius:50%;display:grid;place-items:center}.row-duration{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}.track-row>.icon-btn{min-width:38px;min-height:44px}.track-row>.icon-btn svg{width:17px}.offline-dot{width:5px;height:5px;display:inline-block;background:var(--green);border-radius:50%;margin-right:5px;vertical-align:middle}.album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 14px}.album-card{text-align:left;padding:0;min-width:0;border-radius:8px}.album-cover{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 65% 15%,var(--cover),transparent 70%),#22221e;border:1px solid #ffffff1a;border-radius:8px;position:relative;overflow:hidden}.album-cover:before{content:'';position:absolute;width:70%;height:70%;border:1px solid #fff3;border-radius:50%;box-shadow:0 0 0 17px #ffffff05,0 0 0 34px #ffffff04}.album-cover:after{content:'';position:absolute;left:-20%;right:-20%;height:1px;background:#ffffff24;transform:rotate(-30deg)}.album-cover b{font-family:Georgia,serif;font-size:38px;font-weight:400;color:#fff9;z-index:1}.album-cover small{position:absolute;left:12px;bottom:10px;color:#fffd;font-size:8px;letter-spacing:2px}.album-card:hover .album-cover{border-color:var(--gold)}.album-card h3{margin:9px 0 3px;font-size:12px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.album-card p{margin:0;color:var(--muted);font-size:10px}.empty{padding:44px 20px;border:1px dashed var(--line);text-align:center;border-radius:12px;color:var(--muted)}.empty h3{font-family:Georgia,serif;color:var(--ink);font-size:23px;font-weight:400;margin:0 0 8px}.empty p{font-size:12px;margin:0 0 16px}.offline-box{border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:22px;background:#191916}.offline-heading{display:flex;gap:14px;align-items:center;margin-bottom:14px}.offline-heading>span>svg{color:var(--gold);width:25px;height:25px}.offline-heading h2{font-size:14px;margin:0 0 3px;font-weight:500}.offline-heading p{font-size:11px;color:var(--muted);margin:0}.offline-buttons{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.offline-buttons button{font-size:11px}.primary{background:var(--gold);color:#242018;padding:11px 16px;border-radius:7px;font-size:12px;font-weight:600;min-height:42px}.primary:hover{background:#f5ce8b}progress{accent-color:var(--gold);width:100%;height:6px}.download-line{font-size:11px;color:var(--muted);margin-top:12px}.footer{border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:20px;margin-top:50px;padding:24px 0 32px;color:var(--muted);font-size:10px}.footer button{font-size:10px;padding:0;color:var(--muted)}.footer a{color:var(--muted)}.footer-links{display:flex;gap:18px;flex-wrap:wrap}.modal{position:fixed;inset:0;display:grid;place-items:center;background:#000b;z-index:50;padding:20px}.dialog{width:100%;max-width:500px;max-height:85vh;overflow:auto;background:#1b1b18;border:1px solid #49483e;border-radius:16px;padding:24px;box-shadow:0 30px 100px #000b}.dialog-top{display:flex;align-items:start;justify-content:space-between;gap:15px;margin-bottom:16px}.dialog-top h2{font-family:Georgia,serif;font-weight:400;font-size:27px;line-height:1.2;margin:8px 0}.dialog-top p{font-size:12px;color:var(--muted);margin:0}.dialog h3{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin:24px 0 10px}.dialog p{font-size:13px;color:var(--muted);line-height:1.7}.dialog-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.dialog-actions .pill{font-size:12px}.lyrics{white-space:pre-wrap}.share-link{width:100%;padding:12px;background:#10100f;color:var(--muted);border:1px solid var(--line);border-radius:7px;font-size:11px}.queue-list{list-style:none;padding:0;margin:12px 0;max-height:50vh;overflow:auto}.queue-list button{width:100%;padding:12px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:12px}.queue-list button.active{color:var(--gold)}.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#e5d7bb;color:#292317;border:1px solid #ffe5b3;padding:12px 18px;z-index:70;border-radius:8px;font-size:12px;max-width:min(90vw,430px);box-shadow:0 5px 30px #0005}.mini-player{display:none}.mini-copy{min-width:0;flex:1;text-align:left;display:flex;flex-direction:column;gap:2px}.mini-copy strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.mini-copy small{font-size:10px;color:var(--muted)}
 @media(min-width:1000px){.track-row>.icon-btn{opacity:.65}.track-row:hover>.icon-btn,.track-row:focus-within>.icon-btn,.track-row>.icon-btn.active{opacity:1}}
 @media(max-width:1000px){.wrap{padding:0 25px}.content{gap:24px;grid-template-columns:minmax(285px,360px) minmax(0,1fr)}.album-grid{grid-template-columns:repeat(2,1fr)}.track-art{display:none}.tabs{gap:16px}.hero-meta{display:none}.track-display h2{font-size:23px}}
-@media(max-width:740px){.wrap{padding:0 18px}.masthead{min-height:77px}.masthead .eyebrow{display:none}.mast-actions{gap:8px}.connection{font-size:10px}.brand-name{font-size:22px}.brand-mark{width:34px;height:34px}.hero{padding:27px 0 22px}.hero h1{font-size:37px;letter-spacing:-1.7px}.hero p{font-size:12px}.hero .eyebrow{font-size:9px}.content{display:block}.player-column{position:static}.player{max-width:100%}.player-top{padding:12px 18px 0}.visual-stage{aspect-ratio:auto;height:220px;margin:10px}.orbit-art{width:123px;height:123px}.orbit-art img{width:72px;height:72px}.orbit-art:after{top:1px;right:20px}.idle-art small{margin-top:22px;font-size:12px}.track-display{padding:10px 20px 0;min-height:78px}.track-display h2{font-size:24px}.transport{padding:0 20px 18px}.controls{margin:10px 0}.main-play{height:53px;width:53px}.settings summary{padding:11px 20px}.about-small{display:none}.archive{margin-top:25px}.track-list{max-height:none}.tabs{justify-content:space-between;gap:12px;margin-bottom:15px}.tab{font-size:12px}.album-grid{grid-template-columns:repeat(3,1fr);gap:17px 12px}.album-cover b{font-size:29px}.track-art{display:grid}.track-row{min-height:74px;gap:4px}.track-button{gap:9px}.track-number{min-width:18px;font-size:10px}.track-row>.icon-btn{min-width:36px}.track-name{font-size:12px}.track-subtitle{font-size:10px}.footer{margin-top:32px;flex-direction:column;gap:15px;padding-bottom:calc(100px + env(safe-area-inset-bottom))}.mini-player.visible{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;gap:10px;padding:10px 17px calc(10px + env(safe-area-inset-bottom));background:#20201ef7;border-top:1px solid #595442;z-index:30;box-shadow:0 -10px 25px #0003}.mini-player .icon-btn{color:var(--gold)}.toast{bottom:calc(86px + env(safe-area-inset-bottom))}.dialog{padding:20px;max-height:88vh}.modal{padding:14px}.settings-body .fine{margin-bottom:0}}
+@media(max-width:740px){.wrap{padding:0 18px}.masthead{min-height:77px}.masthead .eyebrow{display:none}.mast-actions{gap:8px}.connection{font-size:10px}.brand-name{font-size:22px}.brand-logo{width:42px;height:42px}.hero{padding:27px 0 22px}.hero h1{font-size:37px;letter-spacing:-1.7px}.hero p{font-size:12px}.hero .eyebrow{font-size:9px}.content{display:block}.player-column{position:static}.player{max-width:100%}.player-top{padding:12px 18px 0}.visual-stage{aspect-ratio:auto;height:220px;margin:10px}.orbit-art{width:123px;height:123px}.idle-logo{width:83px;height:83px}.orbit-art:after{top:1px;right:20px}.idle-art small{margin-top:22px;font-size:12px}.track-display{padding:10px 20px 0;min-height:78px}.track-display h2{font-size:24px}.transport{padding:0 20px 18px}.controls{margin:10px 0}.main-play{height:53px;width:53px}.settings summary{padding:11px 20px}.about-small{display:none}.archive{margin-top:25px}.track-list{max-height:none}.tabs{justify-content:space-between;gap:12px;margin-bottom:15px}.tab{font-size:12px}.album-grid{grid-template-columns:repeat(3,1fr);gap:17px 12px}.album-cover b{font-size:29px}.track-art{display:grid}.track-row{min-height:74px;gap:4px}.track-button{gap:9px}.track-number{min-width:18px;font-size:10px}.track-row>.icon-btn{min-width:36px}.track-name{font-size:12px}.track-subtitle{font-size:10px}.footer{margin-top:32px;flex-direction:column;gap:15px;padding-bottom:calc(100px + env(safe-area-inset-bottom))}.mini-player.visible{display:flex;position:fixed;bottom:0;left:0;right:0;align-items:center;gap:10px;padding:10px 17px calc(10px + env(safe-area-inset-bottom));background:#20201ef7;border-top:1px solid #595442;z-index:30;box-shadow:0 -10px 25px #0003}.mini-player .icon-btn{color:var(--gold)}.toast{bottom:calc(86px + env(safe-area-inset-bottom))}.dialog{padding:20px;max-height:88vh}.modal{padding:14px}.settings-body .fine{margin-bottom:0}}
 @media(max-width:380px){.wrap{padding:0 12px}.hero h1{font-size:33px}.track-art{display:none}.track-number{min-width:23px}.row-duration{font-size:9px}.connection{display:none}.album-grid{gap:15px 8px}.search-wrap input{font-size:11px;padding-left:38px}.filter-toggle{padding:0 10px}.track-row{gap:3px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 </style>
@@ -41,7 +43,7 @@
 <a class="skip" href="#archive">Skip to music</a>
 <div class="wrap">
 <header class="masthead">
-<a class="brand" href="./" aria-label="Suncat home"><img class="brand-mark" src="assets/suncat.svg" alt=""><span class="brand-name">suncat<span style="color:var(--gold)">.</span></span><span class="eyebrow" style="margin-left:12px">Digital audio archive</span></a>
+<a class="brand" href="./" aria-label="Suncat home"><span class="brand-logo"><img class="brand-mark" src="assets/suncat-og-image.jpg?v=cat-2" alt="Suncat cat and butterfly logo"></span><span class="brand-name">suncat<span style="color:var(--gold)">.</span></span><span class="eyebrow" style="margin-left:12px">Digital audio archive</span></a>
 <div class="mast-actions"><span class="connection" id="connection">Ready to listen</span><button id="install" class="pill" hidden>Install app</button><button class="icon-btn" id="about-button" aria-label="About Suncat" title="About Suncat" data-icon="info"></button></div>
 </header>
 <section class="hero" aria-labelledby="page-title"><div><span class="eyebrow">The independent listening room</span><h1 id="page-title">Original songs.<br><em>Other worlds.</em></h1><p>Albums, experiments &amp; the sounds of Runestones.</p></div><div class="hero-meta"><strong id="catalog-count"></strong><br><span>Made by Suncat · Houston, Texas</span></div></section>
@@ -49,13 +51,13 @@
 <div class="player-column">
 <section class="player" id="player" aria-label="Music player">
 <div class="player-top"><span class="eyebrow signal"><span class="signal-dot"></span><span id="playing-label">Your listening room</span></span><button class="icon-btn" id="now-info" aria-label="Current track details" disabled data-icon="more"></button></div>
-<div class="visual-stage" id="visualizer-container"><canvas id="visualizer" aria-label="Audio-reactive visualization"></canvas><div class="idle-art" id="idle-art"><div class="orbit-art"><img src="assets/suncat.svg" alt=""></div><small id="idle-caption">A little sun in your speakers.</small></div><div class="visual-actions"><button class="visual-label" id="cycle-visual" aria-label="Next visualization">Sound sculpture · 02 / 08</button><button class="icon-btn" id="fullscreen" aria-label="Expand visualizer" title="Expand visualizer" data-icon="expand"></button></div></div>
+<div class="visual-stage" id="visualizer-container"><canvas id="visualizer" aria-label="Audio-reactive visualization"></canvas><div class="idle-art" id="idle-art"><div class="orbit-art"><span class="idle-logo"><img src="assets/suncat-og-image.jpg?v=cat-2" alt=""></span></div><small id="idle-caption">A little sun in your speakers.</small></div><div class="visual-actions"><button class="visual-label" id="cycle-visual" aria-label="Next visualization">Frequency spectrum · 09 / 11</button><button class="icon-btn" id="fullscreen" aria-label="Expand visualizer" title="Expand visualizer" data-icon="expand"></button></div></div>
 <div class="track-display"><div class="track-title-row"><div><h2 id="track-title">Find your next favorite.</h2><p id="track-album">Pick a song and stay a while.</p></div><button class="icon-btn" id="now-heart" aria-label="Save current track" disabled data-icon="heart"></button></div></div>
 <p class="player-status" id="player-status" role="status" aria-live="polite"></p>
 <div class="transport"><label class="sr-only" for="progress-bar">Playback position</label><input class="seek" id="progress-bar" type="range" min="0" max="1000" value="0" step="1" disabled><div class="times"><span id="time-current">0:00</span><span id="time-total">0:00</span></div>
 <div class="controls"><button id="btn-shuffle" class="icon-btn" aria-label="Shuffle" aria-pressed="false" title="Shuffle" data-icon="shuffle"></button><button id="btn-prev" class="icon-btn" aria-label="Previous track" title="Previous track" data-icon="prev"></button><button id="btn-main-play" class="main-play" aria-label="Play" data-icon="play"></button><button id="btn-next" class="icon-btn" aria-label="Next track" title="Next track" data-icon="next"></button><button id="btn-repeat" class="icon-btn active" aria-label="Repeat: all" title="Repeat: all" data-icon="repeat"></button></div>
 <div class="sub-controls"><div class="volume-group"><button id="mute" class="icon-btn" aria-label="Mute" data-icon="volume"></button><label class="sr-only" for="volume">Volume</label><input id="volume" type="range" min="0" max="1" step="0.01" value="0.85"></div><button class="pill" id="queue-button"><span data-icon="queue"></span><span id="queue-count">Queue</span></button></div></div>
-<details class="settings"><summary>Make yourself at home <span class="eyebrow" style="letter-spacing:1px">Player settings</span></summary><div class="settings-body"><label class="setting-row">Visualizer<select id="visual-select" aria-label="Visualizer"></select></label><label class="setting-row">Detail<select id="quality"><option value="balanced">Balanced</option><option value="eco">Battery saver</option></select></label><label class="setting-row">Sound<select id="sound"><option value="original">Original recording</option><option value="enhanced">Warm &amp; present</option></select></label><button class="pill" id="background-mode" style="width:100%;margin-top:10px">Switch to background mode</button><p class="fine" id="mode-note">For listening with the screen locked, choose background mode. Your place is kept; tap Play after switching.</p></div></details>
+<details class="settings"><summary>Make yourself at home <span class="eyebrow" style="letter-spacing:1px">Player settings</span></summary><div class="settings-body"><label class="setting-row">Visualizer<select id="visual-select" aria-label="Visualizer"></select></label><p class="fine" id="visual-description"></p><label class="setting-row">Detail<select id="quality"><option value="balanced">Balanced</option><option value="eco">Battery saver</option></select></label><label class="setting-row">Sound<select id="sound"><option value="original">Original recording</option><option value="enhanced">Warm &amp; present</option></select></label><button class="pill" id="background-mode" style="width:100%;margin-top:10px">Switch to background mode</button><p class="fine" id="mode-note">For listening with the screen locked, choose background mode. Your place is kept; tap Play after switching.</p></div></details>
 <audio id="audio-player" playsinline preload="metadata"></audio>
 </section>
 <div class="about-small"><p>Music for the strange, the tender, and the worlds in between. Original albums and game soundtracks by Suncat.</p><a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" rel="noopener">Enter the world of Runestones ↗</a></div>
@@ -192,7 +194,7 @@ const playlistData = [
                 { title: "Title Theme", src: "Title Theme.mp3", duration: "3:00", rating: 0, album: "Runestones Soundtrack",genre:"Synthwave", lyrics: "[Instrumental]", extraInfo: "Game Music from the game Runestones Online by Suncat. You can play it free @ suncatmeow.github.io/RunestonesOnline" },
                 { title: "Underworld", src: "Underworld.mp3", duration: "3:00", rating: 0, album: "Runestones Soundtrack",genre:"Synthwave", lyrics: "[Instrumental]", extraInfo: "Game Music from the game Runestones Online by Suncat. You can play it free @ suncatmeow.github.io/RunestonesOnline" }
         ];
-// Suncat Archive 2.0. No build step or third-party UI dependencies.
+// Suncat Archive 2.3. No build step or third-party UI dependencies.
 const $ = id => document.getElementById(id);
 const iconPaths = {
  play:'<path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none"/>',pause:'<path d="M8 5v14M16 5v14" stroke-width="4"/>',
@@ -224,7 +226,7 @@ let favorites=[...new Set((Array.isArray(storedFavorites)?storedFavorites:Array.
 let prefs=safeRead('suncat_preferences_v2',{});if(!prefs||typeof prefs!=='object'||Array.isArray(prefs))prefs={};
 let view='tracks',selectedAlbum=null,query='',displayOrder=[],queueOrder=[],playQueue=[],queuePos=-1,currentTrackIndex=-1;
 let shuffle=!!prefs.shuffle,repeat=['off','all','one'].includes(prefs.repeat)?prefs.repeat:'all';
-let visualizerMode=Number.isInteger(prefs.visual)&&prefs.visual>=0&&prefs.visual<8?prefs.visual:1;
+let visualizerMode=Number.isInteger(prefs.visual)&&prefs.visual>=0&&prefs.visual<11?prefs.visual:8;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let isBackgroundMode=typeof prefs.background==='boolean'?prefs.background:safeRead('suncat_bg_mode',reducedMotion)===true;
 let quality=['eco','balanced'].includes(prefs.quality)?prefs.quality:(matchMedia('(pointer:coarse)').matches?'eco':'balanced');
@@ -232,11 +234,13 @@ let soundMode=prefs.sound==='enhanced'?'enhanced':'original';
 let volume=typeof prefs.volume==='number'&&Number.isFinite(prefs.volume)?Math.min(1,Math.max(0,prefs.volume)):.85;
 let filters={genres:new Set(),albums:new Set(),rating:'all'},sortOrder='rating';
 const audioPlayer=$('audio-player'),canvas=$('visualizer'),ctx=canvas.getContext('2d');
+let enhancementInput,enhancementConnected=false,enhancementTimer;
 let audioCtx,source,dryGain,wetGain,isEngineRunning=false,visualFrame=0,visualVisible=true,playerVisible=true;
 let playToken=0,seekPending=null,dragging=false,lastSave=0,toastTimer,dialogReturnFocus;
 let offlineTracks=new Set(),offlineBytes=0,downloadJob=null,offlineReady=false,workerError='';
 const AUDIO_CACHE='suncat-audio-v9',LEGACY_CACHE='suncat-audio-v91.0613';
-const visualNames=['Stereo scope','Sound sculpture','Spectral globe','Solar system','Amorphous entity','Gravitational system','Spectral lotus','Cymatic resonance'];
+const visualNames=['Stereo scope','Stereo ribbon','Spectral globe','Solar system','Amorphous entity','Gravitational system','Spectral lotus','Cymatic-inspired field','Frequency spectrum','Spectrogram','Stereo waveform'];
+const visualDescriptions=['Stereo scope: horizontal = side, vertical = mid. Correlation shows how L/R move together.','Art: L/R waveforms bend the ribbons; band energy changes their radius. Rotation is decorative.','Art: frequency bands wrap around a globe; the mesh retains six seconds of history.','Art: waveform and spectrum shapes orbit together. Orbits are decorative.','Art: spectral energy and channel differences deform a six-second mesh.','Art: audio deforms the field; orbiting shapes are decorative.','Art: energy expands petals; spectral peaks choose their colors. No chord detection.','Art inspired by cymatics; frequency energy deforms a mesh. This is not a physical simulation.','Measurement: power in adjacent frequency bands, with Blackman-window correction. Fixed −90 to 0 dBFS scale.','Measurement: six seconds of frequency-band power. Low frequencies below, recent sound at right. Brightness shows level.','Measurement: left and right waveforms share a 20 ms window and a fixed amplitude scale.'];
 function durationSeconds(t){return t.duration.split(':').reduce((n,p)=>n*60+Number(p),0);}
 function formatTime(s){if(!Number.isFinite(s)||s<0)return '0:00';return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
 function sourceURL(src){return new URL(src.split('/').map(x=>encodeURIComponent(x).replace(/'/g,'%27')).join('/'),new URL('.',location.href)).href;}
@@ -277,7 +281,7 @@ function selectTrack(i,{autoplay=true,resume=0}={}){
  if(!Number.isInteger(i)||!playlistData[i])return;
  playToken++;audioPlayer.pause();currentTrackIndex=i;if(!playQueue.includes(i))setQueue(i);queuePos=playQueue.indexOf(i);
  seekPending=Number.isFinite(resume)&&resume>0?resume:null;
- audioPlayer.src=sourceURL(playlistData[i].src);audioPlayer.load();soundView.history=[];soundView.lotusPhysics=null;soundView.lastCapture=-Infinity;
+ audioPlayer.src=sourceURL(playlistData[i].src);audioPlayer.load();resetVisualHistory();
  $('progress-bar').value=0;$('progress-bar').disabled=true;$('time-current').textContent=formatTime(resume);$('time-total').textContent=playlistData[i].duration;
  status();updateNow();renderLibrary();updateQueueBadge();
  const u=new URL(location.href);u.searchParams.set('track',slug(playlistData[i]));try{history.replaceState(null,'',u);}catch{}
@@ -310,8 +314,8 @@ function previousTrack(){if(audioPlayer.currentTime>3){seekTo(0);return;}if(play
 function toggleShuffle(){shuffle=!shuffle;if(currentTrackIndex>=0){playQueue=shuffle?[currentTrackIndex,...shuffleList(queueOrder.filter(i=>i!==currentTrackIndex))]:[...queueOrder];queuePos=playQueue.indexOf(currentTrackIndex);}updateModes();savePrefs();saveSession();}
 function updateModes(){$('btn-shuffle').classList.toggle('active',shuffle);$('btn-shuffle').setAttribute('aria-pressed',shuffle);$('btn-repeat').classList.toggle('active',repeat!=='off');$('btn-repeat').setAttribute('aria-label',`Repeat: ${repeat}`);$('btn-repeat').title=`Repeat: ${repeat}`;$('btn-repeat').innerHTML=icon(repeat==='one'?'repeatOne':'repeat');$('background-mode').textContent=isBackgroundMode?'Switch to visualizer mode':'Switch to background mode';$('sound').disabled=isBackgroundMode;$('visual-select').disabled=isBackgroundMode;$('cycle-visual').disabled=isBackgroundMode;$('quality').disabled=isBackgroundMode;$('mode-note').textContent=isBackgroundMode?'Background mode uses the original recording and turns visuals off. Lock-screen playback depends on your browser and device.':'For listening with the screen locked, choose background mode. Your place is kept; tap Play after switching.';}
 function updateProgress(){const d=audioPlayer.duration,t=audioPlayer.currentTime;if(Number.isFinite(d)&&d>0){$('progress-bar').disabled=false;if(!dragging){$('progress-bar').value=Math.round(t/d*1000);$('time-current').textContent=formatTime(t);}$('time-total').textContent=formatTime(d);$('progress-bar').setAttribute('aria-valuetext',`${formatTime(t)} of ${formatTime(d)}`);if('mediaSession'in navigator&&navigator.mediaSession.setPositionState)try{navigator.mediaSession.setPositionState({duration:d,position:Math.min(d,Math.max(0,t)),playbackRate:audioPlayer.playbackRate});}catch{}}if(Date.now()-lastSave>5000){lastSave=Date.now();saveSession();}}
-function seekTo(time){if(!Number.isFinite(audioPlayer.duration))return;seekPending=null;audioPlayer.currentTime=Math.max(0,Math.min(audioPlayer.duration,time));soundView.history=[];updateProgress();saveSession();}
-function updateMedia(){if(!('mediaSession'in navigator)||!('MediaMetadata'in window))return;const t=playlistData[currentTrackIndex];try{navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:'Suncat',album:t.album,artwork:[{src:new URL('icon-192.png',location.href).href,sizes:'192x192',type:'image/png'},{src:new URL('icon-512.png',location.href).href,sizes:'512x512',type:'image/png'}]});}catch{}}
+function seekTo(time){if(!Number.isFinite(audioPlayer.duration))return;seekPending=null;audioPlayer.currentTime=Math.max(0,Math.min(audioPlayer.duration,time));resetVisualHistory();updateProgress();saveSession();}
+function updateMedia(){if(!('mediaSession'in navigator)||!('MediaMetadata'in window))return;const t=playlistData[currentTrackIndex];try{navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:'Suncat',album:t.album,artwork:[{src:new URL('icon-192.png?v=cat-2',location.href).href,sizes:'192x192',type:'image/png'},{src:new URL('icon-512.png?v=cat-2',location.href).href,sizes:'512x512',type:'image/png'}]});}catch{}}
 function setupAudioEngine(){
  const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)throw new Error('Web Audio unavailable');
  audioCtx=new AudioContextClass();source=audioCtx.createMediaElementSource(audioPlayer);dryGain=audioCtx.createGain();wetGain=audioCtx.createGain();
@@ -324,28 +328,43 @@ function setupAudioEngine(){
  const air=audioCtx.createBiquadFilter();air.type='highshelf';air.frequency.value=8000;air.gain.value=.8;
  const headroom=audioCtx.createGain();headroom.gain.value=.8;
  const compressor=audioCtx.createDynamicsCompressor();compressor.threshold.value=-12;compressor.knee.value=18;compressor.ratio.value=3;compressor.attack.value=.012;compressor.release.value=.2;
- source.connect(high);high.connect(bass);bass.connect(mud);mud.connect(presence);presence.connect(air);air.connect(headroom);headroom.connect(compressor);compressor.connect(wetGain);wetGain.connect(out);
+ enhancementInput=high;if(soundMode==='enhanced'){source.connect(high);enhancementConnected=true;}high.connect(bass);bass.connect(mud);mud.connect(presence);presence.connect(air);air.connect(headroom);headroom.connect(compressor);compressor.connect(wetGain);wetGain.connect(out);
  dryGain.gain.value=soundMode==='original'?1:0;wetGain.gain.value=soundMode==='enhanced'?1:0;
  out.connect(audioCtx.destination);initVisualAnalysis(out);isEngineRunning=true;
 }
-function resizeCanvas(){const dpr=Math.min(window.devicePixelRatio||1,quality==='eco'?1:1.5);canvas.width=Math.round(canvas.clientWidth*dpr);canvas.height=Math.round(canvas.clientHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(audioPlayer.paused||!isEngineRunning)drawIdleState();}
-function drawIdleState(){ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);$('idle-art').hidden=false;$('idle-caption').textContent=isBackgroundMode?'Just you and the music.':currentTrackIndex>=0?'Press Play. Stay a while.':'A little sun in your speakers.';}
-function stopVisuals(){cancelAnimationFrame(visualFrame);visualFrame=0;}
-function startVisuals(){if(visualFrame||isBackgroundMode||document.hidden||!visualVisible||audioPlayer.paused||!isEngineRunning)return;visualFrame=requestAnimationFrame(renderVisualizer);}
-function renderVisualizer(stamp){
- visualFrame=0;if(isBackgroundMode||document.hidden||!visualVisible||audioPlayer.paused||audioPlayer.ended||!soundView.left)return;
- visualFrame=requestAnimationFrame(renderVisualizer);
- if(stamp-soundView.lastFrame<1000/SV_FPS)return;soundView.lastFrame=stamp;
- const w=canvas.clientWidth,h=canvas.clientHeight,now=audioCtx.currentTime;
- if(!w||!h||audioCtx.state!=='running'||audioPlayer.readyState<3)return;
- if(soundView.source!==audioPlayer.currentSrc||Math.abs(audioPlayer.currentTime-soundView.playhead)>.5||now-soundView.lastCapture>.3)soundView.history=[];
- soundView.source=audioPlayer.currentSrc;soundView.playhead=audioPlayer.currentTime;
- soundView.left.getFloatTimeDomainData(soundView.waveL);soundView.right.getFloatTimeDomainData(soundView.waveR);soundView.left.getFloatFrequencyData(soundView.fftL);soundView.right.getFloatFrequencyData(soundView.fftR);
- captureSpectrum(now);soundView.lastCapture=now;$('idle-art').hidden=true;
- ctx.clearRect(0,0,w,h);ctx.fillStyle='#020205';ctx.fillRect(0,0,w,h);ctx.save();ctx.translate(w/2,h/2);
- try{[drawStereoScope,drawSoundSculpture,drawSpectralGlobe,drawSolarSystem,drawAmorphousEntity,drawGravitationalSystem,drawSpectralLotus,drawCymaticResonance][visualizerMode](w,h,now);}finally{ctx.restore();}
+function applySoundMode(){
+ if(!dryGain)return;
+ clearTimeout(enhancementTimer);
+ if(soundMode==='enhanced'&&!enhancementConnected){source.connect(enhancementInput);enhancementConnected=true;}
+ dryGain.gain.setTargetAtTime(soundMode==='original'?1:0,audioCtx.currentTime,.05);
+ wetGain.gain.setTargetAtTime(soundMode==='enhanced'?1:0,audioCtx.currentTime,.05);
+ if(soundMode==='original')enhancementTimer=setTimeout(()=>{if(soundMode==='original'&&enhancementConnected){source.disconnect(enhancementInput);enhancementConnected=false;}},400);
 }
-function chooseVisual(i){visualizerMode=i;$('visual-select').value=String(i);$('cycle-visual').textContent=`${visualNames[i]} · ${String(i+1).padStart(2,'0')} / 08`;savePrefs();if(audioPlayer.paused)drawIdleState();}
+function resizeCanvas(){const dpr=Math.min(window.devicePixelRatio||1,quality==='eco'||visualBudget.level>0?1:1.5);const width=Math.round(canvas.clientWidth*dpr),height=Math.round(canvas.clientHeight*dpr);if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}ctx.setTransform(dpr,0,0,dpr,0,0);if(audioPlayer.paused||!isEngineRunning)drawIdleState();}
+function drawIdleState(){ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);$('idle-art').hidden=false;$('idle-caption').textContent=isBackgroundMode?'Just you and the music.':currentTrackIndex>=0?'Press Play. Stay a while.':'A little sun in your speakers.';}
+function stopVisuals(){cancelAnimationFrame(visualFrame);visualFrame=0;setAnalysisActive(false);}
+function startVisuals(){if(visualFrame||isBackgroundMode||document.hidden||!visualVisible||audioPlayer.paused||!isEngineRunning)return;setAnalysisActive(true);soundView.lastFrame=-Infinity;visualBudget.lastRaf=NaN;visualBudget.rafGap=0;visualFrame=requestAnimationFrame(renderVisualizer);}
+function renderVisualizer(stamp){
+ visualFrame=0;if(isBackgroundMode||document.hidden||!visualVisible||audioPlayer.paused||audioPlayer.ended||!soundView.left){setAnalysisActive(false);return;}
+ visualFrame=requestAnimationFrame(renderVisualizer);
+ if(Number.isFinite(visualBudget.lastRaf))visualBudget.rafGap=visualBudget.rafGap*.9+Math.min(200,stamp-visualBudget.lastRaf)*.1;
+ visualBudget.lastRaf=stamp;
+ const fps=visualBudget.level>=2?Math.min(SV_FPS,12):SV_FPS,interval=1000/fps,elapsed=stamp-soundView.lastFrame;
+ if(elapsed+.1<interval)return;
+ soundView.lastFrame=Number.isFinite(elapsed)?stamp-elapsed%interval:stamp;
+ const started=performance.now(),w=canvas.clientWidth,h=canvas.clientHeight,now=audioCtx.currentTime;
+ if(!w||!h||audioCtx.state!=='running'||audioPlayer.readyState<3)return;
+ if(soundView.source!==audioPlayer.currentSrc||Math.abs(audioPlayer.currentTime-soundView.playhead)>.5||now-soundView.lastCapture>.3)resetVisualHistory();
+ soundView.source=audioPlayer.currentSrc;soundView.playhead=audioPlayer.currentTime;
+ readVisualSignal(now);$('idle-art').hidden=true;
+ ctx.clearRect(0,0,w,h);drawVisualBackdrop(w,h);ctx.save();const drawHeight=visualizerMode>0&&visualizerMode<8?Math.max(80,h-64):h;ctx.translate(w/2,drawHeight/2);
+ try{visualDrawers[visualizerMode](w,drawHeight,now);if(visualizerMode===0){measurementHeader(w,h,`Correlation ${soundView.metrics.correlation===null?'—':soundView.metrics.correlation.toFixed(2)} · side ↔ · mid ↕`);}}finally{ctx.restore();}
+ if(visualizerMode<8)drawSpectrumFooter(w,h);
+ const measured=performance.now()-started;
+ // RAF spacing also catches deferred Canvas paint cost outside this callback.
+ updateVisualBudget(Math.max(measured,visualBudget.rafGap>28||Number.isFinite(elapsed)&&elapsed>interval*2.5?14:0));
+}
+function chooseVisual(i){if(!Number.isInteger(i)||i<0||i>=visualNames.length)return;visualizerMode=i;$('visual-select').value=String(i);$('cycle-visual').textContent=`${visualNames[i]} · ${String(i+1).padStart(2,'0')} / ${visualNames.length}`;$('visual-description').textContent=visualDescriptions[i];canvas.setAttribute('aria-label',visualDescriptions[i]);resetVisualBudget();savePrefs();if(audioPlayer.paused)drawIdleState();}
 function openDialog(title,subtitle='',kicker='Suncat archive'){
  dialogReturnFocus=document.activeElement;$('dialog-title').textContent=title;$('dialog-subtitle').textContent=subtitle;$('dialog-kicker').textContent=kicker;$('dialog-body').innerHTML='';$('modal').hidden=false;document.body.style.overflow='hidden';document.querySelector('.wrap').setAttribute('inert','');$('mini-player').setAttribute('inert','');$('close-dialog').focus();
 }
@@ -353,7 +372,7 @@ function closeDialog(){$('modal').hidden=true;document.body.style.overflow='';do
 function trackDetails(i){const t=playlistData[i];openDialog(t.title,`${t.album} · ${t.duration}`,'Behind the track');$('dialog-body').innerHTML=`<div class="dialog-actions"><button class="primary" id="detail-play">Play track</button><button class="pill" id="detail-share">${icon('share')} Share</button><button class="pill" id="detail-save" ${downloadJob?'disabled':''}>${icon('download')} ${offlineTracks.has(t.src)?'Remove download':'Save offline'}</button></div><p>${esc(t.genre||'')}</p><p class="fine">Archive rating: ${t.rating?'★'.repeat(t.rating)+'☆'.repeat(5-t.rating):'Unrated'} · Curated by Suncat</p><h3>Behind the track</h3><p>${esc(t.extraInfo||'From the Suncat archive.')}</p><h3>Lyrics</h3><p class="lyrics">${esc(t.lyrics==='Lyrics coming soon...'?'Lyrics haven’t been added to this track yet.':t.lyrics||'Lyrics haven’t been added to this track yet.')}</p>`;$('detail-play').onclick=()=>{setQueue(i);selectTrack(i);closeDialog();};$('detail-share').onclick=()=>shareTrack(i);$('detail-save').onclick=async()=>{if(offlineTracks.has(t.src)){await removeDownloads([i]);trackDetails(i);}else{closeDialog();downloadTracks([i]);}};}
 function shareTrack(i){const t=playlistData[i],u=new URL(location.protocol==='file:'?'https://suncatmeow.github.io/music/':location.href);u.search='';u.hash='';u.searchParams.set('track',slug(t));openDialog('Pass a little sunshine.',t.title,'Share this track');$('dialog-body').innerHTML='<label class="sr-only" for="share-url">Track link</label><input class="share-link" id="share-url" readonly><div class="dialog-actions"><button class="primary" id="copy-link">Copy link</button><button class="pill" id="native-share">Share with an app</button></div><p class="fine">This link opens the song, ready to play.</p>';$('share-url').value=u.href;$('copy-link').onclick=async()=>{try{if(!navigator.clipboard)throw Error();await navigator.clipboard.writeText(u.href);toast('Track link copied.');}catch{$('share-url').focus();$('share-url').select();toast('Select and copy the link above.');}};$('native-share').hidden=!navigator.share;$('native-share').onclick=async()=>{try{await navigator.share({title:`${t.title} | Suncat`,text:`Listen to ${t.title} by Suncat.`,url:u.href});}catch(e){if(e.name!=='AbortError')toast('Use Copy link to share this track.');}};}
 function openQueue(){openDialog('Stay for another song.',`${playQueue.length} tracks · ${shuffle?'Shuffled':'In order'} · Repeat ${repeat}`,'Your listening queue');$('dialog-body').innerHTML=playQueue.length?`<ol class="queue-list">${playQueue.map((i,pos)=>`<li><button data-queue="${i}" class="${pos===queuePos?'active':''}">${String(pos+1).padStart(2,'0')} · ${esc(playlistData[i].title)}${pos===queuePos?' · Selected':''}</button></li>`).join('')}</ol><p class="fine">Your queue follows the view you started playing. Browsing elsewhere keeps it intact.</p>`:'<p>Play a track to start your queue.</p>';$('dialog-body').querySelectorAll('[data-queue]').forEach(b=>b.onclick=()=>{selectTrack(Number(b.dataset.queue));closeDialog();});$('dialog-body').querySelector('.active')?.scrollIntoView({block:'nearest'});}
-function about(){openDialog('A world made by Suncat.','Independent music & game development · Houston, Texas','About the archive');$('dialog-body').innerHTML='<p>Suncat creates original rock, pop, blues, and avant-garde albums alongside soundtracks for other worlds. This is a home for the music: a place to listen, explore, and keep your favorites close.</p><p><a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" rel="noopener">Play Runestones Online ↗</a></p><h3>Your listening room</h3><p>Tap the visualizer name to explore eight ways of seeing sound. The shapes respond to the recording’s waveforms and frequency bands. Planetary and cymatic designs are artistic interpretations.</p><h3>Privacy & storage</h3><p>Your playlist, playback position, preferences, and saved audio stay in this browser. Clearing site data removes them. Playlist backups let you keep or move your favorites. This site uses Google Analytics for visit statistics.</p><h3>Keyboard</h3><p>Space: play / pause · Left / Right: seek 5 seconds · Shift + Left / Right: previous / next. Shortcuts apply when you’re outside buttons and form controls.</p><p class="fine">Suncat Archive 2.0 · Made for a little more listening.</p>';}
+function about(){openDialog('A world made by Suncat.','Independent music & game development · Houston, Texas','About the archive');$('dialog-body').innerHTML='<p>Suncat creates original rock, pop, blues, and avant-garde albums alongside soundtracks for other worlds. This is a home for the music: a place to listen, explore, and keep your favorites close.</p><p><a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" rel="noopener">Play Runestones Online ↗</a></p><h3>Your listening room</h3><p>Tap the visualizer name to explore eleven views. Spectrum, spectrogram, waveform and stereo scope show measured aspects of the signal. The other views are artistic interpretations. Frequency analysis uses a 4096-sample window, with no temporal smoothing. RMS and sample peaks use the latest window; they are not loudness, true-peak or sound-pressure meters. Measurements follow the selected sound processing, before your device’s speaker and room.</p><h3>Privacy & storage</h3><p>Your playlist, playback position, preferences, and saved audio stay in this browser. Clearing site data removes them. Playlist backups let you keep or move your favorites. This site uses Google Analytics for visit statistics.</p><h3>Keyboard</h3><p>Space: play / pause · Left / Right: seek 5 seconds · Shift + Left / Right: previous / next. Shortcuts apply when you’re outside buttons and form controls.</p><p class="fine">Suncat Archive 2.3 · Made for a little more listening.</p>';}
 function backupDialog(){openDialog('Keep your favorites close.','Export your playlist or add tracks from a previous backup.','Playlist backup');$('dialog-body').innerHTML='<div class="dialog-actions"><button class="primary" id="export-playlist">Export playlist</button><button class="pill" id="import-playlist">Import playlist</button><input id="import-file" type="file" accept="application/json,.json" hidden></div><p class="fine">Backups contain song references, not audio. Importing adds matching songs to your playlist without removing anything.</p>';$('export-playlist').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Suncat Archive',version:2,favorites},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Suncat-Playlist.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};$('import-playlist').onclick=()=>$('import-file').click();$('import-file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>1024*1024)throw Error();const d=JSON.parse(await file.text());if(!Array.isArray(d.favorites)||!d.favorites.every(s=>typeof s==='string'))throw Error();const before=favorites.length;favorites=[...new Set([...favorites,...d.favorites.filter(s=>bySrc.has(s))])];safeWrite('suncat_favorites_v2',favorites);renderLibrary();updateNow();toast(`${favorites.length-before} tracks added to your playlist.`);}catch{toast('Choose a valid Suncat playlist JSON backup.');}};}
 function validAudio(response){return response&&response.status===200&&!/text\/html|application\/json/i.test(response.headers.get('content-type')||'');}
 async function scanOffline(){
@@ -409,109 +428,117 @@ async function downloadTracks(indices){
 async function removeDownloads(indices){if(downloadJob){toast('Stop the current download before removing tracks.');return;}const wanted=new Set(indices.map(i=>normalURL(sourceURL(playlistData[i].src))));try{const names=await caches.keys();for(const name of [AUDIO_CACHE,LEGACY_CACHE]){if(!names.includes(name))continue;const cache=await caches.open(name);for(const req of await cache.keys())if(wanted.has(normalURL(req.url)))await cache.delete(req);}await scanOffline();toast('Downloads removed. Your playlist is kept.');}catch{toast('Downloads could not be removed. Try again.');}}
 function storageDialog(){openDialog('Music on this device.',`${offlineTracks.size} saved tracks`,'Manage downloads');$('dialog-body').innerHTML='<p>Saved tracks play without an internet connection. Your browser can reclaim this storage when space is low. Open “On device” to see what is available.</p><div class="dialog-actions"><button class="primary" id="show-downloads">View saved tracks</button><button class="pill" id="clear-downloads">Remove all downloads</button></div><p class="fine" id="storage-detail"></p>';$('show-downloads').onclick=()=>{changeView('offline');closeDialog();$('archive').scrollIntoView({behavior:reducedMotion?'auto':'smooth'});};$('clear-downloads').disabled=!!downloadJob||!offlineTracks.size;$('clear-downloads').onclick=()=>{openDialog('Remove downloaded audio?','Your playlist and preferences will stay.','Free device space');$('dialog-body').innerHTML='<p>You will need an internet connection to listen to these tracks again until you save them.</p><div class="dialog-actions"><button class="pill" id="keep-downloads">Keep downloads</button><button class="primary" id="confirm-clear">Remove downloads</button></div>';$('keep-downloads').onclick=closeDialog;$('confirm-clear').onclick=async()=>{closeDialog();await removeDownloads(playlistData.map((_,i)=>i));};};if(navigator.storage?.estimate)navigator.storage.estimate().then(e=>{if($('storage-detail'))$('storage-detail').textContent=`Browser storage used by this origin: approximately ${(e.usage/1048576).toFixed(0)} MB.`;}).catch(()=>{});}
 
-        const soundView = {
-            left: null,
-            right: null,
-            waveL: null,
-            waveR: null,
-            fftL: null,
-            fftR: null,
-            bands: [],
-            history: [],
-            lastFrame: -Infinity,
-            lastCapture: -Infinity,
-            source: '',
-            playhead: 0
-        };
+// The refined stage uses real band levels; no fabricated beat detector.
+function drawVisualBackdrop(w,h){
+ const gradient=ctx.createRadialGradient(w*.5,h*.47,0,w*.5,h*.47,Math.max(w,h)*.65);
+ gradient.addColorStop(0,'#101b24');gradient.addColorStop(1,'#020205');ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
+}
+function drawSpectrumFooter(w,h){
+ if(!soundView.bands.length)return;
+ const left=18,width=w-36;ctx.save();ctx.globalAlpha=.66;
+ for(let i=0;i<SV_BANDS;i++){const b=soundView.bands[i],level=soundView.levels[i];ctx.fillStyle=b.color;ctx.fillRect(left+b.x0*width,h-48-level*13,Math.max(.5,(b.x1-b.x0)*width-.5),level*13);}
+ ctx.globalAlpha=.65;ctx.fillStyle='#bccbd0';ctx.font='9px system-ui';ctx.fillText(`${Math.round(soundView.lowHz)} Hz`,left,h-65);ctx.textAlign='right';ctx.fillText(`${Math.round(soundView.highHz/1000)} kHz`,w-left,h-65);ctx.restore();
+}
 
-        const SV_BANDS = 64;
-        const SV_SECONDS = 6;
-        let SV_FPS = 24;
+// Shared, fixed-scale analysis. No per-song normalization or automatic gain.
+// Web Audio uses a periodic Blackman window and a 1/N FFT. Its mean square
+// gain is .42² + .5²/2 + .08²/2 = .3046. Positive-frequency power is doubled.
+const SV_BANDS=64, SV_SECONDS=6, SV_HISTORY_CAP=146, SV_WINDOW_POWER=.3046;
+let SV_FPS=24;
+const soundView={left:null,right:null,waveL:null,waveR:null,fftL:null,fftR:null,
+ bands:[],history:[],pool:[],poolIndex:0,lastFrame:-Infinity,lastCapture:-Infinity,
+ source:'',playhead:0,levels:new Float32Array(SV_BANDS),bandDb:new Float32Array(SV_BANDS),
+ bandPower:new Float64Array(SV_BANDS),metrics:{},peaks:new Float64Array(3),
+ delta:1/24,motionTime:0,sequence:0};
+const visualBudget={level:0,cost:0,slow:0,fast:0,lastRaf:NaN,rafGap:0};
+function svClamp(value,low=0,high=1){return Math.max(low,Math.min(high,value));}
+function svDb(power){return power>0?10*Math.log10(power):-Infinity;}
+function visualDetail(){return quality==='eco'||visualBudget.level>0;}
+function initVisualAnalysis(output){
+ const tap=audioCtx.createGain();tap.channelCount=2;tap.channelCountMode='explicit';tap.channelInterpretation='speakers';
+ const splitter=audioCtx.createChannelSplitter(2);output.connect(tap);tap.connect(splitter);
+ soundView.output=output;soundView.tap=tap;soundView.connected=true;
+ soundView.left=audioCtx.createAnalyser();soundView.right=audioCtx.createAnalyser();
+ for(const node of [soundView.left,soundView.right]){node.fftSize=4096;node.smoothingTimeConstant=0;}
+ splitter.connect(soundView.left,0);splitter.connect(soundView.right,1);
+ const size=soundView.left.fftSize,bins=size/2,binHz=audioCtx.sampleRate/size;
+ soundView.waveL=new Float32Array(size);soundView.waveR=new Float32Array(size);
+ soundView.fftL=new Float32Array(bins);soundView.fftR=new Float32Array(bins);soundView.power=new Float64Array(bins);
+ soundView.binHz=binHz;
+ // Snap adjacent edges to FFT bins. Each bin belongs to exactly one band;
+ // bass bands never pretend to resolve frequencies finer than the FFT.
+ let start=Math.max(1,Math.round(20/binHz));const last=Math.min(bins,Math.floor(20000/binHz));
+ soundView.bands=Array.from({length:SV_BANDS},(_,i)=>{
+  const end=Math.min(last,Math.max(start+1,Math.round(20*Math.pow(last*binHz/20,(i+1)/SV_BANDS)/binHz)));
+  const band={start,end,low:(start-.5)*binHz,high:(end-.5)*binHz};start=end;return band;
+ });
+ soundView.lowHz=soundView.bands[0].low;soundView.highHz=soundView.bands[SV_BANDS-1].high;
+ const span=Math.log(soundView.highHz/soundView.lowHz);
+ for(const b of soundView.bands){b.x0=Math.log(b.low/soundView.lowHz)/span;b.x1=Math.log(b.high/soundView.lowHz)/span;b.color=getFreqColor(Math.sqrt(b.low*b.high),80,62);}
+ soundView.pool=Array.from({length:SV_HISTORY_CAP},()=>({time:0,levels:new Float32Array(SV_BANDS)}));
+ resetVisualHistory();
+}
+function setAnalysisActive(active){
+ if(!soundView.tap||soundView.connected===active)return;
+ if(active)soundView.output.connect(soundView.tap);else soundView.output.disconnect(soundView.tap);
+ soundView.connected=active;
+}
+function resetVisualHistory(){
+ soundView.history.length=0;soundView.poolIndex=0;soundView.lastCapture=-Infinity;
+ soundView.lotusPhysics=null;soundView.motionTime=0;soundView.evolution=0;soundView.twist=0;soundView.resonanceTime=0;
+ soundView.sequence++;soundView.spectrogramSequence=-1;
+}
+function captureSpectrum(time){
+ const left=soundView.waveL,right=soundView.waveR,n=left.length;
+ let pL=0,pR=0,peakL=0,peakR=0,cross=0,sumL=0,sumR=0;
+ for(let i=0;i<n;i++){const l=left[i],r=right[i];pL+=l*l;pR+=r*r;cross+=l*r;sumL+=l;sumR+=r;peakL=Math.max(peakL,Math.abs(l));peakR=Math.max(peakR,Math.abs(r));}
+ const varianceL=Math.max(0,pL-sumL*sumL/n),varianceR=Math.max(0,pR-sumR*sumR/n);
+ const m=soundView.metrics;
+ m.rmsL=Math.sqrt(pL/n);m.rmsR=Math.sqrt(pR/n);m.peakL=peakL;m.peakR=peakR;
+ m.rmsDb=svDb((pL+pR)/(2*n));m.peakDb=svDb(Math.max(peakL,peakR)**2);
+ m.correlation=varianceL>1e-14&&varianceR>1e-14?svClamp((cross-sumL*sumR/n)/Math.sqrt(varianceL*varianceR),-1,1):null;
+ m.sideRatio=pL+pR>1e-14?svClamp((pL+pR-2*cross)/(2*(pL+pR))):0;
+ m.silent=Math.max(peakL,peakR)<1e-7;
+ soundView.delta=Number.isFinite(soundView.lastCapture)?Math.min(.15,Math.max(0,time-soundView.lastCapture)):1/SV_FPS;
+ if(!m.silent)soundView.motionTime+=soundView.delta;
+ let maxPower=0,peakBin=0,bass=0,mid=0,treble=0;
+ const peakPower=[0,0,0];soundView.peaks.fill(0);
+ for(let i=0;i<soundView.power.length;i++){
+  const p=(Math.pow(10,soundView.fftL[i]/10)+Math.pow(10,soundView.fftR[i]/10))*(i===0?1:2)/(2*SV_WINDOW_POWER);
+  soundView.power[i]=p;const hz=i*soundView.binHz;
+  if(i&&p>maxPower){maxPower=p;peakBin=i;}
+  if(hz>=20&&hz<soundView.highHz){const section=hz<250?0:hz<2000?1:2;if(p>peakPower[section]){peakPower[section]=p;soundView.peaks[section]=hz;}if(section===0)bass+=p;else if(section===1)mid+=p;else treble+=p;}
+ }
+ m.peakHz=maxPower>1e-12?peakBin*soundView.binHz:0;
+ m.bass=svClamp((svDb(bass)+90)/90);m.mid=svClamp((svDb(mid)+90)/90);m.treble=svClamp((svDb(treble)+90)/90);
+ for(let b=0;b<SV_BANDS;b++){
+  const band=soundView.bands[b];let p=0;for(let i=band.start;i<band.end;i++)p+=soundView.power[i];
+  soundView.bandPower[b]=p;soundView.bandDb[b]=svDb(p);soundView.levels[b]=svClamp((soundView.bandDb[b]+90)/90);
+ }
+ while(soundView.history.length&&(time-soundView.history[0].time>SV_SECONDS||soundView.history.length>=SV_HISTORY_CAP-1))soundView.history.shift();
+ const row=soundView.pool[soundView.poolIndex];soundView.poolIndex=(soundView.poolIndex+1)%SV_HISTORY_CAP;
+ row.time=time;row.levels.set(soundView.levels);soundView.history.push(row);soundView.sequence++;
+}
+function readVisualSignal(time){
+ soundView.left.getFloatTimeDomainData(soundView.waveL);soundView.right.getFloatTimeDomainData(soundView.waveR);
+ soundView.left.getFloatFrequencyData(soundView.fftL);soundView.right.getFloatFrequencyData(soundView.fftR);
+ captureSpectrum(time);soundView.lastCapture=time;
+}
+// Geometry may become sparser under load; the audio window and scales stay fixed.
+function updateVisualBudget(ms){
+ visualBudget.cost=visualBudget.cost*.9+ms*.1;
+ if(visualBudget.cost>10){visualBudget.slow++;visualBudget.fast=0;}else if(visualBudget.cost<4){visualBudget.fast++;visualBudget.slow=0;}else{visualBudget.slow=0;visualBudget.fast=0;}
+ if(visualBudget.slow>=12&&visualBudget.level<2){visualBudget.level++;visualBudget.slow=0;resizeCanvas();}
+ if(visualBudget.fast>=240&&visualBudget.level>0){visualBudget.level--;visualBudget.fast=0;resizeCanvas();}
+}
+function resetVisualBudget(){visualBudget.level=0;visualBudget.cost=0;visualBudget.slow=0;visualBudget.fast=0;visualBudget.lastRaf=NaN;visualBudget.rafGap=0;resizeCanvas();}
+const meshHistory=[];
+function visualHistory(){
+ const history=soundView.history,max=visualDetail()?18:30;meshHistory.length=0;
+ const step=Math.max(1,Math.ceil(history.length/max));for(let i=0;i<history.length;i+=step)meshHistory.push(history[i]);
+ if(history.length&&meshHistory[meshHistory.length-1]!==history[history.length-1])meshHistory.push(history[history.length-1]);return meshHistory;
+}
 
-        function initVisualAnalysis(output) {
-            // Explicit stereo upmix also gives mono files matching L/R channels.
-            const stereoTap = audioCtx.createGain();
-            stereoTap.channelCount = 2;
-            stereoTap.channelCountMode = 'explicit';
-            stereoTap.channelInterpretation = 'speakers';
-
-            const splitter = audioCtx.createChannelSplitter(2);
-            output.connect(stereoTap);
-            stereoTap.connect(splitter);
-
-            soundView.left = audioCtx.createAnalyser();
-            soundView.right = audioCtx.createAnalyser();
-
-            [soundView.left, soundView.right].forEach(node => {
-                node.fftSize = 4096;
-                node.smoothingTimeConstant = 0;
-            });
-
-            splitter.connect(soundView.left, 0);
-            splitter.connect(soundView.right, 1);
-
-            const size = soundView.left.fftSize;
-            const bins = soundView.left.frequencyBinCount;
-
-            soundView.waveL = new Float32Array(size);
-            soundView.waveR = new Float32Array(size);
-            soundView.fftL = new Float32Array(bins);
-            soundView.fftR = new Float32Array(bins);
-
-            const binHz = audioCtx.sampleRate / size;
-            const lowHz = 40;
-            const highHz = Math.min(16000, audioCtx.sampleRate / 2);
-
-            soundView.bands = Array.from({ length: SV_BANDS }, (_, i) => {
-                const low = lowHz * Math.pow(highHz / lowHz, i / SV_BANDS);
-                const high = lowHz * Math.pow(highHz / lowHz, (i + 1) / SV_BANDS);
-
-                const start = Math.min(bins - 1, Math.max(1, Math.floor(low / binHz)));
-                const end = Math.min(bins, Math.max(start + 1, Math.ceil(high / binHz)));
-
-                return { start, end };
-            });
-
-            soundView.history = [];
-            soundView.lastCapture = -Infinity;
-        }
-
-        function svClamp(value, low = 0, high = 1) {
-            return Math.max(low, Math.min(high, value));
-        }
-
-        function captureSpectrum(time) {
-            const levels = new Float32Array(SV_BANDS);
-
-            for (let band = 0; band < SV_BANDS; band++) {
-                const { start, end } = soundView.bands[band];
-                let power = 0;
-
-                for (let bin = start; bin < end; bin++) {
-                    // Combine channel powers, avoiding mono phase cancellation.
-                    power += (
-                        Math.pow(10, soundView.fftL[bin] / 10) +
-                        Math.pow(10, soundView.fftR[bin] / 10)
-                    ) * 0.5;
-                }
-
-                const meanPower = power / (end - start);
-                const db = 10 * Math.log10(Math.max(meanPower, 1e-12));
-
-                // Fixed display scale: -90 dB at the floor, 0 dB at the top.
-                levels[band] = svClamp((db + 90) / 90);
-            }
-
-            soundView.history.push({ time, levels });
-            soundView.history = soundView.history.filter(row =>
-                time - row.time <= SV_SECONDS
-            );
-
-            // Hard memory bound as well as the time bound.
-            while (soundView.history.length > SV_FPS * SV_SECONDS + 2) {
-                soundView.history.shift();
-            }
-        }
         function safeMod(n, m) {
             return ((n % m) + m) % m;
         }
@@ -523,47 +550,12 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
         }
 
-        // --- REPLACED: getDominantFrequency is now getChordGradient ---
-        function getChordGradient(ctx, w, h, lightness = 50) {
-            // Draw a gradient diagonally across the current drawing area
-            const grad = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
-
-            if (!soundView.fftL || !audioCtx) {
-                grad.addColorStop(0, `hsla(0, 0%, ${lightness}%, 1)`);
-                grad.addColorStop(1, `hsla(0, 0%, ${lightness}%, 1)`);
-                return grad;
-            }
-
-            const bins = soundView.fftL.length;
-            const binHz = audioCtx.sampleRate / soundView.left.fftSize;
-
-            let maxB = -Infinity, binB = 1;
-            let maxM = -Infinity, binM = 1;
-            let maxT = -Infinity, binT = 1;
-
-            // Find loudest note in Bass, Mids, and Treble
-            for (let i = 1; i < bins; i++) {
-                const power = Math.pow(10, soundView.fftL[i] / 10) + Math.pow(10, soundView.fftR[i] / 10);
-                const hz = i * binHz;
-
-                if (hz >= 20 && hz < 250) {
-                    if (power > maxB) { maxB = power; binB = i; }
-                } else if (hz >= 250 && hz < 2000) {
-                    if (power > maxM) { maxM = power; binM = i; }
-                } else if (hz >= 2000 && hz < 16000) {
-                    if (power > maxT) { maxT = power; binT = i; }
-                }
-            }
-
-            const hzB = maxB !== -Infinity ? binB * binHz : 65;   
-            const hzM = maxM !== -Infinity ? binM * binHz : 261;  
-            const hzT = maxT !== -Infinity ? binT * binHz : 1046; 
-
-            grad.addColorStop(0, getFreqColor(hzT, 100, lightness, 1));
-            grad.addColorStop(0.5, getFreqColor(hzM, 100, lightness, 1));
-            grad.addColorStop(1, getFreqColor(hzB, 100, lightness, 1));
-            
-            return grad;
+        // Pitch-class colors are decorative; these are spectral peaks, not chords.
+        function getChordGradient(ctx,w,h,lightness=50){
+            const grad=ctx.createLinearGradient(-w/2,-h/2,w/2,h/2);
+            grad.addColorStop(0,getFreqColor(soundView.peaks[2],90,lightness));
+            grad.addColorStop(.5,getFreqColor(soundView.peaks[1],90,lightness));
+            grad.addColorStop(1,getFreqColor(soundView.peaks[0],90,lightness));return grad;
         }
 
         // ----------------------------------------------------
@@ -585,7 +577,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             ctx.stroke();
 
             ctx.beginPath();
-            for (let i = 0; i < left.length; i++) {
+            for (let i = Math.max(0,left.length-Math.round(audioCtx.sampleRate*.02)); i < left.length; i++) {
                 // X axis = Stereo Width (Difference)
                 // Y axis = Mono Volume (Shared center signal)
                 const side = (left[i] - right[i]) * 0.5;
@@ -595,7 +587,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
                 const x = side * scale;
                 const y = -mid * scale; 
 
-                if (i === 0) ctx.moveTo(x, y);
+                if (i === Math.max(0,left.length-Math.round(audioCtx.sampleRate*.02))) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             }
 
@@ -603,8 +595,8 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             ctx.strokeStyle = grad;
             
             // Glowing shadow layer
-            ctx.lineWidth = 8;
-            ctx.globalAlpha = 0.3;
+            ctx.lineWidth = visualDetail()?2:4;
+            ctx.globalAlpha = 0.2;
             ctx.stroke();
 
             // Bright core layer
@@ -616,100 +608,13 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
         }
         
         // ----------------------------------------------------
-        // MODE 1: SOUND SCULPTURE (Full 3-Axis X, Y, Z Tumble)
-        // ----------------------------------------------------
-        function drawSoundSculpture(w, h) {
-            const left = soundView.waveL;
-            const right = soundView.waveR;
-            
-            const grad = getChordGradient(ctx, w, h, 60);
-
-            const delay = Math.max(1, Math.round(audioCtx.sampleRate * 0.0007));
-            const count = left.length - delay * 2;
-            const step = Math.max(1, Math.floor(count / 400)); 
-            const scale = Math.min(w, h) * 0.35;
-
-            // --- THE 3-AXIS TUMBLE MATH ---
-            // Different speeds for X, Y, and Z so it never repeats the exact same angle
-            const tX = audioPlayer.currentTime * 0.15; 
-            const tY = audioPlayer.currentTime * 0.25; 
-            const tZ = audioPlayer.currentTime * 0.10; 
-
-            const cx = Math.cos(tX), sx = Math.sin(tX);
-            const cy = Math.cos(tY), sy = Math.sin(tY);
-            const cz = Math.cos(tZ), sz = Math.sin(tZ);
-
-            const points = [];
-            for (let i = 0; i < count; i += step) {
-                // 1. Raw 3D placement based on audio delay
-                const rawX = (left[i] + right[i]) * 0.5;
-                const rawY = (left[i + delay] + right[i + delay]) * 0.5;
-                const rawZ = (left[i + delay * 2] + right[i + delay * 2]) * 0.5;
-
-                // 2. Rotate around X axis
-                const y1 = rawY * cx - rawZ * sx;
-                const z1 = rawY * sx + rawZ * cx;
-
-                // 3. Rotate around Y axis
-                const x2 = rawX * cy + z1 * sy;
-                const z2 = -rawX * sy + z1 * cy;
-
-                // 4. Rotate around Z axis
-                const x3 = x2 * cz - y1 * sz;
-                const y3 = x2 * sz + y1 * cz;
-
-                const perspective = 3.8 / Math.max(1.2, 3.8 + z2);
-
-                points.push({
-                    x: x3 * scale * perspective,
-                    y: -y3 * scale * perspective,
-                    depth: z2, // Save the final Z depth for sorting back-to-front
-                    perspective
-                });
-            }
-
-            const segments = [];
-            for (let i = 1; i < points.length; i++) {
-                segments.push({
-                    a: points[i - 1], b: points[i],
-                    depth: (points[i - 1].depth + points[i].depth) * 0.5
-                });
-            }
-
-            segments.sort((a, b) => b.depth - a.depth);
-
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.strokeStyle = grad;
-            ctx.fillStyle = grad;
-
-            for (const { a, b, depth } of segments) {
-                const near = svClamp(0.5 - depth * 0.25);
-                
-                ctx.globalAlpha = 0.1 + near * 0.8;
-                ctx.lineWidth = 0.6 + near * 1.5;
-                
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(b.x, b.y);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, 0.7 * b.perspective, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            ctx.globalAlpha = 1.0;
-            ctx.globalCompositeOperation = 'source-over';
-        }
-
-        // ----------------------------------------------------
         // MODE 2: THE SPECTRAL GLOBE
         // ----------------------------------------------------
         function drawSpectralGlobe(w, h, now) {
             function projectGlobe(bandIndex, level, age) {
                 const progress = age / SV_SECONDS; 
                 const lat = (0.5 - progress) * 2.6; 
-                const lon = (bandIndex / SV_BANDS) * Math.PI * 2 + (now * 0.4);
+                const lon = (bandIndex / SV_BANDS) * Math.PI * 2 + (soundView.motionTime * 0.4);
 
                 const baseR = Math.min(w, h) * 0.26;
                 const maxLevelR = Math.min(w, h) * 0.22;
@@ -740,11 +645,12 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             // Longitude (Vertical rings) - Optimized batching
             ctx.globalAlpha = 0.15;
             ctx.lineWidth = 1;
-            for (let band = 0; band < SV_BANDS; band++) {
+            for (let band = 0; band < SV_BANDS; band += visualDetail()?4:2) {
                 ctx.beginPath();
                 let started = false;
-                for (let i = 0; i < soundView.history.length; i++) {
-                    const row = soundView.history[i];
+                const rows=visualHistory();
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
                     const age = now - row.time;
                     if (age < 0 || age > SV_SECONDS) continue;
                     
@@ -756,7 +662,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             }
 
             // Latitude (Horizontal rings) - Optimized batching
-            for (const row of soundView.history) {
+            for (const row of visualHistory()) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
                 const freshness = 1 - age / SV_SECONDS; 
@@ -801,8 +707,8 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             stereoVariance /= (soundView.waveL.length / 10);
 
             if (!soundView.evolution) { soundView.evolution = 0; soundView.twist = 0; }
-            soundView.evolution += (bassEnergy + trebleEnergy) * 0.05 + 0.005; 
-            soundView.twist += (stereoVariance * 5 - soundView.twist) * 0.05; 
+            soundView.evolution += soundView.metrics.silent?0:((bassEnergy+trebleEnergy)*1.2)*soundView.delta; 
+            soundView.twist += (stereoVariance * 5 - soundView.twist) * (1-Math.exp(-1.23*soundView.delta)); 
 
             const wSphere = (Math.sin(soundView.evolution * 0.3) + 1) * 0.5 * bassEnergy * 2;
             const wRibbon = (Math.cos(soundView.evolution * 0.4) + 1) * 0.5 * trebleEnergy * 2;
@@ -852,7 +758,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             ctx.globalCompositeOperation = 'lighter';
             ctx.strokeStyle = grad;
 
-            for (const row of soundView.history) {
+            for (const row of visualHistory()) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
                 const freshness = 1 - age / SV_SECONDS; 
@@ -895,14 +801,14 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             drawSpectralGlobe(w, h, now);
             ctx.restore();
 
-            const orbit1 = now * 0.8;
+            const orbit1 = soundView.motionTime * 0.8;
             ctx.save();
             ctx.translate(Math.cos(orbit1) * r1, Math.sin(orbit1) * r1);
             ctx.scale(0.25, 0.25); 
             drawStereoScope(w, h);
             ctx.restore();
 
-            const orbit2 = (now * 0.4) + Math.PI; 
+            const orbit2 = (soundView.motionTime * 0.4) + Math.PI; 
             ctx.save();
             ctx.translate(Math.cos(orbit2) * r2, Math.sin(orbit2) * r2);
             ctx.scale(0.35, 0.35); 
@@ -929,8 +835,8 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             stereoVariance /= (soundView.waveL.length / 10);
 
             if (!soundView.evolution) { soundView.evolution = 0; soundView.twist = 0; }
-            soundView.evolution += (bassEnergy + trebleEnergy) * 0.05 + 0.005; 
-            soundView.twist += (stereoVariance * 5 - soundView.twist) * 0.05; 
+            soundView.evolution += soundView.metrics.silent?0:((bassEnergy+trebleEnergy)*1.2)*soundView.delta; 
+            soundView.twist += (stereoVariance * 5 - soundView.twist) * (1-Math.exp(-1.23*soundView.delta)); 
 
             const wSphere = (Math.sin(soundView.evolution * 0.3) + 1) * 0.5 * bassEnergy * 2;
             const wRibbon = (Math.cos(soundView.evolution * 0.4) + 1) * 0.5 * trebleEnergy * 2;
@@ -978,7 +884,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             const lowHz = 40;
             const highHz = Math.min(16000, audioCtx.sampleRate / 2);
 
-            for (const row of soundView.history) {
+            for (const row of visualHistory()) {
                 const age = now - row.time;
                 if (age < 0 || age > SV_SECONDS) continue;
                 const freshness = 1 - age / SV_SECONDS; 
@@ -1023,7 +929,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             }
             ctx.stroke();
 
-            const uPlanet1 = safeMod(now * 0.12, 1.0);
+            const uPlanet1 = safeMod(soundView.motionTime * 0.12, 1.0);
             const p1Pos = getGravityPoint(uPlanet1, orbit1V, 0, orbit1Rad);
             
             ctx.save();
@@ -1032,7 +938,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             drawStereoScope(w, h);
             ctx.restore();
 
-            const uPlanet2 = safeMod(now * 0.06 + 0.5, 1.0); 
+            const uPlanet2 = safeMod(soundView.motionTime * 0.06 + 0.5, 1.0); 
             const p2Pos = getGravityPoint(uPlanet2, orbit2V, 0, orbit2Rad);
             
             ctx.save();
@@ -1071,21 +977,21 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             const maxRadius = Math.min(w, h) * 0.45;
             const layersData = [];
 
-            // 3. Data Extraction: Find the exact notes and energy for each layer
+            // 3. Spectral peaks and energy for each layer (not note detection)
             for (let i = 0; i < 4; i++) {
                 const def = layerDefs[i];
                 let totalEnergy = 0;
                 
                 // CRITICAL FIX: Set to -Infinity to properly catch negative dB FFT values!
-                let peak1Val = -Infinity, peak1Bin = 0;
-                let peak2Val = -Infinity, peak2Bin = 0;
+                let peak1Val = 1e-12, peak1Bin = 0;
+                let peak2Val = 1e-12, peak2Bin = 0;
                 
                 const startBin = soundView.bands[def.startBand].start;
                 const endBin = soundView.bands[def.endBand - 1].end;
                 
-                // Scan the raw audio to find the TWO dominant notes playing in this range
+                // Two strongest bins can belong to the same tone; used only for color.
                 for (let b = startBin; b < endBin; b++) {
-                    const power = soundView.fftL[b] + soundView.fftR[b];
+                    const power = soundView.power[b];
                     if (power > peak1Val) {
                         peak2Val = peak1Val; peak2Bin = peak1Bin;
                         peak1Val = power; peak1Bin = b;
@@ -1101,9 +1007,9 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
                 totalEnergy /= (def.endBand - def.startBand);
                 
                 // Convert the raw array bins into actual Hz frequencies
-                // If it's pure silence (bin 0), we default to a baseline frequency so it doesn't turn gray
-                const hz1 = peak1Bin > 0 ? peak1Bin * (audioCtx.sampleRate / soundView.left.fftSize) : 440;
-                const hz2 = peak2Bin > 0 ? peak2Bin * (audioCtx.sampleRate / soundView.left.fftSize) : 660;
+                // Silence has no pitch and uses neutral color.
+                const hz1 = peak1Bin > 0 ? peak1Bin * (audioCtx.sampleRate / soundView.left.fftSize) : 0;
+                const hz2 = peak2Bin > 0 ? peak2Bin * (audioCtx.sampleRate / soundView.left.fftSize) : 0;
                 
                 layersData.push({
                     energy: totalEnergy,
@@ -1116,15 +1022,15 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             // 4. Rhythm & Wind Physics (The Sway)
             // The rhythm (Bass + Mid energy) aggressively pushes the target rotation forward
             const rhythmPush = (layersData[0].energy + layersData[1].energy) * 0.08;
-            soundView.lotusPhysics.targetRot += rhythmPush + 0.005; 
+            soundView.lotusPhysics.targetRot += soundView.metrics.silent?0:rhythmPush*24*soundView.delta; 
 
             const phys = soundView.lotusPhysics;
             // The center layer snaps to the rhythm quickly
-            phys.layers[0] += (phys.targetRot - phys.layers[0]) * 0.25; 
+            phys.layers[0] += (phys.targetRot - phys.layers[0]) * (1-Math.pow(1-0.25,soundView.delta*24)); 
             // Outer layers drag behind the center (wind resistance) creating the twisting effect
-            phys.layers[1] += (phys.layers[0] - phys.layers[1]) * 0.15; 
-            phys.layers[2] += (phys.layers[1] - phys.layers[2]) * 0.08; 
-            phys.layers[3] += (phys.layers[2] - phys.layers[3]) * 0.04; 
+            phys.layers[1] += (phys.layers[0] - phys.layers[1]) * (1-Math.pow(1-0.15,soundView.delta*24)); 
+            phys.layers[2] += (phys.layers[1] - phys.layers[2]) * (1-Math.pow(1-0.08,soundView.delta*24)); 
+            phys.layers[3] += (phys.layers[2] - phys.layers[3]) * (1-Math.pow(1-0.04,soundView.delta*24)); 
 
             // 5. Drawing the Mandala (From outside in, so the small petals overlap the big ones)
             ctx.globalCompositeOperation = 'source-over';
@@ -1147,7 +1053,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
                     ctx.rotate(angle + interlockOffset);
                     
                     // The Shimmering Note-Gradient
-                    const shimmerOffset = Math.sin(now * 4 + p + i) * 0.25;
+                    const shimmerOffset = Math.sin(soundView.motionTime * 4 + p + i) * 0.25;
                     const grad = ctx.createLinearGradient(0, 0, 0, petalLen);
                     grad.addColorStop(0, data.color1);
                     // The middle color shifts back and forth, creating a boiling/shimmering look
@@ -1184,35 +1090,22 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
         }
 
         // ----------------------------------------------------
-        // MODE 7: CYMATIC RESONANCE FIELD (The Scientist's Masterpiece)
+        // MODE 7: CYMATIC-INSPIRED ART (not a plate or fluid simulation)
         // ----------------------------------------------------
         function drawCymaticResonance(w, h, now) {
-            // [1] Extract exact frequency energy to drive standing waves
-            let bass = 0, mid = 0, treble = 0;
-            const bins = soundView.fftL.length;
-            const binHz = audioCtx.sampleRate / soundView.left.fftSize;
-
-            for (let i = 1; i < bins; i++) {
-                const hz = i * binHz;
-                const power = Math.max(0, (soundView.fftL[i] + soundView.fftR[i] + 180) / 180);
-                if (hz < 150) bass += power;
-                else if (hz < 1200) mid += power;
-                else if (hz < 8000) treble += power;
-            }
-            bass /= 10; mid /= 30; treble /= 80;
-
-            if (!soundView.resonanceTime) soundView.resonanceTime = 0;
-            soundView.resonanceTime += (bass + mid) * 0.1 + 0.02;
+            const {bass,mid,treble}=soundView.metrics;
+            if (!soundView.resonanceTime) soundView.resonanceTime=0;
+            if(!soundView.metrics.silent)soundView.resonanceTime+=(bass+mid)*2.4*soundView.delta;
 
             const scale = Math.min(w, h) * 0.45;
             const t = soundView.resonanceTime;
 
             // Camera spin
-            const ca = Math.cos(now * 0.2), sa = Math.sin(now * 0.2);
+            const ca = Math.cos(soundView.motionTime * 0.2), sa = Math.sin(soundView.motionTime * 0.2);
             const ct = Math.cos(0.7), st = Math.sin(0.7); // Tilt
 
             function projectCymaticNode(radius, angle) {
-                // PHYSICS: Standing Wave Equations (Approximating Bessel Functions)
+                // Stylized radial modes; frequency-region energy controls displacement.
                 // Bass creates slow, wide circular ripples (Node = 2)
                 const bassRipple = Math.sin(radius * 12 - t * 2) * Math.cos(angle * 2) * (bass * 0.3);
                 // Mids create tighter, hexagonal standing waves (Node = 6)
@@ -1220,7 +1113,7 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
                 // Treble creates micro-flutter at the edges (Node = 12)
                 const trebleRipple = Math.sin(radius * 40) * Math.cos(angle * 12) * (treble * 0.1);
 
-                // Z is the physical height of the fluid/plate
+                // Artistic height of the mesh
                 const zDisp = bassRipple + midRipple + trebleRipple;
 
                 const rawX = radius * Math.cos(angle);
@@ -1248,8 +1141,8 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
             ctx.strokeStyle = grad;
             ctx.lineWidth = 1.2;
 
-            const rings = 16;
-            const slices = 64;
+            const rings = visualDetail()?10:16;
+            const slices = visualDetail()?40:64;
 
             // Draw Concentric Resonance Rings
             for (let r = 1; r <= rings; r++) {
@@ -1287,6 +1180,120 @@ function storageDialog(){openDialog('Music on this device.',`${offlineTracks.siz
         // RENDER LOOP
         // ----------------------------------------------------
 
+// Reuse vertex and face storage; pitch colors cached with the frequency bands.
+const ribbonCache={n:0,channels:[],faces:[]};
+function drawSoundSculpture(w,h){
+ const left=soundView.waveL,right=soundView.waveR,bands=soundView.levels;
+ const n=visualDetail()?80:144,size=Math.min(w,h)*.32,t=soundView.motionTime;
+ if(ribbonCache.n!==n){
+  ribbonCache.n=n;ribbonCache.channels=[0,1].map(()=>Array.from({length:n+1},()=>({x:0,y:0,z:0,half:0,bin:0})));
+  ribbonCache.faces=[];for(let c=0;c<2;c++)for(let i=1;i<=n;i++)ribbonCache.faces.push({a:ribbonCache.channels[c][i-1],b:ribbonCache.channels[c][i],z:0});
+ }
+ const ca=Math.cos(t*.12),sa=Math.sin(t*.12);
+ for(let channel=0;channel<2;channel++){
+  const wave=channel?right:left,points=ribbonCache.channels[channel];
+  for(let i=0;i<=n;i++){
+   const u=i/n,a=u*Math.PI*4+channel*Math.PI,bin=Math.min(63,Math.floor(u*64));
+   const sample=wave[Math.min(wave.length-1,Math.floor(u*(wave.length-1)))];
+   const radius=size*(.66+bands[bin]*.44+sample*.6);
+   const x=radius*Math.cos(a),y=size*(u-.5)*1.3+sample*size*.55,z=radius*Math.sin(a);
+   const rx=x*ca+z*sa,rz=-x*sa+z*ca,ry=y*.9-rz*.22,perspective=3/(3+rz/size),p=points[i];
+   p.x=rx*perspective;p.y=ry*perspective;p.z=rz;p.half=(2.2+bands[bin]*5.5)*perspective;p.bin=bin;
+  }
+ }
+ for(const f of ribbonCache.faces)f.z=(f.a.z+f.b.z)/2;
+ ribbonCache.faces.sort((a,b)=>b.z-a.z);
+ ctx.globalCompositeOperation='source-over';
+ for(const f of ribbonCache.faces){const {a,b}=f,near=svClamp(.5-f.z/size*.45);
+  ctx.globalAlpha=.35+near*.6;ctx.fillStyle=soundView.bands[b.bin].color;ctx.beginPath();ctx.moveTo(a.x-a.half,a.y);ctx.lineTo(b.x-b.half,b.y);ctx.lineTo(b.x+b.half,b.y);ctx.lineTo(a.x+a.half,a.y);ctx.closePath();ctx.fill();
+  if(!visualDetail()){ctx.strokeStyle='#daeeff';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+ }
+ ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+}
+
+function meterText(){
+ const m=soundView.metrics,db=v=>Number.isFinite(v)?v.toFixed(1):'−∞';
+ return `RMS ${db(m.rmsDb)} · Peak ${db(m.peakDb)} dBFS`;
+}
+function measurementPlot(w,h){return {x:-w/2+35,y:-h/2+43,w:w-53,h:Math.max(40,h-112)};}
+function labelFrequency(hz){return hz>=1000?`${Math.round(hz/1000)}k`:`${Math.round(hz)}`;}
+function measurementHeader(w,h,label){
+ ctx.fillStyle='#d5e1e4';ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText(meterText(),-w/2+14,-h/2+18);
+ ctx.fillStyle='#a0b3ba';ctx.fillText(label,-w/2+14,-h/2+33);
+}
+function frequencyX(hz,p){return p.x+Math.log(hz/soundView.lowHz)/Math.log(soundView.highHz/soundView.lowHz)*p.w;}
+function spectrumAxes(p){
+ ctx.font='9px system-ui';ctx.lineWidth=1;
+ for(const db of [0,-30,-60,-90]){const y=p.y-db/90*p.h;ctx.strokeStyle='#d4e5ed18';ctx.beginPath();ctx.moveTo(p.x,y);ctx.lineTo(p.x+p.w,y);ctx.stroke();ctx.fillStyle='#95a8b0';ctx.textAlign='right';ctx.fillText(String(db),p.x-6,y+3);}
+ ctx.textAlign='center';for(const hz of [100,1000,10000]){if(hz<soundView.lowHz||hz>soundView.highHz)continue;const x=frequencyX(hz,p);if(x>p.x+p.w-40)continue;ctx.fillStyle='#95a8b0';ctx.fillText(labelFrequency(hz),x,p.y+p.h+14);}
+ ctx.textAlign='left';ctx.fillText(labelFrequency(soundView.lowHz)+' Hz',p.x,p.y+p.h+14);ctx.textAlign='right';ctx.fillText(labelFrequency(soundView.highHz),p.x+p.w,p.y+p.h+14);ctx.textAlign='left';
+}
+function drawFrequencySpectrum(w,h){
+ const p=measurementPlot(w,h);measurementHeader(w,h,'Band RMS · fixed scale · stereo power average');spectrumAxes(p);
+ for(let i=0;i<SV_BANDS;i++){
+  const band=soundView.bands[i],height=soundView.levels[i]*p.h,x=p.x+band.x0*p.w,width=(band.x1-band.x0)*p.w;
+  ctx.fillStyle=band.color;ctx.globalAlpha=.82;ctx.fillRect(x,p.y+p.h-height,Math.max(.5,width-.7),height);
+ }
+ ctx.globalAlpha=1;
+}
+const spectrogramCanvas=document.createElement('canvas');spectrogramCanvas.width=144;spectrogramCanvas.height=SV_BANDS;
+const spectrogramContext=spectrogramCanvas.getContext('2d'),spectrogramImage=spectrogramContext.createImageData(144,SV_BANDS);
+const spectrogramPalette=Array.from({length:256},(_,i)=>{
+ const u=i/255,stops=[[3,6,13],[28,43,98],[25,153,183],[125,225,203],[255,222,140]],v=u*4,k=Math.min(3,Math.floor(v)),f=v-k;
+ return stops[k].map((a,c)=>Math.round(a+(stops[k+1][c]-a)*f));
+});
+function updateSpectrogram(now){
+ if(soundView.spectrogramSequence===soundView.sequence)return;
+ soundView.spectrogramSequence=soundView.sequence;
+ const history=soundView.history,data=spectrogramImage.data;let row=0;
+ for(let x=0;x<144;x++){
+  const time=now-SV_SECONDS+(x+.5)/144*SV_SECONDS;
+  while(row+1<history.length&&history[row+1].time<=time)row++;
+  const item=history[row],valid=item&&item.time<=time&&time-item.time<=.15;
+  for(let b=0;b<SV_BANDS;b++){const offset=(b*144+x)*4,c=spectrogramPalette[valid?Math.round(item.levels[b]*255):0];data[offset]=c[0];data[offset+1]=c[1];data[offset+2]=c[2];data[offset+3]=255;}
+ }
+ spectrogramContext.putImageData(spectrogramImage,0,0);
+}
+function drawSpectrogram(w,h,now){
+ const p=measurementPlot(w,h);measurementHeader(w,h,'Spectrogram · band RMS · −90 → 0 dBFS');updateSpectrogram(now);
+ ctx.imageSmoothingEnabled=false;
+ for(let b=0;b<SV_BANDS;b++){
+  const band=soundView.bands[b],y=p.y+(1-band.x1)*p.h,height=(band.x1-band.x0)*p.h;
+  ctx.drawImage(spectrogramCanvas,0,b,144,1,p.x,y,p.w,height+.25);
+ }
+ ctx.fillStyle='#a7bac0';ctx.font='9px system-ui';ctx.textAlign='right';
+ for(const hz of [100,1000,10000]){if(hz<soundView.lowHz||hz>soundView.highHz)continue;const f=Math.log(hz/soundView.lowHz)/Math.log(soundView.highHz/soundView.lowHz);ctx.fillText(labelFrequency(hz),p.x-5,p.y+(1-f)*p.h+3);}
+ ctx.textAlign='left';ctx.fillText('−6 s',p.x,p.y+p.h+14);ctx.textAlign='center';ctx.fillText('−3 s',p.x+p.w/2,p.y+p.h+14);ctx.textAlign='right';ctx.fillText('Now',p.x+p.w,p.y+p.h+14);ctx.textAlign='left';
+ // Brightness increases with measured power; the colors do not encode pitch.
+ for(let i=0;i<32;i++){const c=spectrogramPalette[Math.round(i/31*255)];ctx.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;ctx.fillRect(p.x+i*p.w/32,p.y+p.h+22,p.w/32+1,3);}
+}
+function waveformWindow(){
+ const count=Math.min(soundView.waveL.length,Math.round(audioCtx.sampleRate*.02)),limit=soundView.waveL.length-count;
+ const wave=soundView.metrics.rmsL>=soundView.metrics.rmsR?soundView.waveL:soundView.waveR;
+ // A common trigger preserves the timing and phase relationship of L/R.
+ let start=limit;for(let i=limit;i>Math.max(0,limit-count);i--)if(wave[i-1]<=0&&wave[i]>0){start=i;break;}
+ return {start,count};
+}
+function drawStereoWaveform(w,h){
+ const p=measurementPlot(w,h),window=waveformWindow();measurementHeader(w,h,'Stereo waveform · 20 ms · fixed ±1 amplitude');
+ ctx.font='10px system-ui';
+ for(let channel=0;channel<2;channel++){
+  const wave=channel?soundView.waveR:soundView.waveL,y=p.y+p.h*(channel?.75:.25),scale=p.h*.23,color=channel?'#f0bc71':'#7dded8';
+  ctx.strokeStyle='#d4e5ed24';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.x,y);ctx.lineTo(p.x+p.w,y);ctx.stroke();
+  ctx.fillStyle=color;ctx.fillText(channel?'R':'L',p.x-18,y+3);ctx.strokeStyle=color;ctx.beginPath();
+  // Min/max per pixel preserves brief peaks when several samples share a column.
+  const columns=Math.max(1,Math.floor(p.w));
+  for(let x=0;x<columns;x++){
+   const from=window.start+Math.floor(x/columns*window.count),to=window.start+Math.min(window.count,Math.max(Math.floor((x+1)/columns*window.count),Math.floor(x/columns*window.count)+1));
+   let min=Infinity,max=-Infinity;for(let i=from;i<to;i++){min=Math.min(min,wave[i]);max=Math.max(max,wave[i]);}
+   ctx.moveTo(p.x+x,y-max*scale);ctx.lineTo(p.x+x,y-min*scale+.35);
+  }
+  ctx.stroke();
+ }
+ ctx.fillStyle='#a7bac0';ctx.fillText('0 ms',p.x,p.y+p.h+14);ctx.textAlign='right';ctx.fillText('20 ms',p.x+p.w,p.y+p.h+14);ctx.textAlign='left';
+}
+const visualDrawers=[drawStereoScope,drawSoundSculpture,drawSpectralGlobe,drawSolarSystem,drawAmorphousEntity,drawGravitationalSystem,drawSpectralLotus,drawCymaticResonance,drawFrequencySpectrum,drawSpectrogram,drawStereoWaveform];
+
 function initApp(){
  paintIcons();$('all-count').textContent=playlistData.length;$('albums-count').textContent=albums.length;$('catalog-count').textContent=`${albums.length} collections / ${playlistData.length} tracks`;
  $('volume').value=volume;audioPlayer.volume=volume;$('quality').value=quality;SV_FPS=quality==='eco'?15:24;$('sound').value=soundMode;
@@ -1310,9 +1317,9 @@ function initApp(){
  audioPlayer.addEventListener('play',()=>{updateTransport();startVisuals();});audioPlayer.addEventListener('playing',()=>{status();updateTransport();startVisuals();});audioPlayer.addEventListener('pause',()=>{stopVisuals();updateTransport();saveSession();});
  audioPlayer.addEventListener('waiting',()=>{if(!audioPlayer.paused)status('Buffering…');});audioPlayer.addEventListener('ended',()=>nextTrack(true));
  audioPlayer.addEventListener('error',()=>{if(currentTrackIndex>=0){status(navigator.onLine?'This recording is unavailable. Try Play again or choose another track.':'This song is not saved here. Choose a track from On device.');stopVisuals();updateTransport();}});
- $('visual-select').onchange=e=>chooseVisual(Number(e.target.value));$('cycle-visual').onclick=()=>chooseVisual((visualizerMode+1)%8);
- $('quality').onchange=e=>{quality=e.target.value;SV_FPS=quality==='eco'?15:24;resizeCanvas();savePrefs();};
- $('sound').onchange=e=>{soundMode=e.target.value;if(dryGain){dryGain.gain.setTargetAtTime(soundMode==='original'?1:0,audioCtx.currentTime,.05);wetGain.gain.setTargetAtTime(soundMode==='enhanced'?1:0,audioCtx.currentTime,.05);}savePrefs();};
+ $('visual-select').onchange=e=>chooseVisual(Number(e.target.value));$('cycle-visual').onclick=()=>chooseVisual((visualizerMode+1)%visualNames.length);
+ $('quality').onchange=e=>{quality=e.target.value;SV_FPS=quality==='eco'?15:24;resetVisualBudget();savePrefs();};
+ $('sound').onchange=e=>{soundMode=e.target.value;applySoundMode();savePrefs();};
  $('background-mode').onclick=()=>{saveSession();isBackgroundMode=!isBackgroundMode;savePrefs();safeWrite('suncat_bg_mode',isBackgroundMode);location.reload();};
  $('fullscreen').hidden=!document.fullscreenEnabled;$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer-container').requestFullscreen();}catch{toast('Full-screen view isn’t available in this browser.');}};
  document.addEventListener('fullscreenchange',resizeCanvas);

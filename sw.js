@@ -1,10 +1,10 @@
-/* Suncat Archive 2.0 — scope-safe shell updates, explicit audio downloads,
+/* Suncat Archive 2.3 — scope-safe shell updates, explicit audio downloads,
    full/range offline playback, and compatibility with the previous player. */
 const SCOPE = new URL(self.registration.scope);
-const CACHE_NAME = 'suncat-music-shell-v2.0.0-' + encodeURIComponent(SCOPE.pathname);
+const CACHE_NAME = 'suncat-music-shell-v2.3.0-' + encodeURIComponent(SCOPE.pathname);
 const AUDIO_CACHE = 'suncat-audio-v9';
 const LEGACY_CACHE = 'suncat-audio-v91.0613';
-const SHELL = ['index.html','manifest.json','assets/suncat.svg','icon-192.png','icon-512.png'];
+const SHELL = ['index.html','manifest.json','assets/suncat-og-image.jpg','icon-192.png','icon-512.png'];
 const urlFor = path => new URL(path, SCOPE).href;
 function normalized(url) { const u = new URL(url, SCOPE); try { return u.origin + decodeURIComponent(u.pathname); } catch { return u.origin + u.pathname; } }
 function isFullAudio(response) { return response?.status === 200 && !/text\/html|application\/json/i.test(response.headers.get('content-type') || ''); }
@@ -12,7 +12,7 @@ self.addEventListener('install', event => {
  event.waitUntil((async () => {
   const cache = await caches.open(CACHE_NAME);
   // A failed deployment never replaces an already working offline shell.
-  await cache.addAll(SHELL.map(urlFor));
+  await cache.addAll(SHELL.map(path => new Request(urlFor(path), {cache:'reload'})));
   await self.skipWaiting();
  })());
 });
