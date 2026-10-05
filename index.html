@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Suncat | Digital Audio Archive</title>
-<meta name="description" content="The Suncat listening room. Explore original albums, the Runestones soundtrack, and eleven audio visualizers. Save your favorites and listen offline.">
+<meta name="description" content="The Suncat listening room. Explore original albums, the Runestones soundtrack, and audio-reactive art. Save your favorites and listen offline.">
 <meta name="author" content="Suncat">
 <meta name="theme-color" content="#10100f">
 <link rel="canonical" href="https://suncatmeow.github.io/music/">
@@ -194,7 +194,7 @@ const playlistData = [
                 { title: "Title Theme", src: "Title Theme.mp3", duration: "3:00", rating: 0, album: "Runestones Soundtrack",genre:"Synthwave", lyrics: "[Instrumental]", extraInfo: "Game Music from the game Runestones Online by Suncat. You can play it free @ suncatmeow.github.io/RunestonesOnline" },
                 { title: "Underworld", src: "Underworld.mp3", duration: "3:00", rating: 0, album: "Runestones Soundtrack",genre:"Synthwave", lyrics: "[Instrumental]", extraInfo: "Game Music from the game Runestones Online by Suncat. You can play it free @ suncatmeow.github.io/RunestonesOnline" }
         ];
-// Suncat Archive 2.3.2. No build step or third-party UI dependencies.
+// Suncat Archive 2.4. No build step or third-party UI dependencies.
 const $ = id => document.getElementById(id);
 const iconPaths = {
  play:'<path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none"/>',pause:'<path d="M8 5v14M16 5v14" stroke-width="4"/>',
@@ -226,7 +226,10 @@ let favorites=[...new Set((Array.isArray(storedFavorites)?storedFavorites:Array.
 let prefs=safeRead('suncat_preferences_v2',{});if(!prefs||typeof prefs!=='object'||Array.isArray(prefs))prefs={};
 let view='tracks',selectedAlbum=null,query='',displayOrder=[],queueOrder=[],playQueue=[],queuePos=-1,currentTrackIndex=-1;
 let shuffle=!!prefs.shuffle,repeat=['off','all','one'].includes(prefs.repeat)?prefs.repeat:'all';
-let visualizerMode=Number.isInteger(prefs.visual)&&prefs.visual>=0&&prefs.visual<11?prefs.visual:8;
+// Keep existing art choices. Move the old analyzer default to the restored
+// sculpture once; later, an explicit measurement choice is remembered.
+let visualizerMode=Number.isInteger(prefs.visual)&&prefs.visual>=0&&prefs.visual<12?prefs.visual:1;
+if(prefs.visualRevision!==1&&[0,8,9,10].includes(visualizerMode))visualizerMode=1;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let isBackgroundMode=typeof prefs.background==='boolean'?prefs.background:safeRead('suncat_bg_mode',reducedMotion)===true;
 let quality=['eco','balanced'].includes(prefs.quality)?prefs.quality:(matchMedia('(pointer:coarse)').matches?'eco':'balanced');
@@ -239,15 +242,16 @@ let audioCtx,source,dryGain,wetGain,isEngineRunning=false,visualFrame=0,visualVi
 let playToken=0,seekPending=null,dragging=false,lastSave=0,toastTimer,dialogReturnFocus;
 let offlineTracks=new Set(),offlineBytes=0,downloadJob=null,offlineReady=false,workerError='';
 const AUDIO_CACHE='suncat-audio-v9',LEGACY_CACHE='suncat-audio-v91.0613';
-const visualNames=['Stereo scope','Stereo ribbon','Spectral globe','Solar system','Amorphous entity','Gravitational system','Spectral lotus','Cymatic-inspired field','Frequency spectrum','Spectrogram','Stereo waveform'];
-const visualDescriptions=['Stereo scope: horizontal = side, vertical = mid. Correlation shows how L/R move together.','Art: L/R waveforms bend the ribbons; band energy changes their radius. Rotation is decorative.','Art: frequency bands wrap around a globe; the mesh retains six seconds of history.','Art: waveform and spectrum shapes orbit together. Orbits are decorative.','Art: spectral energy and channel differences deform a six-second mesh.','Art: audio deforms the field; orbiting shapes are decorative.','Art: energy expands petals; spectral peaks choose their colors. No chord detection.','Art inspired by cymatics; frequency energy deforms a mesh. This is not a physical simulation.','Measurement: power in adjacent frequency bands, with Blackman-window correction. Fixed −90 to 0 dBFS scale.','Measurement: six seconds of frequency-band power. Low frequencies below, recent sound at right. Brightness shows level.','Measurement: left and right waveforms share a 20 ms window and a fixed amplitude scale.'];
+const visualNames=['Stereo scope','Sound sculpture','Spectral globe','Solar system','Amorphous entity','Gravitational system','Spectral lotus','Cymatic-inspired field','Frequency spectrum','Spectrogram','Stereo waveform','Stereo ribbon'];
+const artViews=[1,2,3,4,5,6,7,11],measurementViews=[8,9,10,0];
+const visualDescriptions=['Stereo scope: horizontal = side, vertical = mid. Correlation shows how L/R move together.','The original tumbling waveform sculpture. A companion trace carries stereo differences. The shapes follow the sound; rotation and color are artistic.','Six seconds of sound wrap around a turning globe.','Waveforms and spectral shapes become a little solar system.','Sound and stereo differences ripple through an evolving form.','An orbiting sculpture above a field shaped by the music.','Sound opens the petals; spectral peaks color them.','A rippling web inspired by cymatics, shaped by frequency energy. An artistic interpretation rather than a physical simulation.','Measurement: power in adjacent frequency bands, with Blackman-window correction. Fixed −90 to 0 dBFS scale.','Measurement: six seconds of frequency-band power. Low frequencies below, recent sound at right. Brightness shows level.','Measurement: left and right waveforms share a 20 ms window and a fixed amplitude scale.','Two ribbons woven from the left and right waveforms, with their radius shaped by frequency energy.'];
 function durationSeconds(t){return t.duration.split(':').reduce((n,p)=>n*60+Number(p),0);}
 function formatTime(s){if(!Number.isFinite(s)||s<0)return '0:00';return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
 function sourceURL(src){return new URL(src.split('/').map(x=>encodeURIComponent(x).replace(/'/g,'%27')).join('/'),new URL('.',location.href)).href;}
 function normalURL(url){const u=new URL(url,location.href);try{return u.origin+decodeURIComponent(u.pathname);}catch{return u.origin+u.pathname;}}
 function slug(t){return t.title.toLowerCase().replace(/[^a-z0-9]/g,'');}
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4200);}
-function savePrefs(){safeWrite('suncat_preferences_v2',{shuffle,repeat,visual:visualizerMode,background:isBackgroundMode,quality,sound:soundMode,volume:audioPlayer.volume});}
+function savePrefs(){safeWrite('suncat_preferences_v2',{shuffle,repeat,visual:visualizerMode,visualRevision:1,background:isBackgroundMode,quality,sound:soundMode,volume:audioPlayer.volume});}
 function status(message=''){$('player-status').textContent=message;}
 function art(t){const a=albums.indexOf(t.album);return `<span class="track-art" aria-hidden="true" style="--cover:${albumColors[a%albumColors.length]}" data-mark="${(albumMarks[a]||String(a+1))}"></span>`;}
 function shuffleList(items){const out=[...items];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;}
@@ -357,14 +361,15 @@ function renderVisualizer(stamp){
  if(soundView.source!==audioPlayer.currentSrc||Math.abs(audioPlayer.currentTime-soundView.playhead)>.5||now-soundView.lastCapture>.3)resetVisualHistory();
  soundView.source=audioPlayer.currentSrc;soundView.playhead=audioPlayer.currentTime;
  readVisualSignal(now);$('idle-art').hidden=true;
- ctx.clearRect(0,0,w,h);drawVisualBackdrop(w,h);ctx.save();const drawHeight=visualizerMode>0&&visualizerMode<8?Math.max(80,h-64):h;ctx.translate(w/2,drawHeight/2);
+ ctx.clearRect(0,0,w,h);drawVisualBackdrop(w,h);ctx.save();const drawHeight=h;ctx.translate(w/2,drawHeight/2);
  try{visualDrawers[visualizerMode](w,drawHeight,now);if(visualizerMode===0){measurementHeader(w,h,`Correlation ${soundView.metrics.correlation===null?'—':soundView.metrics.correlation.toFixed(2)} · side ↔ · mid ↕`);}}finally{ctx.restore();}
- if(visualizerMode<8)drawSpectrumFooter(w,h);
+ if(visualizerMode===0)drawSpectrumFooter(w,h);
  const measured=performance.now()-started;
  // RAF spacing also catches deferred Canvas paint cost outside this callback.
  updateVisualBudget(Math.max(measured,visualBudget.rafGap>28||Number.isFinite(elapsed)&&elapsed>interval*2.5?14:0));
 }
-function chooseVisual(i){if(!Number.isInteger(i)||i<0||i>=visualNames.length)return;visualizerMode=i;$('visual-select').value=String(i);$('cycle-visual').setAttribute('aria-label',`${visualNames[i]}. Switch to the next visualization`);$('visual-description').textContent=visualDescriptions[i];canvas.setAttribute('aria-label',visualDescriptions[i]);resetVisualBudget();savePrefs();if(audioPlayer.paused)drawIdleState();}
+function chooseVisual(i){if(!Number.isInteger(i)||i<0||i>=visualNames.length)return;visualizerMode=i;$('visual-select').value=String(i);$('cycle-visual').setAttribute('aria-label',`${visualNames[i]}. Switch to the next ${artViews.includes(i)?'art view':'measurement'}`);$('visual-description').textContent=visualDescriptions[i];canvas.setAttribute('aria-label',visualDescriptions[i]);resetVisualBudget();savePrefs();if(audioPlayer.paused)drawIdleState();}
+function cycleVisual(){const collection=artViews.includes(visualizerMode)?artViews:measurementViews;chooseVisual(collection[(collection.indexOf(visualizerMode)+1)%collection.length]);}
 function openDialog(title,subtitle='',kicker='Suncat archive'){
  dialogReturnFocus=document.activeElement;$('dialog-title').textContent=title;$('dialog-subtitle').textContent=subtitle;$('dialog-kicker').textContent=kicker;$('dialog-body').innerHTML='';$('modal').hidden=false;document.body.style.overflow='hidden';document.querySelector('.wrap').setAttribute('inert','');$('mini-player').setAttribute('inert','');$('close-dialog').focus();
 }
@@ -372,7 +377,7 @@ function closeDialog(){$('modal').hidden=true;document.body.style.overflow='';do
 function trackDetails(i){const t=playlistData[i];openDialog(t.title,`${t.album} · ${t.duration}`,'Behind the track');$('dialog-body').innerHTML=`<div class="dialog-actions"><button class="primary" id="detail-play">Play track</button><button class="pill" id="detail-share">${icon('share')} Share</button><button class="pill" id="detail-save" ${downloadJob?'disabled':''}>${icon('download')} ${offlineTracks.has(t.src)?'Remove download':'Save offline'}</button></div><p>${esc(t.genre||'')}</p><p class="fine">Archive rating: ${t.rating?'★'.repeat(t.rating)+'☆'.repeat(5-t.rating):'Unrated'} · Curated by Suncat</p><h3>Behind the track</h3><p>${esc(t.extraInfo||'From the Suncat archive.')}</p><h3>Lyrics</h3><p class="lyrics">${esc(t.lyrics==='Lyrics coming soon...'?'Lyrics haven’t been added to this track yet.':t.lyrics||'Lyrics haven’t been added to this track yet.')}</p>`;$('detail-play').onclick=()=>{setQueue(i);selectTrack(i);closeDialog();};$('detail-share').onclick=()=>shareTrack(i);$('detail-save').onclick=async()=>{if(offlineTracks.has(t.src)){await removeDownloads([i]);trackDetails(i);}else{closeDialog();downloadTracks([i]);}};}
 function shareTrack(i){const t=playlistData[i],u=new URL(location.protocol==='file:'?'https://suncatmeow.github.io/music/':location.href);u.search='';u.hash='';u.searchParams.set('track',slug(t));openDialog('Pass a little sunshine.',t.title,'Share this track');$('dialog-body').innerHTML='<label class="sr-only" for="share-url">Track link</label><input class="share-link" id="share-url" readonly><div class="dialog-actions"><button class="primary" id="copy-link">Copy link</button><button class="pill" id="native-share">Share with an app</button></div><p class="fine">This link opens the song, ready to play.</p>';$('share-url').value=u.href;$('copy-link').onclick=async()=>{try{if(!navigator.clipboard)throw Error();await navigator.clipboard.writeText(u.href);toast('Track link copied.');}catch{$('share-url').focus();$('share-url').select();toast('Select and copy the link above.');}};$('native-share').hidden=!navigator.share;$('native-share').onclick=async()=>{try{await navigator.share({title:`${t.title} | Suncat`,text:`Listen to ${t.title} by Suncat.`,url:u.href});}catch(e){if(e.name!=='AbortError')toast('Use Copy link to share this track.');}};}
 function openQueue(){openDialog('Stay for another song.',`${playQueue.length} tracks · ${shuffle?'Shuffled':'In order'} · Repeat ${repeat}`,'Your listening queue');$('dialog-body').innerHTML=playQueue.length?`<ol class="queue-list">${playQueue.map((i,pos)=>`<li><button data-queue="${i}" class="${pos===queuePos?'active':''}">${String(pos+1).padStart(2,'0')} · ${esc(playlistData[i].title)}${pos===queuePos?' · Selected':''}</button></li>`).join('')}</ol><p class="fine">Your queue follows the view you started playing. Browsing elsewhere keeps it intact.</p>`:'<p>Play a track to start your queue.</p>';$('dialog-body').querySelectorAll('[data-queue]').forEach(b=>b.onclick=()=>{selectTrack(Number(b.dataset.queue));closeDialog();});$('dialog-body').querySelector('.active')?.scrollIntoView({block:'nearest'});}
-function about(){openDialog('A world made by Suncat.','Independent music & game development · Houston, Texas','About the archive');$('dialog-body').innerHTML='<p>Suncat creates original rock, pop, blues, and avant-garde albums alongside soundtracks for other worlds. This is a home for the music: a place to listen, explore, and keep your favorites close.</p><p><a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" rel="noopener">Play Runestones Online ↗</a></p><h3>Your listening room</h3><p>Tap anywhere in the visualizer to explore eleven views, or choose a view in Player settings. Spectrum, spectrogram, waveform and stereo scope show measured aspects of the signal. The other views are artistic interpretations. Frequency analysis uses a 4096-sample window, with no temporal smoothing. RMS and sample peaks use the latest window; they are not loudness, true-peak or sound-pressure meters. Measurements follow the selected sound processing, before your device’s speaker and room.</p><h3>Privacy & storage</h3><p>Your playlist, playback position, preferences, and saved audio stay in this browser. Clearing site data removes them. Playlist backups let you keep or move your favorites. This site uses Google Analytics for visit statistics.</p><h3>Keyboard</h3><p>Space: play / pause · Left / Right: seek 5 seconds · Shift + Left / Right: previous / next. Shortcuts apply when you’re outside buttons and form controls.</p><p class="fine">Suncat Archive 2.3.2 · Made for a little more listening.</p>';}
+function about(){openDialog('A world made by Suncat.','Independent music & game development · Houston, Texas','About the archive');$('dialog-body').innerHTML='<p>Suncat creates original rock, pop, blues, and avant-garde albums alongside soundtracks for other worlds. This is a home for the music: a place to listen, explore, and keep your favorites close.</p><p><a href="https://suncatmeow.github.io/RunestonesOnline" target="_blank" rel="noopener">Play Runestones Online ↗</a></p><h3>Your listening room</h3><p>Tap anywhere in the picture to explore eight artistic views, starting with the original Sound sculpture. Its tumbling lines follow the waveform, with a companion trace for stereo differences. The globe, petals, orbits and ribbons offer other ways to see the music. Choose a view in Player settings; the optional Measurements group holds the spectrum, spectrogram, waveform and stereo scope. Tapping stays within your chosen group. Art views interpret the signal; their motion and colors are artistic choices. Measurement views use a 4096-sample analysis window and follow the selected sound processing, before your device’s speaker and room. RMS and sample peaks are not integrated loudness, true-peak or sound-pressure readings.</p><h3>Privacy & storage</h3><p>Your playlist, playback position, preferences, and saved audio stay in this browser. Clearing site data removes them. Playlist backups let you keep or move your favorites. This site uses Google Analytics for visit statistics.</p><h3>Keyboard</h3><p>Space: play / pause · Left / Right: seek 5 seconds · Shift + Left / Right: previous / next. Shortcuts apply when you’re outside buttons and form controls.</p><p class="fine">Suncat Archive 2.4 · Made for a little more listening.</p>';}
 function backupDialog(){openDialog('Keep your favorites close.','Export your playlist or add tracks from a previous backup.','Playlist backup');$('dialog-body').innerHTML='<div class="dialog-actions"><button class="primary" id="export-playlist">Export playlist</button><button class="pill" id="import-playlist">Import playlist</button><input id="import-file" type="file" accept="application/json,.json" hidden></div><p class="fine">Backups contain song references, not audio. Importing adds matching songs to your playlist without removing anything.</p>';$('export-playlist').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Suncat Archive',version:2,favorites},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Suncat-Playlist.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};$('import-playlist').onclick=()=>$('import-file').click();$('import-file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>1024*1024)throw Error();const d=JSON.parse(await file.text());if(!Array.isArray(d.favorites)||!d.favorites.every(s=>typeof s==='string'))throw Error();const before=favorites.length;favorites=[...new Set([...favorites,...d.favorites.filter(s=>bySrc.has(s))])];safeWrite('suncat_favorites_v2',favorites);renderLibrary();updateNow();toast(`${favorites.length-before} tracks added to your playlist.`);}catch{toast('Choose a valid Suncat playlist JSON backup.');}};}
 function validAudio(response){return response&&response.status===200&&!/text\/html|application\/json/i.test(response.headers.get('content-type')||'');}
 async function scanOffline(){
@@ -607,6 +612,56 @@ function visualHistory(){
             ctx.globalCompositeOperation = 'source-over';
         }
         
+        // Original 0.7 ms delay embedding, with the same three-axis tumble.
+        // Mid preserves the original shape; Side carries the stereo difference
+        // that averaging L/R alone would cancel. Neither trace is auto-normalized.
+        // All coordinates are reused; depth buckets batch strokes without blur.
+        const sculptureCache={count:0,step:1,traces:Array.from({length:2},()=>({
+            x:new Float32Array(400),y:new Float32Array(400),
+            z:new Float32Array(400),perspective:new Float32Array(400),
+            next:new Int16Array(400),heads:new Int16Array(16),peak:0
+        }))};
+        function drawSoundSculpture(w,h){
+            const left=soundView.waveL,right=soundView.waveR;
+            if(!left||!right)return;
+            const delay=Math.max(1,Math.round(audioCtx.sampleRate*.0007));
+            const available=left.length-delay*2;if(available<2)return;
+            const reduced=visualDetail(),limit=reduced?256:400,buckets=reduced?8:16;
+            const step=Math.max(1,Math.ceil(available/limit)),count=Math.ceil(available/step);
+            sculptureCache.count=count;sculptureCache.step=step;
+            const scale=Math.min(w,h)*.35,t=soundView.motionTime;
+            const cx=Math.cos(t*.15),sx=Math.sin(t*.15),cy=Math.cos(t*.25),sy=Math.sin(t*.25),cz=Math.cos(t*.10),sz=Math.sin(t*.10);
+            const grad=getChordGradient(ctx,w,h,60);
+            ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle=grad;ctx.fillStyle=grad;ctx.lineCap='round';ctx.lineJoin='round';
+            for(let channel=0;channel<2;channel++){
+                const trace=sculptureCache.traces[channel],sign=channel?-1:1;
+                trace.heads.fill(-1);trace.peak=0;
+                for(let j=0;j<count;j++){
+                    const i=j*step,rawX=(left[i]+sign*right[i])*.5,rawY=(left[i+delay]+sign*right[i+delay])*.5,rawZ=(left[i+delay*2]+sign*right[i+delay*2])*.5;
+                    trace.peak=Math.max(trace.peak,Math.abs(rawX),Math.abs(rawY),Math.abs(rawZ));
+                    const y1=rawY*cx-rawZ*sx,z1=rawY*sx+rawZ*cx,x2=rawX*cy+z1*sy,z2=-rawX*sy+z1*cy;
+                    const x3=x2*cz-y1*sz,y3=x2*sz+y1*cz,perspective=3.8/Math.max(1.2,3.8+z2);
+                    trace.x[j]=x3*scale*perspective;trace.y[j]=-y3*scale*perspective;trace.z[j]=z2;trace.perspective[j]=perspective;
+                    if(j){const depth=(trace.z[j-1]+z2)*.5,bucket=Math.max(0,Math.min(buckets-1,Math.floor((2-depth)*buckets/4)));trace.next[j]=trace.heads[bucket];trace.heads[bucket]=j;}
+                }
+                if(trace.peak<1e-7)continue;
+                // A wide, faint stroke adds warmth without an expensive shadow.
+                ctx.beginPath();ctx.moveTo(trace.x[0],trace.y[0]);
+                for(let j=1;j<count;j++)ctx.lineTo(trace.x[j],trace.y[j]);
+                ctx.lineWidth=reduced?3:5;ctx.globalAlpha=.075;ctx.stroke();
+                for(let bucket=0;bucket<buckets;bucket++){
+                    if(trace.heads[bucket]===-1)continue;
+                    const depth=2-(bucket+.5)*4/buckets,near=svClamp(.5-depth*.25);
+                    ctx.globalAlpha=.1+near*.8;ctx.lineWidth=.6+near*1.5;ctx.beginPath();
+                    for(let j=trace.heads[bucket];j!==-1;j=trace.next[j]){ctx.moveTo(trace.x[j-1],trace.y[j-1]);ctx.lineTo(trace.x[j],trace.y[j]);}
+                    ctx.stroke();ctx.beginPath();
+                    for(let j=trace.heads[bucket];j!==-1;j=trace.next[j])if(j%(reduced?4:2)===0){const radius=.7*trace.perspective[j];ctx.moveTo(trace.x[j]+radius,trace.y[j]);ctx.arc(trace.x[j],trace.y[j],radius,0,Math.PI*2);}
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+
         // ----------------------------------------------------
         // MODE 2: THE SPECTRAL GLOBE
         // ----------------------------------------------------
@@ -1182,7 +1237,7 @@ function visualHistory(){
 
 // Reuse vertex and face storage; pitch colors cached with the frequency bands.
 const ribbonCache={n:0,channels:[],faces:[]};
-function drawSoundSculpture(w,h){
+function drawStereoRibbon(w,h){
  const left=soundView.waveL,right=soundView.waveR,bands=soundView.levels;
  const n=visualDetail()?80:144,size=Math.min(w,h)*.32,t=soundView.motionTime;
  if(ribbonCache.n!==n){
@@ -1292,12 +1347,12 @@ function drawStereoWaveform(w,h){
  }
  ctx.fillStyle='#a7bac0';ctx.fillText('0 ms',p.x,p.y+p.h+14);ctx.textAlign='right';ctx.fillText('20 ms',p.x+p.w,p.y+p.h+14);ctx.textAlign='left';
 }
-const visualDrawers=[drawStereoScope,drawSoundSculpture,drawSpectralGlobe,drawSolarSystem,drawAmorphousEntity,drawGravitationalSystem,drawSpectralLotus,drawCymaticResonance,drawFrequencySpectrum,drawSpectrogram,drawStereoWaveform];
+const visualDrawers=[drawStereoScope,drawSoundSculpture,drawSpectralGlobe,drawSolarSystem,drawAmorphousEntity,drawGravitationalSystem,drawSpectralLotus,drawCymaticResonance,drawFrequencySpectrum,drawSpectrogram,drawStereoWaveform,drawStereoRibbon];
 
 function initApp(){
  paintIcons();$('all-count').textContent=playlistData.length;$('albums-count').textContent=albums.length;$('catalog-count').textContent=`${albums.length} collections / ${playlistData.length} tracks`;
  $('volume').value=volume;audioPlayer.volume=volume;$('quality').value=quality;SV_FPS=quality==='eco'?15:24;$('sound').value=soundMode;
- $('visual-select').innerHTML=visualNames.map((name,i)=>`<option value="${i}">${name}</option>`).join('');chooseVisual(visualizerMode);updateModes();
+ $('visual-select').innerHTML=[['Art',artViews],['Measurements',measurementViews]].map(([label,views])=>`<optgroup label="${label}">${views.map(i=>`<option value="${i}">${visualNames[i]}</option>`).join('')}</optgroup>`).join('');chooseVisual(visualizerMode);updateModes();
  for(const [container,items,kind] of [['genre-filters',genres,'genres'],['album-filters',albums,'albums']]){$(container).innerHTML=items.map((value,i)=>`<label class="chip"><input type="checkbox" data-filter="${kind}" value="${esc(value)}">${esc(value==='Runestones Soundtrack'?'Runestones OST':value)}</label>`).join('');}
  $('filter-menu').addEventListener('change',e=>{const type=e.target.dataset.filter;if(type){e.target.checked?filters[type].add(e.target.value):filters[type].delete(e.target.value);renderLibrary();}});
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>changeView(b.dataset.view));
@@ -1317,7 +1372,7 @@ function initApp(){
  audioPlayer.addEventListener('play',()=>{updateTransport();startVisuals();});audioPlayer.addEventListener('playing',()=>{status();updateTransport();startVisuals();});audioPlayer.addEventListener('pause',()=>{stopVisuals();drawIdleState();updateTransport();saveSession();});
  audioPlayer.addEventListener('waiting',()=>{if(!audioPlayer.paused)status('Buffering…');});audioPlayer.addEventListener('ended',()=>nextTrack(true));
  audioPlayer.addEventListener('error',()=>{if(currentTrackIndex>=0){status(navigator.onLine?'This recording is unavailable. Try Play again or choose another track.':'This song is not saved here. Choose a track from On device.');stopVisuals();updateTransport();}});
- $('visual-select').onchange=e=>chooseVisual(Number(e.target.value));$('cycle-visual').onclick=()=>chooseVisual((visualizerMode+1)%visualNames.length);
+ $('visual-select').onchange=e=>chooseVisual(Number(e.target.value));$('cycle-visual').onclick=cycleVisual;
  $('quality').onchange=e=>{quality=e.target.value;SV_FPS=quality==='eco'?15:24;resetVisualBudget();savePrefs();};
  $('sound').onchange=e=>{soundMode=e.target.value;applySoundMode();savePrefs();};
  $('background-mode').onclick=()=>{saveSession();isBackgroundMode=!isBackgroundMode;savePrefs();safeWrite('suncat_bg_mode',isBackgroundMode);location.reload();};

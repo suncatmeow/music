@@ -1,7 +1,7 @@
 /* Suncat Archive 2.3.2 — scope-safe shell updates, explicit audio downloads,
    full/range offline playback, and compatibility with the previous player. */
 const SCOPE = new URL(self.registration.scope);
-const CACHE_NAME = 'suncat-music-shell-v2.3.2-' + encodeURIComponent(SCOPE.pathname);
+const CACHE_NAME = 'suncat-music-shell-v2.4-' + encodeURIComponent(SCOPE.pathname);
 const AUDIO_CACHE = 'suncat-audio-v9';
 const LEGACY_CACHE = 'suncat-audio-v91.0613';
 const SHELL = ['index.html','manifest.json','assets/suncat-og-image.jpg','icon-192.png','icon-512.png'];
