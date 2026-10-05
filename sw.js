@@ -1,106 +1,73 @@
-const CACHE_NAME = 'suncat-music-shell-v1';
+/* Suncat Archive 2.0 — scope-safe shell updates, explicit audio downloads,
+   full/range offline playback, and compatibility with the previous player. */
+const SCOPE = new URL(self.registration.scope);
+const CACHE_NAME = 'suncat-music-shell-v2.0.0-' + encodeURIComponent(SCOPE.pathname);
 const AUDIO_CACHE = 'suncat-audio-v9';
 const LEGACY_CACHE = 'suncat-audio-v91.0613';
-const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
-];
-
-// 1. INSTALL: Cache the core App Shell
+const SHELL = ['index.html','manifest.json','assets/suncat.svg','icon-192.png','icon-512.png'];
+const urlFor = path => new URL(path, SCOPE).href;
+function normalized(url) { const u = new URL(url, SCOPE); try { return u.origin + decodeURIComponent(u.pathname); } catch { return u.origin + u.pathname; } }
+function isFullAudio(response) { return response?.status === 200 && !/text\/html|application\/json/i.test(response.headers.get('content-type') || ''); }
 self.addEventListener('install', event => {
-  self.skipWaiting(); 
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('Suncat SW: Caching App Shell');
-      return cache.addAll(urlsToCache);
-    })
-  );
+ event.waitUntil((async () => {
+  const cache = await caches.open(CACHE_NAME);
+  // A failed deployment never replaces an already working offline shell.
+  await cache.addAll(SHELL.map(urlFor));
+  await self.skipWaiting();
+ })());
 });
-
-// 2. ACTIVATE: Clean up old caches
 self.addEventListener('activate', event => {
-    event.waitUntil((async () => {
-        const names = await caches.keys();
-        const audioCache = await caches.open(AUDIO_CACHE);
-
-        // Preserve full songs downloaded by the old bulk downloader.
-        if (names.includes(LEGACY_CACHE)) {
-            const legacy = await caches.open(LEGACY_CACHE);
-
-            for (const request of await legacy.keys()) {
-                const url = new URL(request.url);
-                if (!url.pathname.toLowerCase().endsWith('.mp3')) continue;
-
-                const existing = await audioCache.match(request);
-                if (existing?.status === 200) continue;
-
-                const response = await legacy.match(request);
-                if (response?.status === 200) {
-                    await audioCache.put(request, response);
-                }
-            }
-        }
-
-        // Delete only this app's obsolete shell caches.
-        await Promise.all(
-            names
-                .filter(name =>
-                    name.startsWith('suncat-music-shell-') &&
-                    name !== CACHE_NAME
-                )
-                .map(name => caches.delete(name))
-        );
-
-        await self.clients.claim();
-    })());
+ event.waitUntil((async () => {
+  const suffix = '-' + encodeURIComponent(SCOPE.pathname);
+  for (const name of await caches.keys()) {
+   if (name.startsWith('suncat-music-shell-v2.') && name.endsWith(suffix) && name !== CACHE_NAME) await caches.delete(name);
+  }
+  // Both generations of downloaded audio remain in place; no costly copying.
+  await self.clients.claim();
+ })());
 });
-
-// 3. MESSAGE: Handle the Bulk Download Request
+async function findAudio(request) {
+ const names = await caches.keys();
+ for (const name of [AUDIO_CACHE, LEGACY_CACHE]) {
+  if (!names.includes(name)) continue;
+  const cache = await caches.open(name);
+  const direct = await cache.match(request.url, {ignoreSearch:true});
+  if (isFullAudio(direct)) return direct;
+  // Previous versions encoded apostrophes differently. Match the decoded path.
+  const key = normalized(request.url);
+  for (const stored of await cache.keys()) if (normalized(stored.url) === key) {
+   const response = await cache.match(stored);
+   if (isFullAudio(response)) return response;
+  }
+ }
+ return null;
+}
+let bulkRunning = false;
 self.addEventListener('message', event => {
-    if (event.data.action === 'START_BULK_DOWNLOAD') {
-        const tracks = event.data.tracks;
-        const client = event.source;
-
-        event.waitUntil((async () => {
-            const cache = await caches.open(AUDIO_CACHE);
-            let count = 0;
-
-            for (const track of tracks) {
-                try {
-                    // THE CRITICAL FIX: Convert relative paths ("Baby Boy.mp3") 
-                    // to absolute URLs so the fetch event can find them in the cache later!
-                    const absoluteUrl = new URL(track, self.location.href).href;
-                    
-                    const existingResponse = await cache.match(absoluteUrl);
-
-                    // Only skip if it's already cached AND it's a full 200 file
-                    if (!existingResponse || existingResponse.status !== 200) {
-                        const networkResponse = await fetch(absoluteUrl);
-                        if (networkResponse.status !== 200) {
-                            throw new Error(`Download failed: HTTP ${networkResponse.status}`);
-                        }
-                        await cache.put(absoluteUrl, networkResponse);
-                    }
-                } catch (err) {
-                    console.error(`Suncat SW: Failed to cache ${track}`, err);
-                } finally {
-                    count++;
-                    if (client) {
-                        client.postMessage({
-                            action: 'DOWNLOAD_PROGRESS',
-                            current: count,
-                            total: tracks.length,
-                            track: track
-                        });
-                    }
-                }
-            }
-        })());
-    }
+ if (event.data?.action !== 'START_BULK_DOWNLOAD' || !Array.isArray(event.data.tracks) || bulkRunning) return;
+ const tracks = event.data.tracks.slice(0,1000).filter(x => typeof x === 'string');
+ event.waitUntil((async () => {
+  bulkRunning = true;
+  try {
+   const cache = await caches.open(AUDIO_CACHE); let current = 0;
+   for (const track of tracks) {
+    let success = false;
+    try {
+     const url = new URL(track, SCOPE);
+     if (url.origin !== SCOPE.origin || !url.pathname.startsWith(SCOPE.pathname) || !url.pathname.toLowerCase().endsWith('.mp3')) throw Error('Invalid track');
+     if (!await findAudio(new Request(url))) {
+      const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 60000);
+      try { const response = await fetch(url, {signal:controller.signal}); if (!isFullAudio(response)) throw Error('Incomplete audio'); await cache.put(url, response); }
+      finally { clearTimeout(timer); }
+     }
+     success = true;
+    } catch (error) { console.warn('Track not saved:', track, error.name); }
+    event.source?.postMessage({action:'DOWNLOAD_PROGRESS',current:++current,total:tracks.length,track,success});
+   }
+  } finally { bulkRunning = false; }
+ })());
 });
+
 async function cachedAudioResponse(request, cachedResponse) {
     const range = request.headers.get('range');
 
@@ -167,49 +134,38 @@ async function cachedAudioResponse(request, cachedResponse) {
         }
     });
 }
-// 4. FETCH: Dynamic Caching & Offline Routing
+
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-    // Is this an audio file?
-    if (event.request.url.includes('.mp3')) {
-        event.respondWith((async () => {
-            const cache = await caches.open(AUDIO_CACHE);
-            
-            // Match against the exact absolute URL the browser is requesting
-            const cachedResponse = await cache.match(event.request.url, { ignoreSearch: true });
-
-            if (cachedResponse?.status === 200) {
-                return cachedAudioResponse(event.request, cachedResponse);
-            }
-
-            // IF NOT CACHED: Fetch from network
-            try {
-                // BUG FIX: Return the fetch directly without auto-caching to preserve user storage
-                return await fetch(event.request);
-            } catch (err) {
-                console.log('Suncat SW: Network fetch failed for audio (Offline)', err);
-                // Return a graceful 503 so the audio engine knows it's offline rather than hanging
-                return new Response("Offline", { status: 503 });
-            }
-        })());
-    } else {
-        // Standard caching for HTML, CSS, JS
-        event.respondWith(
-            caches.match(event.request, { ignoreSearch: true }).then(cachedResponse => {
-                // 1. If we found a match (ignoring query strings like ?track=), return it!
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                
-                // 2. If not in cache, try the network
-                return fetch(event.request).catch(() => {
-                    // 3. If the network fails (offline) AND the user is trying to load a webpage
-                    // Force the service worker to serve the cached App Shell
-                    if (event.request.mode === 'navigate') {
-                        return caches.match('./index.html');
-                    }
-                });
-            })
-        );
+ const request = event.request, url = new URL(request.url);
+ if (request.method !== 'GET' || url.origin !== SCOPE.origin || !url.pathname.startsWith(SCOPE.pathname)) return;
+ if (url.pathname.toLowerCase().endsWith('.mp3')) {
+  event.respondWith((async () => {
+   const cached = await findAudio(request);
+   if (cached) return cachedAudioResponse(request, cached);
+   try { return await fetch(request); } catch { return new Response('Audio is not saved on this device.', {status:503,headers:{'Content-Type':'text/plain'}}); }
+  })());
+  return;
+ }
+ const isAppPage = request.mode === 'navigate' && (url.pathname === SCOPE.pathname || url.pathname === new URL('index.html', SCOPE).pathname);
+ if (isAppPage) {
+  event.respondWith((async () => {
+   const cache = await caches.open(CACHE_NAME);
+   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 4000);
+   try {
+    const response = await fetch(request, {signal:controller.signal});
+    if (response.ok && /text\/html/i.test(response.headers.get('content-type') || '')) {
+     // Cache writes must not turn successful online navigation into a failure.
+     try { await cache.put(urlFor('index.html'), response.clone()); } catch {}
+     return response;
     }
+    return (await cache.match(urlFor('index.html'))) || response;
+   } catch { return (await cache.match(urlFor('index.html'))) || new Response('Connect to the internet to open Suncat for the first time.',{status:503,headers:{'Content-Type':'text/plain'}}); }
+   finally { clearTimeout(timer); }
+  })());
+  return;
+ }
+ // Cache only this app's known assets; analytics and unrelated pages pass through.
+ if (SHELL.some(path => new URL(path, SCOPE).pathname === url.pathname)) {
+  event.respondWith((async () => { const cache=await caches.open(CACHE_NAME); return (await cache.match(request,{ignoreSearch:true})) || fetch(request); })());
+ }
 });
