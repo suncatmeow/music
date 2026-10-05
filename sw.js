@@ -1,7 +1,7 @@
-/* Suncat Archive 2.3 — scope-safe shell updates, explicit audio downloads,
+/* Suncat Archive 2.3.2 — scope-safe shell updates, explicit audio downloads,
    full/range offline playback, and compatibility with the previous player. */
 const SCOPE = new URL(self.registration.scope);
-const CACHE_NAME = 'suncat-music-shell-v2.3.0-' + encodeURIComponent(SCOPE.pathname);
+const CACHE_NAME = 'suncat-music-shell-v2.3.2-' + encodeURIComponent(SCOPE.pathname);
 const AUDIO_CACHE = 'suncat-audio-v9';
 const LEGACY_CACHE = 'suncat-audio-v91.0613';
 const SHELL = ['index.html','manifest.json','assets/suncat-og-image.jpg','icon-192.png','icon-512.png'];
@@ -152,7 +152,7 @@ self.addEventListener('fetch', event => {
    const cache = await caches.open(CACHE_NAME);
    const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 4000);
    try {
-    const response = await fetch(request, {signal:controller.signal});
+    const response = await fetch(request, {signal:controller.signal,cache:'no-cache'});
     if (response.ok && /text\/html/i.test(response.headers.get('content-type') || '')) {
      // Cache writes must not turn successful online navigation into a failure.
      try { await cache.put(urlFor('index.html'), response.clone()); } catch {}
